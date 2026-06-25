@@ -77,7 +77,7 @@ public class UserProfileSnapshotServiceImpl implements UserProfileSnapshotServic
                 .collect(Collectors.toMap(UserFact::getFactKey, UserFact::getFactValue, (a, b) -> b));
 
         if (needsTimeline && factMap.containsKey("timeline")) {
-            onboarding.setTimeline(factMap.get("timeline"));
+            onboarding.setTimeline(mapTimelineToOnboarding(factMap.get("timeline")));
         }
         if (needsWeekly && factMap.containsKey("weekly_hours")) {
             onboarding.setWeeklyAvailability(mapWeeklyHoursToOnboarding(factMap.get("weekly_hours")));
@@ -103,6 +103,16 @@ public class UserProfileSnapshotServiceImpl implements UserProfileSnapshotServic
             case "15" -> "10_20h";
             case "25" -> "gt_20h";
             default   -> hours;
+        };
+    }
+
+    private static String mapTimelineToOnboarding(String timeline) {
+        if (timeline == null || timeline.isBlank()) return timeline;
+        return switch (timeline.trim()) {
+            case "1个月" -> "within_1_month";
+            case "3个月" -> "within_3_months";
+            case "6个月", "校招季" -> "prepare_early";
+            default -> timeline;
         };
     }
 

@@ -58,3 +58,49 @@ export const isGrowthKeyword = (label?: string): boolean => {
   if (BASE_BLOCKLIST.includes(text)) return false;
   return hasRealText(text);
 };
+
+/** 首页「求职画像」卡片与词云/成长树共用的中文标签集合 */
+export const PORTRAIT_TAG_LABELS = {
+  pain: ['方向不清', '简历薄弱', '项目不足', '面试没底', '缺少计划'],
+  resume: ['已有可用简历', '已有可投简历', '简历草稿中', '暂无简历', '简历质量待确认'],
+  timeline: ['马上投递', '1 个月内', '3 个月内', '提前准备'],
+  weekly: ['< 5 小时', '5-10 小时', '10-20 小时', '> 20 小时'],
+  priority: ['优先改简历', '优先定方向', '优先练面试', '优先做计划'],
+} as const;
+
+export interface PortraitTagLike {
+  label?: string;
+  category?: string;
+}
+
+/** 从 profileTags 中按已知中文标签查找，供首页画像卡片回填 */
+export const findPortraitTagLabel = (
+  tags: PortraitTagLike[] | undefined,
+  labels: readonly string[],
+): string | undefined => {
+  if (!tags?.length) return undefined;
+  const wanted = new Set(labels);
+  return tags.find((tag) => wanted.has(String(tag.label || '').trim()))?.label?.trim();
+};
+
+/** 合并 onboarding 背景与 BACKGROUND 标签，供首页画像卡片展示 */
+export const buildPortraitBackground = (
+  tags: PortraitTagLike[] | undefined,
+  school?: string,
+  major?: string,
+): string => {
+  const parts = [school, major].filter(Boolean);
+  if (parts.length) return parts.join(' · ');
+
+  const backgroundTags = (tags || [])
+    .filter((tag) => tag.category === 'BACKGROUND')
+    .map((tag) => String(tag.label || '').trim())
+    .filter((label) => label && !PORTRAIT_TAG_LABELS.resume.includes(label as typeof PORTRAIT_TAG_LABELS.resume[number]))
+    .filter((label) => !['在校学生', '应届求职', '实习求职', '转行求职', '职场进阶'].includes(label));
+
+  if (backgroundTags.length >= 2) {
+    return `${backgroundTags[0]} · ${backgroundTags[1]}`;
+  }
+  if (backgroundTags.length === 1) return backgroundTags[0];
+  return '待补充';
+};

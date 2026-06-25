@@ -399,7 +399,7 @@ import {
   type AgentUserProfile,
 } from '@/api/agent';
 import { getProfileTagsApi, refreshProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
-import { isGrowthKeyword } from '@/utils/profileTagFilters';
+import { isGrowthKeyword, findPortraitTagLabel, buildPortraitBackground, PORTRAIT_TAG_LABELS } from '@/utils/profileTagFilters';
 import { getProfileSnapshotApi, type UserProfileSnapshot } from '@/api/user';
 import { clearAuthState, LOGIN_PAGE } from '@/utils/auth';
 import { readStoredOnboardingSetup } from '@/utils/onboardingGate';
@@ -567,15 +567,30 @@ const mapLabel = (group: keyof typeof labelMap, value?: string) => {
   return (labelMap[group] as Record<string, string>)[value] || value;
 };
 
+const resolvePortraitField = (
+  group: keyof typeof labelMap,
+  onboardingValue?: string,
+  tagLabels?: readonly string[],
+) => {
+  const mapped = onboardingValue ? mapLabel(group, onboardingValue) : '待补充';
+  if (mapped !== '待补充') return mapped;
+  return findPortraitTagLabel(profileTags.value, tagLabels || []) || '待补充';
+};
+
 const intakeSummary = computed(() => {
   const onboarding = onboardingProfile.value || {};
+  const background = buildPortraitBackground(
+    profileTags.value,
+    onboarding.education?.school,
+    onboarding.education?.major,
+  );
   return [
-    { label: '当前痛点', value: mapLabel('pain', onboarding.painPoint) },
-    { label: '简历状态', value: mapLabel('resume', onboarding.resumeStatus || onboarding.hasResume) },
-    { label: '求职时间线', value: mapLabel('timeline', onboarding.timeline) },
-    { label: '每周投入', value: mapLabel('weekly', onboarding.weeklyAvailability) },
-    { label: '优先帮助', value: mapLabel('priority', onboarding.priorityHelp) },
-    { label: '背景', value: [onboarding.education?.school, onboarding.education?.major].filter(Boolean).join(' · ') || '待补充' },
+    { label: '当前痛点', value: resolvePortraitField('pain', onboarding.painPoint, PORTRAIT_TAG_LABELS.pain) },
+    { label: '简历状态', value: resolvePortraitField('resume', onboarding.resumeStatus || onboarding.hasResume, PORTRAIT_TAG_LABELS.resume) },
+    { label: '求职时间线', value: resolvePortraitField('timeline', onboarding.timeline, PORTRAIT_TAG_LABELS.timeline) },
+    { label: '每周投入', value: resolvePortraitField('weekly', onboarding.weeklyAvailability, PORTRAIT_TAG_LABELS.weekly) },
+    { label: '优先帮助', value: resolvePortraitField('priority', onboarding.priorityHelp, PORTRAIT_TAG_LABELS.priority) },
+    { label: '背景', value: background },
   ];
 });
 

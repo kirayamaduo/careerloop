@@ -167,6 +167,7 @@ import { computed, onMounted, ref } from 'vue';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { useTheme } from '@/utils/theme';
 import { getProfileSnapshotApi, updateOnboardingApi } from '@/api/user';
+import { refreshProfileTagsApi } from '@/api/profileTags';
 import { ONBOARDING_SETUP_KEY, PENDING_ONBOARDING_KEY } from '@/utils/onboardingSync';
 import { isRealUser } from '@/utils/auth';
 import { readStoredOnboardingSetup, snapshotToOnboardingSetup, type StoredOnboardingSetup } from '@/utils/onboardingGate';
@@ -341,6 +342,11 @@ const persistSetup = async () => {
 
   if (isRealUser()) {
     await updateOnboardingApi(setup);
+    try {
+      await refreshProfileTagsApi();
+    } catch {
+      // Tag refresh is best-effort; onboarding snapshot is already persisted.
+    }
     uni.removeStorageSync(PENDING_KEY);
   }
 };

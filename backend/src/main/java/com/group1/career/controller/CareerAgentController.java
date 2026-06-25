@@ -15,6 +15,7 @@ import com.group1.career.service.AgentProfileService;
 import com.group1.career.service.AgentStateService;
 import com.group1.career.service.CareerAgentService;
 import com.group1.career.service.TaskDecomposer;
+import com.group1.career.service.UserProfileTagService;
 import com.group1.career.utils.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +40,7 @@ public class CareerAgentController {
     private final AgentEventService agentEventService;
     private final AgentStateService agentStateService;
     private final TaskDecomposer taskDecomposer;
+    private final UserProfileTagService tagService;
 
     @Operation(summary = "Get unified career profile (personalization level + completeness + readiness)")
     @GetMapping("/profile")
@@ -58,7 +60,9 @@ public class CareerAgentController {
     @PostMapping("/profile/inputs")
     public Result<AgentUserProfileDto> profileInputs(@RequestBody ProfileInputsRequest req) {
         Long userId = SecurityUtil.requireCurrentUserId();
-        return Result.success(agentProfileService.saveInputs(userId, req));
+        AgentUserProfileDto profile = agentProfileService.saveInputs(userId, req);
+        tagService.refreshFromSignals(userId);
+        return Result.success(profile);
     }
 
     @Operation(summary = "Get all agent data in one request (today + tasks + risk + plan + profile)")

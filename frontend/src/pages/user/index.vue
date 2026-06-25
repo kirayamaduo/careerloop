@@ -217,7 +217,7 @@ import { getUserInterviewsApi } from '@/api/interview';
 import { listMyResumesApi } from '@/api/resume';
 import { updateUserApi, getUserInfoApi, requestDeletionApi } from '@/api/user';
 import { uploadFileApi } from '@/api/file';
-import { getProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
+import { getProfileTagsApi, refreshProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
 import { isCloudKeyword } from '@/utils/profileTagFilters';
 import { useTheme, type ThemeKey } from '@/utils/theme';
 import { setLocale, currentLocale, type LangCode } from '@/locales/index';
@@ -380,6 +380,12 @@ const saveProfile = async () => {
       });
       // Update local storage with server response to stay in sync
       uni.setStorageSync('userInfo', { ...userInfo.value, ...updated });
+      try {
+        await refreshProfileTagsApi();
+        await loadProfileTags();
+      } catch {
+        // Best-effort sync for portrait word cloud.
+      }
     } catch { /* localStorage already updated, best-effort backend sync */ }
   }
 

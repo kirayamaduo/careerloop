@@ -7,6 +7,7 @@ import com.group1.career.service.AgentProfileService;
 import com.group1.career.model.entity.User;
 import com.group1.career.service.CareerPlanService;
 import com.group1.career.service.UserProfileSnapshotService;
+import com.group1.career.service.UserProfileTagService;
 import com.group1.career.service.UserService;
 import com.group1.career.utils.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,7 @@ public class UserController {
     private final UserProfileSnapshotService snapshotService;
     private final CareerPlanService careerPlanService;
     private final AgentProfileService agentProfileService;
+    private final UserProfileTagService tagService;
 
     @Operation(summary = "Get user profile (presigned avatar URL hydrated)")
     @GetMapping("/{id}")
@@ -58,6 +60,17 @@ public class UserController {
         User updated = userService.updateUser(
                 id, dto.getNickname(), dto.getAvatarUrl(),
                 dto.getSchool(), dto.getMajor(), dto.getGraduationYear());
+        if (dto.getSchool() != null || dto.getMajor() != null || dto.getGraduationYear() != null) {
+            snapshotService.mergeOnboarding(uid, UserProfileSnapshot.OnboardingBlock.builder()
+                    .education(UserProfileSnapshot.EducationBlock.builder()
+                            .school(blankToNull(dto.getSchool()))
+                            .major(blankToNull(dto.getMajor()))
+                            .graduationYear(dto.getGraduationYear() != null
+                                    ? String.valueOf(dto.getGraduationYear()) : null)
+                            .build())
+                    .build());
+            tagService.refreshFromSignals(uid);
+        }
         return Result.success(userService.hydrateUrl(updated));
     }
 
@@ -128,6 +141,7 @@ public class UserController {
                     parseYear(edu.getGraduationYear()));
         }
         agentProfileService.refresh(uid);
+        tagService.refreshFromSignals(uid);
         return Result.success(snapshotService.read(uid));
     }
 

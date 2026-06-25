@@ -180,7 +180,74 @@ public class UserProfileTagServiceImpl implements UserProfileTagService {
                         tagRepository.save(tag);
                     });
         }
+        syncManualTagsToOnboarding(userId, tags);
         return getSummary(userId);
+    }
+
+    /**
+     * Mirror user-edited tag labels back into snapshot.onboarding so the homepage
+     * "求职画像" card stays aligned with growth tree and word cloud.
+     */
+    private void syncManualTagsToOnboarding(Long userId, List<UserProfileTagDto> tags) {
+        if (tags == null || tags.isEmpty()) return;
+
+        UserProfileSnapshot.OnboardingBlock patch = UserProfileSnapshot.OnboardingBlock.builder().build();
+        UserProfileSnapshot.PreferencesBlock prefPatch = null;
+        boolean dirty = false;
+
+        for (UserProfileTagDto tag : tags) {
+            if (tag == null || !hasText(tag.getLabel())) continue;
+            String label = tag.getLabel().trim();
+            String category = tag.getCategory();
+
+            if (UserProfileTag.CATEGORY_GOAL.equals(category)) {
+                if (prefPatch == null) {
+                    prefPatch = UserProfileSnapshot.PreferencesBlock.builder().build();
+                }
+                if (!hasText(prefPatch.getTargetRole())) {
+                    prefPatch.setTargetRole(label);
+                }
+                continue;
+            }
+
+            String pain = reverseMapPainPoint(label);
+            if (pain != null) {
+                patch.setPainPoint(pain);
+                dirty = true;
+                continue;
+            }
+            String priority = reverseMapPriorityHelp(label);
+            if (priority != null) {
+                patch.setPriorityHelp(priority);
+                dirty = true;
+                continue;
+            }
+            String timeline = reverseMapTimeline(label);
+            if (timeline != null) {
+                patch.setTimeline(timeline);
+                dirty = true;
+                continue;
+            }
+            String weekly = reverseMapWeeklyAvailability(label);
+            if (weekly != null) {
+                patch.setWeeklyAvailability(weekly);
+                dirty = true;
+                continue;
+            }
+            String resumeStatus = reverseMapResumeStatus(label);
+            if (resumeStatus != null) {
+                patch.setResumeStatus(resumeStatus);
+                patch.setHasResume("ready".equals(resumeStatus) || "draft".equals(resumeStatus) ? resumeStatus : "no");
+                dirty = true;
+            }
+        }
+
+        if (dirty) {
+            snapshotService.mergeOnboarding(userId, patch);
+        }
+        if (prefPatch != null && hasText(prefPatch.getTargetRole())) {
+            snapshotService.mergePreferences(userId, prefPatch);
+        }
     }
 
     @Override
@@ -215,15 +282,36 @@ public class UserProfileTagServiceImpl implements UserProfileTagService {
         }
 
         if (snapshot.getOnboarding() != null) {
-            String identityLabel = mapOnboardingIdentity(snapshot.getOnboarding().getIdentityType());
+            UserProfileSnapshot.OnboardingBlock onboarding = snapshot.getOnboarding();
+            String identityLabel = mapOnboardingIdentity(onboarding.getIdentityType());
             if (hasText(identityLabel)) {
                 add(out, UserProfileTag.CATEGORY_BACKGROUND, identityLabel, 65, "onboarding identity");
             }
             String resumeLabel = mapResumeStateLabel(
-                    snapshot.getOnboarding().getResumeStatus(),
-                    snapshot.getOnboarding().getHasResume());
+                    onboarding.getResumeStatus(),
+                    onboarding.getHasResume());
             if (hasText(resumeLabel)) {
                 add(out, UserProfileTag.CATEGORY_BACKGROUND, resumeLabel, 50, "onboarding resume state");
+            }
+            String painLabel = mapPainPointLabel(onboarding.getPainPoint());
+            if (hasText(painLabel)) {
+                add(out, UserProfileTag.CATEGORY_GROWTH, painLabel, 62, "onboarding pain point");
+            }
+            String priorityLabel = mapPriorityHelpLabel(onboarding.getPriorityHelp());
+            if (hasText(priorityLabel)) {
+                add(out, UserProfileTag.CATEGORY_GROWTH, priorityLabel, 58, "onboarding priority help");
+            }
+            String timelineLabel = mapTimelineLabel(onboarding.getTimeline());
+            if (hasText(timelineLabel)) {
+                add(out, UserProfileTag.CATEGORY_GROWTH, timelineLabel, 56, "onboarding timeline");
+            }
+            String weeklyLabel = mapWeeklyLabel(onboarding.getWeeklyAvailability());
+            if (hasText(weeklyLabel)) {
+                add(out, UserProfileTag.CATEGORY_GROWTH, weeklyLabel, 54, "onboarding weekly availability");
+            }
+            if (onboarding.getEducation() != null) {
+                add(out, UserProfileTag.CATEGORY_BACKGROUND, onboarding.getEducation().getSchool(), 68, "onboarding school");
+                add(out, UserProfileTag.CATEGORY_BACKGROUND, onboarding.getEducation().getMajor(), 68, "onboarding major");
             }
         }
         if (snapshot.getAssessment() != null) {
@@ -359,6 +447,102 @@ public class UserProfileTagServiceImpl implements UserProfileTagService {
             case "none", "no" -> "暂无简历";
             case "unsure" -> "简历质量待确认";
             default -> isMeaningfulTagLabel(raw) ? raw.trim() : null;
+        };
+    }
+
+    private String mapPainPointLabel(String raw) {
+        if (!hasText(raw)) return null;
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "direction_unclear" -> "方向不清";
+            case "resume_weak" -> "简历薄弱";
+            case "project_lacking" -> "项目不足";
+            case "interview_anxiety" -> "面试没底";
+            case "no_plan" -> "缺少计划";
+            default -> isMeaningfulTagLabel(raw) ? raw.trim() : null;
+        };
+    }
+
+    private String mapPriorityHelpLabel(String raw) {
+        if (!hasText(raw)) return null;
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "resume" -> "优先改简历";
+            case "direction" -> "优先定方向";
+            case "interview" -> "优先练面试";
+            case "plan" -> "优先做计划";
+            default -> isMeaningfulTagLabel(raw) ? raw.trim() : null;
+        };
+    }
+
+    private String mapTimelineLabel(String raw) {
+        if (!hasText(raw)) return null;
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "now" -> "马上投递";
+            case "within_1_month" -> "1 个月内";
+            case "within_3_months" -> "3 个月内";
+            case "prepare_early" -> "提前准备";
+            default -> isMeaningfulTagLabel(raw) ? raw.trim() : null;
+        };
+    }
+
+    private String mapWeeklyLabel(String raw) {
+        if (!hasText(raw)) return null;
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "lt_5h" -> "< 5 小时";
+            case "5_10h" -> "5-10 小时";
+            case "10_20h" -> "10-20 小时";
+            case "gt_20h" -> "> 20 小时";
+            default -> isMeaningfulTagLabel(raw) ? raw.trim() : null;
+        };
+    }
+
+    private String reverseMapPainPoint(String label) {
+        return switch (label) {
+            case "方向不清" -> "direction_unclear";
+            case "简历薄弱" -> "resume_weak";
+            case "项目不足" -> "project_lacking";
+            case "面试没底" -> "interview_anxiety";
+            case "缺少计划" -> "no_plan";
+            default -> null;
+        };
+    }
+
+    private String reverseMapPriorityHelp(String label) {
+        return switch (label) {
+            case "优先改简历" -> "resume";
+            case "优先定方向" -> "direction";
+            case "优先练面试" -> "interview";
+            case "优先做计划" -> "plan";
+            default -> null;
+        };
+    }
+
+    private String reverseMapTimeline(String label) {
+        return switch (label) {
+            case "马上投递" -> "now";
+            case "1 个月内" -> "within_1_month";
+            case "3 个月内" -> "within_3_months";
+            case "提前准备" -> "prepare_early";
+            default -> null;
+        };
+    }
+
+    private String reverseMapWeeklyAvailability(String label) {
+        return switch (label) {
+            case "< 5 小时" -> "lt_5h";
+            case "5-10 小时" -> "5_10h";
+            case "10-20 小时" -> "10_20h";
+            case "> 20 小时" -> "gt_20h";
+            default -> null;
+        };
+    }
+
+    private String reverseMapResumeStatus(String label) {
+        return switch (label) {
+            case "已有可用简历" -> "ready";
+            case "简历草稿中" -> "draft";
+            case "暂无简历" -> "none";
+            case "简历质量待确认" -> "unsure";
+            default -> null;
         };
     }
 
