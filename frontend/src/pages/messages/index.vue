@@ -428,6 +428,15 @@ const handleSystemClick = async (item: SystemMessageView) => {
     uni.navigateTo({ url: '/pages/interview/history' });
   } else if (item.preview.includes('diagnosis')) {
     uni.navigateTo({ url: '/pages/resume-ai/index' });
+  } else {
+    // No deep link at all — show the full text so the tap is never a no-op
+    // (list rows ellipsize long previews).
+    uni.showModal({
+      title: item.name,
+      content: item.preview,
+      showCancel: false,
+      confirmText: '知道了',
+    });
   }
 };
 

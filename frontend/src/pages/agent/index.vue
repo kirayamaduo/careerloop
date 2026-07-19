@@ -89,7 +89,7 @@
           <text class="hub-empty-text">{{ t('agent.hub.tasksEmpty') }}</text>
         </view>
         <view v-for="task in secondaryTasks" :key="task.taskId" class="hub-task">
-          <view class="hub-task-header" @click="toggleTask(task.taskId)">
+          <view class="hub-task-header" @click="expandTask(task)" hover-class="press-fb" hover-stay-time="120">
             <view class="hub-task-meta">
               <view class="hub-task-badges">
                 <view v-if="task.difficulty" class="hub-badge" :class="'diff-' + task.difficulty.toLowerCase()">
@@ -521,10 +521,6 @@ const expandTask = async (task: AgentTask) => {
       subtaskLoading.delete(task.taskId);
     }
   }
-};
-
-const toggleTask = (taskId: number) => {
-  if (expandedTasks.has(taskId)) expandedTasks.delete(taskId);
 };
 
 const ensurePlan = async () => {
