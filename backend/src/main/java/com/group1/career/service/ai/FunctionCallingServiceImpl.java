@@ -44,6 +44,11 @@ public class FunctionCallingServiceImpl implements FunctionCallingService {
     /** Per-tool execution timeout in milliseconds. */
     private static final long TOOL_TIMEOUT_MS = 5_000;
 
+    private static final String AI_SERVICE_ERROR =
+            AiService.UNAVAILABLE_MESSAGE;
+    private static final String TOOL_UNAVAILABLE_RESULT =
+            "{\"ok\":false,\"error\":\"TOOL_UNAVAILABLE\"}";
+
     @Override
     public String chat(List<Map<String, String>> stringMessages, Long userId) {
         List<Map<String, Object>> messages = toObjectMessages(stringMessages);
@@ -59,13 +64,14 @@ public class FunctionCallingServiceImpl implements FunctionCallingService {
             try {
                 respJson = objectMapper.readTree(rawResponse);
             } catch (Exception e) {
-                log.error("[F13] Failed to parse model response: {}", rawResponse);
-                return lastAssistantText.isBlank() ? "AI service error" : lastAssistantText;
+                log.error("[F13] Model response parse failed: exception={}",
+                        e.getClass().getSimpleName());
+                return lastAssistantText.isBlank() ? AI_SERVICE_ERROR : lastAssistantText;
             }
 
             if (respJson.has("error")) {
-                log.error("[F13] Model returned error: {}", rawResponse);
-                return lastAssistantText.isBlank() ? "AI service error" : lastAssistantText;
+                log.error("[F13] Model returned an error envelope");
+                return lastAssistantText.isBlank() ? AI_SERVICE_ERROR : lastAssistantText;
             }
 
             JsonNode choices = respJson.path("choices");
@@ -139,7 +145,7 @@ public class FunctionCallingServiceImpl implements FunctionCallingService {
         Optional<AiTool> toolOpt = toolRegistry.find(toolName);
         if (toolOpt.isEmpty()) {
             log.warn("[F13] Unknown tool: {}", toolName);
-            return "Tool not found: " + toolName;
+            return TOOL_UNAVAILABLE_RESULT;
         }
         AiTool tool = toolOpt.get();
         try {
@@ -153,8 +159,9 @@ public class FunctionCallingServiceImpl implements FunctionCallingService {
             }
             return result != null ? result : "(empty result)";
         } catch (Exception e) {
-            log.error("[F13] Tool '{}' execution failed: {}", toolName, e.getMessage(), e);
-            return "Tool execution error: " + e.getMessage();
+            log.error("[F13] Tool '{}' execution failed: exception={}",
+                    toolName, e.getClass().getSimpleName());
+            return TOOL_UNAVAILABLE_RESULT;
         }
     }
 

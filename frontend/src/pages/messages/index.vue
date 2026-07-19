@@ -35,6 +35,17 @@
       </view>
     </view>
 
+    <!-- #ifdef MP-WEIXIN -->
+    <view class="wechat-reminder-card app-card-soft" @click="enableWechatReminders">
+      <view class="wechat-reminder-icon"><text class="ri-notification-badge-line"></text></view>
+      <view class="wechat-reminder-copy">
+        <text class="wechat-reminder-title">{{ t('messages.wechatReminderTitle') }}</text>
+        <text class="wechat-reminder-desc">{{ t('messages.wechatReminderDesc') }}</text>
+      </view>
+      <text class="wechat-reminder-action">{{ wechatReminderLoading ? t('messages.wechatReminderLoading') : t('messages.wechatReminderEnable') }}</text>
+    </view>
+    <!-- #endif -->
+
     <!-- Message list -->
     <scroll-view class="msg-list" scroll-y @scroll="onListScroll">
       <view class="list-wrap">
@@ -78,8 +89,20 @@
         </view>
       </view>
 
+      <view class="empty-state app-empty" v-if="systemLoading && systemMessages.length === 0">
+        <text class="empty-icon ri-loader-4-line state-spinning"></text>
+        <text class="empty-text">{{ t('messages.loading') }}</text>
+      </view>
+
+      <view class="empty-state app-empty" v-else-if="systemError">
+        <text class="empty-icon ri-wifi-off-line"></text>
+        <text class="empty-text">{{ t('messages.loadFailed') }}</text>
+        <text class="empty-sub">{{ systemError }}</text>
+        <view class="state-retry" @click="loadSystemNotifications"><text>{{ t('messages.retry') }}</text></view>
+      </view>
+
       <!-- Empty state -->
-      <view class="empty-state app-empty" v-if="!systemLoading && filteredMessages.length === 0">
+      <view class="empty-state app-empty" v-else-if="!systemLoading && filteredMessages.length === 0">
         <text class="empty-icon ri-notification-off-line"></text>
         <text class="empty-text">{{ t('messages.empty') }}</text>
         <text class="empty-sub">{{ t('messages.emptySub') }}</text>
@@ -105,11 +128,14 @@ import {
   type Notification,
 } from '@/api/notification';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
+import { requestConfiguredSubscribe } from '@/utils/wxSubscribe';
 
 const { t } = useI18n();
 const topSafeHeight = ref(88);
 const rightAvoidWidth = ref(20);
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
+const wechatReminderLoading = ref(false);
 
 const onListScroll = (event: any) => {
   // Logic for tracking scroll if needed
@@ -184,7 +210,44 @@ interface SystemMessageView {
 }
 const systemMessages = ref<SystemMessageView[]>([]);
 const systemLoading = ref(false);
+const systemError = ref('');
 const unreadCount = computed(() => systemMessages.value.filter((m) => m.unread).length);
+
+const ensurePageAuth = () => {
+  if (isRealUser()) return true;
+  systemMessages.value = [];
+  systemLoading.value = false;
+  systemError.value = '';
+  return requireAuth({
+    redirect: 'reLaunch',
+    cancelBehavior: 'back',
+    message: '登录后才能查看你的任务提醒、面试报告和学校跟进消息。',
+  });
+};
+
+const enableWechatReminders = async () => {
+  if (wechatReminderLoading.value || !ensurePageAuth()) return;
+  wechatReminderLoading.value = true;
+  try {
+    const result = await requestConfiguredSubscribe();
+    if (!result.configured) {
+      uni.showToast({ title: t('messages.wechatReminderUnavailable'), icon: 'none' });
+    } else if (!result.synced) {
+      uni.showToast({ title: t('messages.wechatReminderSyncFailed'), icon: 'none' });
+    } else if (result.accepted > 0) {
+      uni.showToast({
+        title: t('messages.wechatReminderEnabled', { n: result.accepted }),
+        icon: 'success',
+      });
+    } else {
+      uni.showToast({ title: t('messages.wechatReminderNotEnabled'), icon: 'none' });
+    }
+  } catch {
+    uni.showToast({ title: t('messages.wechatReminderFailed'), icon: 'none' });
+  } finally {
+    wechatReminderLoading.value = false;
+  }
+};
 
 // ─── 滑动删除状态 ────────────────────────────────────────────────────────────
 // 每条消息的当前水平偏移量（px），负值表示向左滑动
@@ -237,6 +300,7 @@ const closeSwipe = (id: number) => {
 };
 
 const deleteMessage = async (item: SystemMessageView) => {
+  if (!ensurePageAuth()) return;
   // 乐观 UI：先从列表移除，失败再恢复
   const backup = [...systemMessages.value];
   systemMessages.value = systemMessages.value.filter((m) => m.notificationId !== item.notificationId);
@@ -285,7 +349,9 @@ const formatRelativeTime = (ts?: string): string => {
 };
 
 const loadSystemNotifications = async () => {
+  if (!ensurePageAuth()) return;
   systemLoading.value = true;
+  systemError.value = '';
   try {
     const list: Notification[] = (await listNotificationsApi()) || [];
     systemMessages.value = list.map((n) => ({
@@ -298,25 +364,32 @@ const loadSystemNotifications = async () => {
       unread: !n.readFlag,
       link: n.link,
     }));
-  } catch {
-    systemMessages.value = [];
+  } catch (e: any) {
+    systemError.value = e?.message || t('messages.loadFailed');
   } finally {
     systemLoading.value = false;
   }
 };
 
 const markAllReadHandler = async () => {
-  // Optimistic UI: flip every row, then call the backend.
+  if (!ensurePageAuth()) return;
+  const previousUnread = new Set(
+    systemMessages.value.filter((message) => message.unread).map((message) => message.notificationId),
+  );
   systemMessages.value.forEach((m) => { m.unread = false; });
   try {
     await markAllReadApi();
     uni.showToast({ title: t('messages.allMarkedRead'), icon: 'success' });
   } catch (e: any) {
+    systemMessages.value.forEach((message) => {
+      message.unread = previousUnread.has(message.notificationId);
+    });
     uni.showToast({ title: e?.message || t('common.failed'), icon: 'none' });
   }
 };
 
 const handleSystemClick = async (item: SystemMessageView) => {
+  if (!ensurePageAuth()) return;
   // 如果卡片正处于滑开状态，先关闭，不执行跳转
   if (activeSwipeId.value === item.notificationId) {
     closeSwipe(item.notificationId);
@@ -338,7 +411,12 @@ const handleSystemClick = async (item: SystemMessageView) => {
         uni.navigateTo({ url: '/pages/interview/history' });
         return;
       }
-      uni.navigateTo({ url: item.link });
+      const base = item.link.split('?')[0];
+      if (['/pages/home/index', '/pages/assistant/index', '/pages/resume/index', '/pages/user/index'].includes(base)) {
+        uni.switchTab({ url: base });
+      } else {
+        uni.navigateTo({ url: item.link });
+      }
     } else {
       uni.showToast({ title: item.link, icon: 'none' });
     }
@@ -374,10 +452,27 @@ onShow(() => {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif);
   height: calc(100vh - var(--window-top, 0px) - var(--window-bottom, 0px));
   overflow: hidden;
 }
+
+.state-retry {
+  min-width: 120px;
+  min-height: 44px;
+  margin: 16px auto 0;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--vermilion, #c23b22);
+  border-radius: var(--btn-radius, 6px);
+  font-size: 14px;
+  font-weight: 600;
+}
+.state-spinning { animation: message-spin .8s linear infinite; }
+@keyframes message-spin { to { transform: rotate(360deg); } }
 
 .status-spacer {
   width: 100%;
@@ -435,6 +530,49 @@ onShow(() => {
 /* ---- Segment tabs ---- */
 .segment-wrap {
   padding: 0 20px 16px;
+}
+
+.wechat-reminder-card {
+  margin: 0 20px 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wechat-reminder-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color, #2563eb);
+  background: var(--primary-soft, #eff6ff);
+  font-size: 19px;
+}
+.wechat-reminder-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wechat-reminder-title {
+  color: var(--text-primary, #0f172a);
+  font-size: var(--font-body, 14px);
+  font-weight: 700;
+}
+.wechat-reminder-desc {
+  color: var(--text-tertiary, #8e8e93);
+  font-size: var(--font-caption, 12px);
+  line-height: 1.45;
+}
+.wechat-reminder-action {
+  flex-shrink: 0;
+  color: var(--primary-color, #2563eb);
+  font-size: var(--font-caption, 12px);
+  font-weight: 700;
 }
 
 .segment-bar {
@@ -803,4 +941,250 @@ onShow(() => {
 }
 
 /* #endif */
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.msg-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.page-header {
+  padding-bottom: 16px;
+}
+
+.page-title,
+.msg-name,
+.empty-text {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.page-title {
+  color: #2c2b29;
+  font-size: 27px;
+  line-height: 1.35;
+}
+
+.page-subtitle {
+  color: #8b8a86;
+  line-height: 1.65;
+}
+
+.clear-btn-icon,
+.topbar-action {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(63, 81, 181, 0.32);
+  border-radius: 6px;
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.clear-btn-icon:active {
+  background: #e3e4f2;
+}
+
+.segment-wrap {
+  padding-bottom: 14px;
+}
+
+.segment-bar {
+  padding: 0;
+  gap: 0;
+  border: none;
+  border-bottom: 1px solid #e0dfdb;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.seg-item {
+  height: 40px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.04em;
+}
+
+.seg-active {
+  border-bottom-color: #c23b22;
+  background: transparent;
+  color: #c23b22;
+  box-shadow: none;
+}
+
+.seg-badge {
+  min-width: 17px;
+  height: 17px;
+  border-radius: 3px;
+  background: #c23b22;
+}
+
+.list-wrap {
+  gap: 10px;
+}
+
+.swipe-row {
+  border-radius: 8px;
+}
+
+.msg-card {
+  min-height: 76px;
+  padding: 15px 16px;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.04);
+}
+
+.msg-card:not(.msg-unread) {
+  background: #fffdfa;
+}
+
+.msg-card:not(.msg-unread) .msg-name,
+.msg-card:not(.msg-unread) .msg-preview {
+  opacity: 0.78;
+}
+
+.msg-unread {
+  border-color: rgba(194, 59, 34, 0.38);
+  background: #fdf7f4;
+}
+
+.msg-unread::before {
+  width: 3px;
+  border-radius: 0;
+  background: #c23b22;
+}
+
+.msg-unread .msg-name {
+  color: #c23b22;
+}
+
+.avatar-wrap {
+  margin-right: 13px;
+}
+
+.app-icon-tile {
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+}
+
+.sys-0 {
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.sys-1 {
+  background: #eef1eb;
+  color: #7b8d6e;
+}
+
+.sys-2 {
+  background: #f6f1e7;
+  color: #b8975a;
+}
+
+.unread-dot {
+  border-radius: 2px;
+  border-color: #fffdfa;
+  background: #c23b22;
+}
+
+.msg-name {
+  color: #2c2b29;
+}
+
+.msg-time {
+  color: #8b8a86;
+  font-variant-numeric: tabular-nums;
+}
+
+.msg-preview {
+  color: #5a5956;
+  line-height: 1.65;
+}
+
+.swipe-delete-btn {
+  border-radius: 0 8px 8px 0;
+  background: #c23b22;
+}
+
+.status-tag {
+  border-radius: 4px;
+}
+
+.tag-progress {
+  border: 1px solid rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+}
+
+.tag-progress .tag-text {
+  color: #3f51b5;
+}
+
+.tag-sent {
+  border: 1px solid rgba(123, 141, 110, 0.36);
+  background: #eef1eb;
+}
+
+.tag-sent .tag-text {
+  color: #66775c;
+}
+
+.tag-pass {
+  border: 1px solid rgba(184, 151, 90, 0.36);
+  background: #f6f1e7;
+}
+
+.tag-pass .tag-text {
+  color: #9a783f;
+}
+
+.empty-text {
+  color: #2c2b29;
+}
+
+.empty-sub {
+  color: #8b8a86;
+}
+
+.msg-page.is-dark {
+  background: #24231f;
+}
+
+.msg-page.is-dark .segment-bar {
+  border-color: #46443e;
+  background: transparent;
+}
+
+.msg-page.is-dark .seg-active {
+  border-bottom-color: #dc6a52;
+  background: transparent;
+  color: #f08a73;
+}
+
+.msg-page.is-dark .msg-card {
+  border-color: #46443e;
+  background: #302f2a;
+}
+
+.msg-page.is-dark .msg-unread {
+  border-color: rgba(220, 106, 82, 0.48);
+  background: #392b27;
+}
+
+.msg-page.is-dark .msg-unread .msg-name {
+  color: #f08a73;
+}
+
+.msg-page.is-dark .clear-btn-icon,
+.msg-page.is-dark .topbar-action {
+  border-color: rgba(159, 168, 218, 0.38);
+  background: rgba(63, 81, 181, 0.18);
+  color: #b8c0ef;
+}
 </style>

@@ -70,21 +70,21 @@ export interface HomepageFeedResponse {
 }
 
 /**
- * Get homepage aggregated feed from backend. Pass userId so the daily-rotated
- * batch is stable per user (different users see slightly different videos
- * the same day, fresh content the next morning).
+ * Public preview uses a non-personalized feed. A signed-in account can opt
+ * into the personalized route, where the backend derives identity solely
+ * from the JWT instead of trusting a caller-supplied userId.
  */
-export const getHomeContentApi = (userId?: number) => {
+export const getHomeContentApi = (personalized = false) => {
   return request<HomepageFeedResponse>({
-    url: userId ? `/api/homepage/feed?userId=${userId}` : '/api/homepage/feed',
+    url: personalized ? '/api/homepage/feed/personalized' : '/api/homepage/feed',
     method: 'GET',
     silent: true,
   });
 };
 
-export const refreshHomeContentApi = (userId?: number) => {
+export const refreshHomeContentApi = () => {
   return request<string>({
-    url: userId ? `/api/homepage/refresh?userId=${userId}` : '/api/homepage/refresh',
+    url: '/api/homepage/refresh',
     method: 'POST',
     silent: true,
   });

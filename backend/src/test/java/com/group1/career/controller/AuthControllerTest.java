@@ -6,6 +6,7 @@ import com.group1.career.config.JwtConfig;
 import com.group1.career.exception.BizException;
 import com.group1.career.interceptor.AuthInterceptor;
 import com.group1.career.model.entity.User;
+import com.group1.career.service.AuthRateLimitService;
 import com.group1.career.service.EmailService;
 import com.group1.career.service.UserService;
 import com.group1.career.service.VerificationCodeService;
@@ -19,10 +20,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -56,10 +63,80 @@ public class AuthControllerTest {
     private VerificationCodeService verificationCodeService;
 
     @MockitoBean
+    private AuthRateLimitService authRateLimitService;
+
+    @MockitoBean
     private AuthInterceptor authInterceptor;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    // ===== Verification code delivery =====
+
+    @Test
+    @DisplayName("POST /auth/send-code — only accepts the two supported purposes")
+    void testSendCode_RejectsUnknownPurpose() throws Exception {
+        mockMvc.perform(post("/auth/send-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "alice@example.com",
+                                  "purpose": "UNBOUNDED_KEY"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.PARAM_ERROR.getCode()));
+    }
+
+    @Test
+    @DisplayName("POST /auth/send-code — SMTP failure releases the resend cooldown")
+    void testSendCode_DeliveryFailureInvalidatesGeneratedCode() throws Exception {
+        when(verificationCodeService.generateAndStore("alice@example.com", "REGISTER"))
+                .thenReturn("123456");
+        doThrow(new RuntimeException("SMTP unavailable"))
+                .when(emailService)
+                .sendVerificationCode("alice@example.com", "123456", "REGISTER");
+
+        mockMvc.perform(post("/auth/send-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "alice@example.com",
+                                  "purpose": "REGISTER"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(503))
+                .andExpect(jsonPath("$.message").value("验证码发送失败，请稍后重试"));
+
+        verify(verificationCodeService).invalidate("alice@example.com", "REGISTER");
+    }
+
+    @Test
+    @DisplayName("POST /auth/send-code — normalizes email before limiting, storage and delivery")
+    void testSendCode_NormalizesEmail() throws Exception {
+        when(verificationCodeService.generateAndStore("alice@example.com", "REGISTER"))
+                .thenReturn("123456");
+
+        mockMvc.perform(post("/auth/send-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "Alice@Example.COM",
+                                  "purpose": "REGISTER"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").value("验证码已发送"));
+
+        verify(authRateLimitService).check(
+                eq(AuthRateLimitService.Operation.SEND_CODE),
+                any(HttpServletRequest.class),
+                eq("alice@example.com"));
+        verify(emailService).sendVerificationCode(
+                "alice@example.com", "123456", "REGISTER");
+    }
 
     // ===== Register =====
 
@@ -175,5 +252,58 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /auth/login — a rate-limit rejection stops password verification")
+    void testLogin_RateLimitedBeforeUserService() throws Exception {
+        doThrow(new BizException(429, "请求过于频繁，请稍后重试"))
+                .when(authRateLimitService)
+                .check(eq(AuthRateLimitService.Operation.LOGIN),
+                        any(HttpServletRequest.class), eq("alice@example.com"));
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "identityType": "EMAIL_PASSWORD",
+                                  "identifier": "Alice@Example.COM",
+                                  "credential": "password123"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(429));
+
+        verify(userService, never()).login(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("POST /auth/logout — revokes the authenticated user's sessions")
+    void logoutRevokesServerSideSessions() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+        mockMvc.perform(post("/auth/logout").requestAttr("userId", 9L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(userService).revokeSessions(9L);
+    }
+
+    @Test
+    @DisplayName("POST /auth/change-password — changes credential for authenticated user")
+    void changePasswordUsesAuthenticatedIdentity() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+        mockMvc.perform(post("/auth/change-password")
+                        .requestAttr("userId", 9L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentPassword": "old-password",
+                                  "newPassword": "new-password"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(userService).changePassword(9L, "old-password", "new-password");
     }
 }

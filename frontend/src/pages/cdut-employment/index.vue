@@ -844,4 +844,281 @@ onPullDownRefresh(async () => {
 .is-dark .highlight-index,
 .is-dark .method-step { background: rgba(37, 99, 235, 0.2); }
 .is-dark .method-text { color: #94a3b8; }
+
+/* Competition visual system ------------------------------------------------ */
+.hero {
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #c23b22;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.hero-kicker {
+  color: #c23b22;
+  font-weight: 600;
+}
+
+.hero-title,
+.summary-title,
+.section-title,
+.chart-subtitle,
+.detail-title,
+.source-title,
+.note-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hero-sub,
+.summary-text,
+.coverage-note,
+.highlight-text,
+.detail-desc,
+.source-excerpt,
+.note-text,
+.method-text {
+  color: #5a5956;
+}
+
+.skel-card,
+.summary-card,
+.coverage-card,
+.visual-card,
+.highlight-item,
+.chart-card,
+.trend-card,
+.detail-entry,
+.source-card,
+.note,
+.method-card,
+.empty-state {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.skel-line {
+  background: #efeee9;
+  border-radius: 2px;
+}
+
+.summary-label {
+  color: #3f51b5;
+  background: transparent;
+  border: 1px solid rgba(63, 81, 181, 0.36);
+  border-radius: 3px;
+}
+
+.refresh-btn,
+.metric,
+.coverage-item,
+.visual-stat {
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.refresh-icon,
+.section-action,
+.visual-stat-value,
+.point-label,
+.source-link {
+  color: #3f51b5;
+}
+
+.metric-value,
+.visual-stat-value,
+.year-bar-count,
+.source-type-count,
+.trend-year {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.postgrad-text {
+  color: #6b8e5a;
+}
+
+.source-text {
+  color: #b8975a;
+}
+
+.coverage-item {
+  border-radius: 4px;
+}
+
+.coverage-verified_full .coverage-label {
+  color: #6b8e5a;
+}
+
+.coverage-partial .coverage-label {
+  color: #3f51b5;
+}
+
+.coverage-missing .coverage-label {
+  color: #c23b22;
+}
+
+.coverage-needs_manual_review .coverage-label {
+  color: #987632;
+}
+
+.source-year-chart {
+  background: #f5f5f0;
+  border: 1px solid #edece8;
+  border-radius: 4px;
+}
+
+.year-bar-fill {
+  background: #3f51b5;
+  border-radius: 3px 3px 0 0;
+  box-shadow: none;
+}
+
+.source-type-track,
+.trend-bar {
+  background: #efeee9;
+  border-radius: 2px;
+}
+
+.source-type-fill {
+  background: #b8975a;
+  border-radius: 2px;
+}
+
+.highlight-index {
+  color: #c23b22;
+  background: rgba(194, 59, 34, 0.07);
+  border: 1px solid rgba(194, 59, 34, 0.25);
+  border-radius: 3px;
+}
+
+.legend-employment,
+.point-employment,
+.trend-fill.employment {
+  background: #3f51b5;
+}
+
+.legend-postgrad,
+.point-postgrad,
+.trend-fill.postgrad {
+  background: #6b8e5a;
+}
+
+.line-employment {
+  --line-color: #3f51b5;
+}
+
+.line-postgrad {
+  --line-color: #6b8e5a;
+}
+
+.trend-fill {
+  border-radius: 2px;
+}
+
+.detail-icon,
+.method-step {
+  color: #3f51b5;
+  background: rgba(63, 81, 181, 0.08);
+  border-radius: 4px;
+}
+
+.source-tag {
+  color: #5a5956;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 3px;
+}
+
+.btn-retry {
+  color: #faf9f6;
+  background: #c23b22;
+  border-radius: 6px;
+}
+
+.is-dark .hero,
+.is-dark .summary-card,
+.is-dark .coverage-card,
+.is-dark .visual-card,
+.is-dark .highlight-item,
+.is-dark .chart-card,
+.is-dark .trend-card,
+.is-dark .detail-entry,
+.is-dark .source-card,
+.is-dark .note,
+.is-dark .method-card {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .hero-title,
+.is-dark .summary-title,
+.is-dark .section-title,
+.is-dark .chart-subtitle,
+.is-dark .detail-title,
+.is-dark .source-title,
+.is-dark .note-title {
+  color: #faf9f6;
+}
+
+.is-dark .refresh-btn,
+.is-dark .metric,
+.is-dark .coverage-item,
+.is-dark .visual-stat,
+.is-dark .source-tag {
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .source-year-chart {
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .hero-sub,
+.is-dark .summary-text,
+.is-dark .coverage-note,
+.is-dark .highlight-text,
+.is-dark .detail-desc,
+.is-dark .source-excerpt,
+.is-dark .note-text,
+.is-dark .method-text {
+  color: #c6c4be;
+}
+
+.is-dark .source-type-track,
+.is-dark .trend-bar,
+.is-dark .skel-line {
+  background: #45443f;
+}
+
+.summary-label,
+.section-action,
+.coverage-label,
+.point-label,
+.chart-subtitle,
+.legend-text,
+.trend-label,
+.trend-value,
+.source-tag,
+.source-link,
+.note-title,
+.method-step {
+  font-weight: 600;
+}
+
+.summary-title,
+.section-title,
+.detail-title,
+.source-title,
+.note-title {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+}
 </style>

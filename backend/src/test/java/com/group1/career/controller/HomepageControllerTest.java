@@ -24,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.web.servlet.MockMvc;
+import org.mockito.invocation.InvocationOnMock;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,8 +38,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -102,63 +106,10 @@ public class HomepageControllerTest {
         when(homeConsultationRepository.findAllByOrderByPublishedAtDescIdDesc(any(Pageable.class)))
                 .thenReturn(Collections.emptyList());
 
-        when(homeFieldTipsService.buildConsultationFeed(any(), anyLong(), anyInt(), any(), any()))
-                .thenAnswer(invocation -> {
-                    long seed = invocation.getArgument(1);
-                    int limit = invocation.getArgument(2);
-                    @SuppressWarnings("unchecked")
-                    List<HomeConsultation> cPool = invocation.getArgument(3);
-                    @SuppressWarnings("unchecked")
-                    List<HomeArticle> aPool = invocation.getArgument(4);
-                    List<HomeConsultationFeedDto> out = new ArrayList<>();
-                    if (cPool != null && !cPool.isEmpty()) {
-                        int offset = (int) Math.floorMod(seed, cPool.size());
-                        int cap = Math.min(limit, cPool.size());
-                        for (int i = 0; i < cap; i++) {
-                            HomeConsultation c = cPool.get((offset + i) % cPool.size());
-                            out.add(HomeConsultationFeedDto.builder()
-                                    .id(c.getId())
-                                    .title(c.getTitle())
-                                    .body(c.getBodyMd())
-                                    .author(c.getAuthor())
-                                    .sourceUrl(c.getSourceUrl())
-                                    .imageUrl(c.getImageUrl())
-                                    .build());
-                        }
-                    }
-                    if (out.size() < limit && aPool != null && !aPool.isEmpty()) {
-                        Set<String> used = new HashSet<>();
-                        for (HomeConsultationFeedDto c : out) {
-                            if (c.getSourceUrl() != null && !c.getSourceUrl().isBlank()) {
-                                used.add(c.getSourceUrl());
-                            }
-                        }
-                        int articleOffset = (int) Math.floorMod(seed / 7, aPool.size());
-                        for (int i = 0; i < aPool.size() && out.size() < limit; i++) {
-                            HomeArticle a = aPool.get((articleOffset + i) % aPool.size());
-                            if (a.getSourceUrl() != null && used.contains(a.getSourceUrl())) {
-                                continue;
-                            }
-                            out.add(HomeConsultationFeedDto.builder()
-                                    .id(a.getId() == null ? -(1000L + i) : -a.getId())
-                                    .title(a.getTitle() == null || a.getTitle().isBlank() ? "精选导读" : a.getTitle())
-                                    .body(a.getSummary() == null || a.getSummary().isBlank()
-                                            ? "点击阅读全文，把其中一点落实到今天。"
-                                            : a.getSummary())
-                                    .author("精选文章")
-                                    .sourceUrl(a.getSourceUrl())
-                                    .imageUrl(a.getImageUrl())
-                                    .build());
-                            if (a.getSourceUrl() != null && !a.getSourceUrl().isBlank()) {
-                                used.add(a.getSourceUrl());
-                            }
-                        }
-                    }
-                    if (out.size() > limit) {
-                        return new ArrayList<>(out.subList(0, limit));
-                    }
-                    return out;
-                });
+        when(homeFieldTipsService.buildPublicConsultationFeed(anyLong(), anyInt(), any(), any()))
+                .thenAnswer(invocation -> fallbackFeed(invocation, 0));
+        when(homeFieldTipsService.buildPersonalizedConsultationFeed(anyLong(), anyLong(), anyInt(), any(), any()))
+                .thenAnswer(invocation -> fallbackFeed(invocation, 1));
     }
 
     @Test
@@ -225,8 +176,8 @@ public class HomepageControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/homepage/feed - Works with userId query param")
-    public void testGetHomepageFeed_WithUserId() throws Exception {
+    @DisplayName("GET /api/homepage/feed - Ignores caller-supplied userId and remains public")
+    public void testGetHomepageFeed_IgnoresUserId() throws Exception {
         when(careerService.getAllPaths()).thenReturn(List.of(
                 CareerPath.builder().pathId(1).name("Java Backend Engineer").build()
         ));
@@ -235,6 +186,44 @@ public class HomepageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.careerCards.length()").value(1));
+
+        verify(homeFieldTipsService).buildPublicConsultationFeed(anyLong(), anyInt(), any(), any());
+        verify(homeFieldTipsService, never())
+                .buildPersonalizedConsultationFeed(anyLong(), anyLong(), anyInt(), any(), any());
+        verify(authInterceptor, never()).preHandle(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("GET /api/homepage/feed/personalized - Uses only authenticated user")
+    public void testGetPersonalizedHomepageFeed_UsesAuthenticatedUser() throws Exception {
+        when(careerService.getAllPaths()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/homepage/feed/personalized")
+                        .param("userId", "999")
+                        .requestAttr("userId", 42L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(homeFieldTipsService).buildPersonalizedConsultationFeed(
+                org.mockito.ArgumentMatchers.eq(42L),
+                anyLong(),
+                anyInt(),
+                any(),
+                any());
+        verify(homeFieldTipsService, never()).buildPublicConsultationFeed(anyLong(), anyInt(), any(), any());
+        verify(authInterceptor).preHandle(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("POST /api/homepage/refresh - Rate-limit identity comes from JWT")
+    public void testRefresh_UsesAuthenticatedUserForRateLimit() throws Exception {
+        mockMvc.perform(post("/api/homepage/refresh")
+                        .param("userId", "999")
+                        .requestAttr("userId", 42L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        verify(redisTemplate.opsForValue()).increment("home:refresh:u:42");
     }
 
     @Test
@@ -259,5 +248,62 @@ public class HomepageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.stats.totalCareerPaths").value(0))
                 .andExpect(jsonPath("$.data.careerCards.length()").value(0));
+    }
+
+    private List<HomeConsultationFeedDto> fallbackFeed(InvocationOnMock invocation, int seedIndex) {
+        long seed = invocation.getArgument(seedIndex);
+        int limit = invocation.getArgument(seedIndex + 1);
+        @SuppressWarnings("unchecked")
+        List<HomeConsultation> cPool = invocation.getArgument(seedIndex + 2);
+        @SuppressWarnings("unchecked")
+        List<HomeArticle> aPool = invocation.getArgument(seedIndex + 3);
+        List<HomeConsultationFeedDto> out = new ArrayList<>();
+        if (cPool != null && !cPool.isEmpty()) {
+            int offset = (int) Math.floorMod(seed, cPool.size());
+            int cap = Math.min(limit, cPool.size());
+            for (int i = 0; i < cap; i++) {
+                HomeConsultation c = cPool.get((offset + i) % cPool.size());
+                out.add(HomeConsultationFeedDto.builder()
+                        .id(c.getId())
+                        .title(c.getTitle())
+                        .body(c.getBodyMd())
+                        .author(c.getAuthor())
+                        .sourceUrl(c.getSourceUrl())
+                        .imageUrl(c.getImageUrl())
+                        .build());
+            }
+        }
+        if (out.size() < limit && aPool != null && !aPool.isEmpty()) {
+            Set<String> used = new HashSet<>();
+            for (HomeConsultationFeedDto c : out) {
+                if (c.getSourceUrl() != null && !c.getSourceUrl().isBlank()) {
+                    used.add(c.getSourceUrl());
+                }
+            }
+            int articleOffset = (int) Math.floorMod(seed / 7, aPool.size());
+            for (int i = 0; i < aPool.size() && out.size() < limit; i++) {
+                HomeArticle a = aPool.get((articleOffset + i) % aPool.size());
+                if (a.getSourceUrl() != null && used.contains(a.getSourceUrl())) {
+                    continue;
+                }
+                out.add(HomeConsultationFeedDto.builder()
+                        .id(a.getId() == null ? -(1000L + i) : -a.getId())
+                        .title(a.getTitle() == null || a.getTitle().isBlank() ? "精选导读" : a.getTitle())
+                        .body(a.getSummary() == null || a.getSummary().isBlank()
+                                ? "点击阅读全文，把其中一点落实到今天。"
+                                : a.getSummary())
+                        .author("精选文章")
+                        .sourceUrl(a.getSourceUrl())
+                        .imageUrl(a.getImageUrl())
+                        .build());
+                if (a.getSourceUrl() != null && !a.getSourceUrl().isBlank()) {
+                    used.add(a.getSourceUrl());
+                }
+            }
+        }
+        if (out.size() > limit) {
+            return new ArrayList<>(out.subList(0, limit));
+        }
+        return out;
     }
 }

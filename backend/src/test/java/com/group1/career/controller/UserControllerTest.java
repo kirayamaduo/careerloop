@@ -82,10 +82,50 @@ public class UserControllerTest {
         // without pulling in the OSS SDK.
         when(userService.hydrateUrl(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        mockMvc.perform(get("/users/{id}", userId))
+        mockMvc.perform(get("/users/{id}", userId).requestAttr("userId", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.userId").value(userId))
                 .andExpect(jsonPath("$.data.nickname").value("ExistingUser"));
+    }
+
+    @Test
+    @DisplayName("PUT /users/{id} - explicitly clears nullable graduation year")
+    public void testUpdateUser_ClearsGraduationYear() throws Exception {
+        Long userId = 7L;
+        User updated = new User();
+        updated.setUserId(userId);
+        updated.setNickname("Student");
+        updated.setGraduationYear(null);
+
+        when(userService.updateUser(
+                eq(userId), eq("Student"), eq(null), eq(""), eq(""),
+                eq(null), eq(true))).thenReturn(updated);
+        when(userService.hydrateUrl(updated)).thenReturn(updated);
+
+        mockMvc.perform(put("/users/{id}", userId)
+                        .requestAttr("userId", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "nickname": "Student",
+                                  "school": "",
+                                  "major": "",
+                                  "clearGraduationYear": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").value(userId))
+                .andExpect(jsonPath("$.data.graduationYear").doesNotExist());
+
+        verify(userService).updateUser(
+                userId, "Student", null, "", "", null, true);
+        verify(snapshotService).mergeOnboarding(eq(userId), argThat(block ->
+                block.getEducation() != null
+                        && "".equals(block.getEducation().getSchool())
+                        && "".equals(block.getEducation().getMajor())
+                        && "".equals(block.getEducation().getGraduationYear())
+                        && block.getEducation().getDegree() == null));
+        verify(userProfileTagService).refreshFromSignals(userId);
     }
 
     @Test
@@ -127,5 +167,35 @@ public class UserControllerTest {
                 "前端开发工程师".equals(block.getTargetRole())));
         verify(careerPlanService).regenerateWithRoleAsync(userId, "前端开发工程师");
         verify(agentProfileService).refresh(userId);
+    }
+
+    @Test
+    @DisplayName("PUT /users/me/profile-snapshot/onboarding - explicit blank education clears relational fields consistently")
+    public void testUpdateOnboarding_ClearsEducationFieldsConsistently() throws Exception {
+        Long userId = 7L;
+        when(snapshotService.read(userId)).thenReturn(UserProfileSnapshot.builder().build());
+
+        mockMvc.perform(put("/users/me/profile-snapshot/onboarding")
+                        .requestAttr("userId", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "education": {
+                                    "school": "  ",
+                                    "major": "",
+                                    "degree": "本科",
+                                    "graduationYear": " "
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        verify(snapshotService).mergeOnboarding(eq(userId), argThat(block ->
+                block.getEducation() != null
+                        && "".equals(block.getEducation().getSchool())
+                        && "".equals(block.getEducation().getMajor())
+                        && "本科".equals(block.getEducation().getDegree())
+                        && "".equals(block.getEducation().getGraduationYear())));
+        verify(userService).updateUser(userId, null, null, "", "", null, true);
     }
 }

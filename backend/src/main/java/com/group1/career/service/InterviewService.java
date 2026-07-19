@@ -38,6 +38,12 @@ public interface InterviewService {
     Interview endInterview(Long interviewId, Integer finalScore);
 
     /**
+     * Abandon an ongoing session without counting it as a completed interview,
+     * check-in, profile signal, or report-ready event.
+     */
+    Interview cancelInterview(Long interviewId);
+
+    /**
      * Get user's all interviews
      */
     List<Interview> getUserInterviews(Long userId);
@@ -55,6 +61,12 @@ public interface InterviewService {
     Interview assertOwnership(Long interviewId, Long userId);
 
     /**
+     * Acquire a database row lock for report generation and verify ownership.
+     * The caller must already run inside a transaction.
+     */
+    Interview lockForReport(Long interviewId, Long userId);
+
+    /**
      * Persist a serialized report JSON onto the interview row and update
      * its final_score in one transaction.
      */
@@ -65,4 +77,3 @@ public interface InterviewService {
      */
     void deleteInterview(Long userId, Long interviewId);
 }
-

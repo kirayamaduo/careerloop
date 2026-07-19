@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="app-soft-bg" :custom-class="['market-page', themeClass, fontClass].join(' ')">
     <SlNavBar :title="t('market.title')" show-back @back="goBack" :safe-top="topSafeHeight" />
 
     <view class="source-tabs">
@@ -131,6 +131,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { listMarketApi, likeQuestionApi, contributeQuestionApi, type MarketQuestion } from '@/api/market';
 import { useTheme } from '@/utils/theme';
+import { requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 import SlActionSheet from '@/style-library/components/SlActionSheet.vue';
@@ -156,6 +157,7 @@ const total = ref(0);
 const page = ref(0);
 const size = 20;
 const loading = ref(false);
+let latestLoadRequestId = 0;
 
 const contributePosition = ref('');
 const contributeDifficulty = ref('Normal');
@@ -209,6 +211,7 @@ const diffClass = (d: string) => {
 };
 
 const load = async () => {
+  const requestId = ++latestLoadRequestId;
   loading.value = true;
   try {
     const res = await listMarketApi({
@@ -218,14 +221,16 @@ const load = async () => {
       page: page.value,
       size,
     });
+    if (requestId !== latestLoadRequestId) return;
     items.value = res?.items || [];
     total.value = res?.total || 0;
   } catch (e: any) {
+    if (requestId !== latestLoadRequestId) return;
     items.value = [];
     total.value = 0;
     uni.showToast({ title: e?.message || t('market.loadFailed'), icon: 'none' });
   } finally {
-    loading.value = false;
+    if (requestId === latestLoadRequestId) loading.value = false;
   }
 };
 
@@ -247,6 +252,7 @@ const nextPage = async () => {
 };
 
 const like = async (q: MarketQuestion) => {
+  if (!requireAuth({ message: '登录后才能点赞题目，并保留你的互动记录。' })) return;
   // Optimistic update — the backend doesn't track per-user votes, but we
   // still keep a per-session set so the heart fills only once until reload.
   if (likedSet.value.has(q.id)) return;
@@ -262,6 +268,8 @@ const like = async (q: MarketQuestion) => {
 };
 
 const submitContribution = async () => {
+  if (contributing.value) return;
+  if (!requireAuth({ message: '登录后才能向题库投稿并查看审核结果。' })) return;
   const trimmed = contributeContent.value.trim();
   if (trimmed.length < 8) {
     uni.showToast({ title: t('market.addMoreWords'), icon: 'none' });
@@ -306,11 +314,6 @@ onShow(() => {
 </script>
 
 <style scoped>
-.sl-page :deep(.market-page) {
-  padding: 0 var(--page-gutter, 20px) 24px;
-  box-sizing: border-box;
-}
-
 .filters {
   border-radius: var(--radius-md, 16px); padding: 14px;
   display: flex; flex-direction: column; gap: 10px;
@@ -451,4 +454,172 @@ onShow(() => {
 .is-dark .like-count { color: #cbd5f5; }
 .is-dark .q-meta { color: var(--text-tertiary, #8e8e93); }
 .is-dark .btn-page { background: #0f172a; color: #cbd5f5; }
+
+/* Competition visual system ------------------------------------------------ */
+.filters,
+.contribute-card,
+.q-card,
+.empty-state {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.filter-input,
+.meta-input,
+.meta-picker,
+.contribute-input {
+  color: #2c2b29;
+  background: #faf9f6;
+  border: 1px solid #d8d7d2;
+  border-radius: 6px;
+}
+
+.diff-chip,
+.source-tab,
+.btn-page,
+.answer-btn,
+.like-btn {
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.diff-chip-on,
+.source-tab-on {
+  background: #3f51b5;
+  border-color: #3f51b5;
+}
+
+.diff-action {
+  background: #c23b22;
+  border-radius: 4px;
+}
+
+.contribute-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.contribute-sub,
+.q-meta,
+.page-meta,
+.loading-text,
+.empty-sub {
+  color: #5a5956;
+}
+
+.btn-primary {
+  color: #faf9f6;
+  background: #c23b22;
+  border-radius: 6px;
+}
+
+.spinner {
+  border-color: #e0dfdb;
+  border-top-color: #3f51b5;
+}
+
+.q-pos,
+.q-answer-label,
+.answer-btn-text {
+  color: #3f51b5;
+}
+
+.q-content {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 15px;
+}
+
+.q-diff,
+.badge {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.diff-easy,
+.badge-official {
+  color: #6b8e5a;
+  border: 1px solid rgba(107, 142, 90, 0.4);
+}
+
+.diff-normal {
+  color: #3f51b5;
+  border: 1px solid rgba(63, 81, 181, 0.36);
+}
+
+.diff-hard {
+  color: #c23b22;
+  border: 1px solid rgba(194, 59, 34, 0.36);
+}
+
+.badge-ai {
+  color: #987632;
+  border: 1px solid rgba(184, 151, 90, 0.42);
+}
+
+.like-btn {
+  color: #c23b22;
+  background: rgba(194, 59, 34, 0.05);
+  border-color: rgba(194, 59, 34, 0.22);
+}
+
+.like-icon {
+  color: #c23b22;
+}
+
+.q-answer {
+  background: #f5f5f0;
+  border-left: 2px solid #3f51b5;
+  border-radius: 2px;
+}
+
+.q-answer-text {
+  color: #5a5956;
+}
+
+.is-dark .filters,
+.is-dark .contribute-card,
+.is-dark .q-card,
+.is-dark .empty-state {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .filter-input,
+.is-dark .meta-input,
+.is-dark .meta-picker,
+.is-dark .contribute-input {
+  color: #faf9f6;
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .contribute-title,
+.is-dark .q-content {
+  color: #faf9f6;
+}
+
+.is-dark .contribute-sub,
+.is-dark .q-meta,
+.is-dark .page-meta,
+.is-dark .q-answer-text {
+  color: #c6c4be;
+}
+
+.is-dark .diff-chip:not(.diff-chip-on),
+.is-dark .source-tab:not(.source-tab-on),
+.is-dark .btn-page,
+.is-dark .answer-btn {
+  background: #34332f;
+  border-color: #494844;
+}
+
+.is-dark .q-answer {
+  background: #1c1b19;
+}
 </style>

@@ -7,6 +7,7 @@ import com.group1.career.service.FileService;
 import com.group1.career.service.ResumeKeywordService;
 import com.group1.career.service.ResumeService;
 import com.group1.career.utils.SecurityUtil;
+import com.group1.career.utils.UserObjectKeyPolicy;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -36,11 +37,14 @@ public class ResumeController {
         // Always trust the JWT-authenticated user, never the body's userId,
         // otherwise any client can attribute resumes to arbitrary users.
         Long uid = SecurityUtil.requireCurrentUserId();
+        String fileKey = request.getFileUrl() == null
+                ? null
+                : UserObjectKeyPolicy.requireOwnedKey(uid, "resumes", request.getFileUrl());
         Resume resume = resumeService.createResume(
                 uid,
                 request.getTitle(),
                 request.getTargetJob(),
-                request.getFileUrl(),
+                fileKey,
                 request.getParsedContent()
         );
         resumeKeywordService.triggerExtraction(uid, resume.getResumeId(), false);
@@ -87,7 +91,10 @@ public class ResumeController {
         Resume resume = resumeService.assertOwnership(resumeId, uid);
         if (request.getTitle() != null) resume.setTitle(request.getTitle());
         if (request.getTargetJob() != null) resume.setTargetJob(request.getTargetJob());
-        if (request.getFileUrl() != null) resume.setFileUrl(request.getFileUrl());
+        if (request.getFileUrl() != null) {
+            resume.setFileUrl(UserObjectKeyPolicy.requireOwnedKey(
+                    uid, "resumes", request.getFileUrl()));
+        }
         if (request.getParsedContent() != null) resume.setParsedContent(request.getParsedContent());
         return Result.success(resumeService.hydrateUrl(resumeService.updateResume(resume)));
     }

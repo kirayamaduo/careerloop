@@ -27,10 +27,10 @@ public interface VoiceService {
      * playable URL; we deliberately don't sign here so the same record can
      * be reused by report / replay views with their own TTL.
      */
-    TtsResult synthesize(String text);
+    TtsResult synthesize(Long userId, String text);
 
     /**
-     * @param objectKey    OSS object key of the uploaded mp3 (folder {@code tts/})
+     * @param objectKey    OSS object key of the uploaded mp3 (folder {@code tts/{userId}/})
      * @param durationMs   coarse duration estimate in milliseconds; UI should
      *                     prefer the {@code <audio>} loadedmetadata value once
      *                     it's available, this is just a fallback so the

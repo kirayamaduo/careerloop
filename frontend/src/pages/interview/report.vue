@@ -296,12 +296,6 @@ onShow(() => {
 </script>
 
 <style scoped>
-.sl-page :deep(.report-container) {
-  padding: 0 20px;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-  box-sizing: border-box;
-}
-
 .report-header { margin-bottom: 24px; padding: 0 20px; }
 .report-brand {
   display: block;
@@ -631,4 +625,204 @@ onShow(() => {
 .is-dark .advice-detail { color: #94a3b8; }
 
 .is-dark .bottom-bar { background: rgba(15, 23, 42, 0.88); border-color: #334155; }
+
+/* Competition visual system ------------------------------------------------ */
+.report-brand {
+  color: #c23b22;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.r-title,
+.section-title,
+.basis-title,
+.advice-title,
+.loading-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.r-sub {
+  color: #8b8a86;
+}
+
+.r-desc,
+.score-desc,
+.basis-text,
+.behavior-summary,
+.behavior-note,
+.advice-detail,
+.contribute-tip,
+.loading-sub,
+.err-detail {
+  color: #5a5956;
+}
+
+.score-card,
+.score-basis,
+.behavior-card,
+.dims-card,
+.advice-card,
+.contribute-card,
+.loading-state,
+.error-state {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.score-card {
+  border-top: 3px solid #c23b22;
+}
+
+.score-ring {
+  background: #ffffff;
+  background-image: none;
+  border: 4px solid #6b8e5a;
+}
+
+.ring-tone-warn {
+  border-color: #b8975a;
+}
+
+.ring-tone-bad {
+  border-color: #c23b22;
+}
+
+.score-num {
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.behavior-score,
+.dim-score {
+  color: #3f51b5;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.behavior-samples {
+  color: #3f51b5;
+  background: transparent;
+  border: 1px solid rgba(63, 81, 181, 0.32);
+  border-radius: 4px;
+}
+
+.behavior-track,
+.dim-bar-bg,
+.mini-bar-wrap {
+  background: #efeee9;
+  border-radius: 2px;
+}
+
+.behavior-fill,
+.bar-0 {
+  background: #3f51b5;
+}
+
+.bar-1 {
+  background: #6b8e5a;
+}
+
+.bar-2 {
+  background: #b8975a;
+}
+
+.bar-3 {
+  background: #c23b22;
+}
+
+.mini-bar,
+.dim-bar-fill {
+  border-radius: 2px 2px 0 0;
+}
+
+.advice-icon {
+  border-radius: 4px;
+}
+
+.advice-card.good .advice-icon {
+  background: #6b8e5a;
+}
+
+.advice-card.warn .advice-icon {
+  background: #b8975a;
+}
+
+.contribute-input {
+  color: #2c2b29;
+  background: #faf9f6;
+  border: 1px solid #d8d7d2;
+  border-radius: 6px;
+}
+
+.btn-secondary,
+.btn-primary,
+.btn-retry,
+.btn-back {
+  border-radius: 6px;
+}
+
+.btn-secondary {
+  color: #3f51b5;
+  background: #faf9f6;
+  border-color: #d8d7d2;
+}
+
+.btn-primary,
+.btn-retry,
+.btn-back {
+  color: #faf9f6;
+  background: #c23b22;
+}
+
+.bottom-bar {
+  background: #faf9f6;
+  border-top: 1px solid #e0dfdb;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.is-dark .r-title,
+.is-dark .section-title,
+.is-dark .basis-title,
+.is-dark .advice-title {
+  color: #faf9f6;
+}
+
+.is-dark .score-card,
+.is-dark .score-basis,
+.is-dark .behavior-card,
+.is-dark .dims-card,
+.is-dark .advice-card,
+.is-dark .contribute-card,
+.is-dark .loading-state,
+.is-dark .error-state {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .score-ring {
+  background: #242320;
+}
+
+.is-dark .contribute-input {
+  color: #faf9f6;
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .bottom-bar {
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .behavior-track,
+.is-dark .dim-bar-bg,
+.is-dark .mini-bar-wrap {
+  background: #45443f;
+}
 </style>

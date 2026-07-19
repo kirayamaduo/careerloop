@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,18 +47,30 @@ public class InterviewReportController {
 
     @Operation(summary = "Get (or generate) the AI evaluation report for an interview")
     @GetMapping("/{interviewId}")
+    @Transactional
     public Result<InterviewReportDto> generateReport(@PathVariable Long interviewId) {
         Long uid = SecurityUtil.requireCurrentUserId();
-        Interview interview = interviewService.assertOwnership(interviewId, uid);
+        // The row lock spans the cache check, AI call, body-frame consume and
+        // cache write. A concurrent request waits, then observes the report
+        // committed by the first request instead of paying for another AI call.
+        Interview interview = interviewService.lockForReport(interviewId, uid);
+
+        if (!"COMPLETED".equals(interview.getStatus())) {
+            throw new BizException("Interview must be completed before generating a report");
+        }
 
         // 1) Fast path: cached
         if (interview.getReportJson() != null && !interview.getReportJson().isBlank()) {
             try {
-                InterviewReportDto cached = objectMapper.readValue(interview.getReportJson(), InterviewReportDto.class);
-                if (cached.getMode() == null || cached.getMode().isBlank()) {
-                    cached.setMode(interview.getMode());
+                JsonNode cachedNode = objectMapper.readTree(interview.getReportJson());
+                InterviewReportDto cached = objectMapper.treeToValue(cachedNode, InterviewReportDto.class);
+                if (isCompleteCachedNode(cachedNode) && isCompleteReport(cached)) {
+                    if (cached.getMode() == null || cached.getMode().isBlank()) {
+                        cached.setMode(interview.getMode());
+                    }
+                    return Result.success(cached);
                 }
-                return Result.success(cached);
+                log.warn("Cached report for interview {} is incomplete; regenerating", interviewId);
             } catch (JsonProcessingException e) {
                 log.warn("Cached report JSON for interview {} is corrupt; regenerating", interviewId, e);
             }
@@ -155,17 +168,29 @@ public class InterviewReportController {
 
         try {
             JsonNode node = objectMapper.readTree(cleaned);
+            if (node == null || !node.isObject()) {
+                throw incompleteEvaluation();
+            }
+            JsonNode radarNode = node.get("radarChart");
+            if (radarNode == null || !radarNode.isObject()) {
+                throw incompleteEvaluation();
+            }
             RadarChartData radar = RadarChartData.builder()
-                    .expression(intField(node, "radarChart", "expression", 70))
-                    .logic(intField(node, "radarChart", "logic", 70))
-                    .technical(intField(node, "radarChart", "technical", 70))
-                    .pressureResistance(intField(node, "radarChart", "pressureResistance", 70))
-                    .communication(intField(node, "radarChart", "communication", 70))
+                    .expression(requiredScore(radarNode, "expression"))
+                    .logic(requiredScore(radarNode, "logic"))
+                    .technical(requiredScore(radarNode, "technical"))
+                    .pressureResistance(requiredScore(radarNode, "pressureResistance"))
+                    .communication(requiredScore(radarNode, "communication"))
                     .build();
 
-            int overall = node.path("overallScore").asInt(
-                    (radar.getExpression() + radar.getLogic() + radar.getTechnical()
-                            + radar.getPressureResistance() + radar.getCommunication()) / 5);
+            int overall = requiredScore(node, "overallScore");
+            List<AdviceItem> strengths = requiredAdvice(node, "strengths");
+            List<AdviceItem> improvements = requiredAdvice(node, "improvements");
+            JsonNode summaryNode = node.get("summary");
+            if (summaryNode == null || !summaryNode.isTextual()
+                    || summaryNode.asText().trim().isEmpty()) {
+                throw incompleteEvaluation();
+            }
 
             return InterviewReportDto.builder()
                     .interviewId(interviewId)
@@ -173,37 +198,123 @@ public class InterviewReportController {
                     .difficulty(interview.getDifficulty())
                     .mode(interview.getMode())
                     .durationSeconds(interview.getDurationSeconds())
-                    .overallScore(Math.max(0, Math.min(100, overall)))
+                    .overallScore(overall)
                     .totalQuestions(userTurns)
                     .radarChart(radar)
-                    .strengths(toAdvice(node.path("strengths")))
-                    .improvements(toAdvice(node.path("improvements")))
-                    .textSummary(node.path("summary").asText(""))
+                    .strengths(strengths)
+                    .improvements(improvements)
+                    .textSummary(summaryNode.asText().trim())
                     .build();
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Failed to parse AI report JSON for interview {}: {}", interviewId, raw, e);
+            log.error("Failed to parse AI report JSON for interview {}", interviewId, e);
             throw new BizException("AI returned an unparseable evaluation. Please retry.");
         }
     }
 
-    private int intField(JsonNode root, String parent, String key, int fallback) {
-        JsonNode p = root.path(parent);
-        if (p.isMissingNode()) return fallback;
-        int v = p.path(key).asInt(fallback);
-        return Math.max(0, Math.min(100, v));
+    private int requiredScore(JsonNode parent, String key) {
+        JsonNode value = parent.get(key);
+        if (value == null || !value.isIntegralNumber() || !value.canConvertToInt()) {
+            throw incompleteEvaluation();
+        }
+        int score = value.intValue();
+        if (score < 0 || score > 100) {
+            throw incompleteEvaluation();
+        }
+        return score;
     }
 
-    private List<AdviceItem> toAdvice(JsonNode arr) {
+    private List<AdviceItem> requiredAdvice(JsonNode root, String key) {
+        JsonNode arr = root.get(key);
+        if (arr == null || !arr.isArray()) {
+            throw incompleteEvaluation();
+        }
         List<AdviceItem> out = new ArrayList<>();
-        if (arr == null || !arr.isArray()) return out;
         for (JsonNode it : arr) {
-            String title = it.path("title").asText("");
-            String detail = it.path("detail").asText("");
-            if (!title.isBlank() || !detail.isBlank()) {
-                out.add(new AdviceItem(title, detail));
+            if (it == null || !it.isObject()) {
+                throw incompleteEvaluation();
             }
+            JsonNode titleNode = it.get("title");
+            JsonNode detailNode = it.get("detail");
+            if (titleNode == null || !titleNode.isTextual()
+                    || detailNode == null || !detailNode.isTextual()
+                    || titleNode.asText().trim().isEmpty()
+                    || detailNode.asText().trim().isEmpty()) {
+                throw incompleteEvaluation();
+            }
+            out.add(new AdviceItem(titleNode.asText().trim(), detailNode.asText().trim()));
         }
         return out;
+    }
+
+    private BizException incompleteEvaluation() {
+        return new BizException("AI evaluation was incomplete. Please retry.");
+    }
+
+    private boolean isCompleteReport(InterviewReportDto report) {
+        if (report == null || report.getRadarChart() == null
+                || report.getStrengths() == null
+                || report.getImprovements() == null
+                || report.getTextSummary() == null || report.getTextSummary().isBlank()) {
+            return false;
+        }
+        RadarChartData radar = report.getRadarChart();
+        return validScore(report.getOverallScore())
+                && validScore(radar.getExpression())
+                && validScore(radar.getLogic())
+                && validScore(radar.getTechnical())
+                && validScore(radar.getPressureResistance())
+                && validScore(radar.getCommunication())
+                && report.getStrengths().stream().allMatch(this::isCompleteAdvice)
+                && report.getImprovements().stream().allMatch(this::isCompleteAdvice);
+    }
+
+    private boolean isCompleteCachedNode(JsonNode root) {
+        if (root == null || !root.isObject()
+                || !isScoreNode(root.get("overallScore"))
+                || !isAdviceArray(root.get("strengths"))
+                || !isAdviceArray(root.get("improvements"))) {
+            return false;
+        }
+        JsonNode summary = root.get("textSummary");
+        JsonNode radar = root.get("radarChart");
+        return summary != null && summary.isTextual() && !summary.asText().isBlank()
+                && radar != null && radar.isObject()
+                && isScoreNode(radar.get("expression"))
+                && isScoreNode(radar.get("logic"))
+                && isScoreNode(radar.get("technical"))
+                && isScoreNode(radar.get("pressureResistance"))
+                && isScoreNode(radar.get("communication"));
+    }
+
+    private boolean isAdviceArray(JsonNode value) {
+        if (value == null || !value.isArray()) return false;
+        for (JsonNode item : value) {
+            if (item == null || !item.isObject()) return false;
+            JsonNode title = item.get("title");
+            JsonNode detail = item.get("detail");
+            if (title == null || !title.isTextual() || title.asText().isBlank()
+                    || detail == null || !detail.isTextual() || detail.asText().isBlank()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isScoreNode(JsonNode value) {
+        return value != null && value.isIntegralNumber() && value.canConvertToInt()
+                && validScore(value.intValue());
+    }
+
+    private boolean isCompleteAdvice(AdviceItem item) {
+        return item != null
+                && item.getTitle() != null && !item.getTitle().isBlank()
+                && item.getDetail() != null && !item.getDetail().isBlank();
+    }
+
+    private boolean validScore(int score) {
+        return score >= 0 && score <= 100;
     }
 
     private BodyLanguageAnalysis toBodyLanguageAnalysis(BodyLanguageService.Aggregate body) {

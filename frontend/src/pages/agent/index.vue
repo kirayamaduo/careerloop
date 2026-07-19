@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="hub-page app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="hub-page app-soft-bg" :custom-class="['hub-page', themeClass, fontClass].join(' ')">
     <SlNavBar
       :title="t('agent.hub.title')"
       show-back
@@ -312,6 +312,7 @@ import {
 } from '@/api/agent';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import { normalizeProductCopy, normalizeRoleLabel } from '@/utils/displayText';
 import { selectPrimaryTask, taskOutcome, taskTarget } from '@/utils/taskDisplay';
 
@@ -330,6 +331,16 @@ const weeklyReview = ref<AgentEvent | null>(null);
 const openTasks = ref<AgentTask[]>([]);
 const recentEvents = ref<AgentEvent[]>([]);
 const loadError = ref('');
+
+const ensurePageAuth = () => {
+  if (isRealUser()) return true;
+  loadError.value = '';
+  return requireAuth({
+    redirect: 'reLaunch',
+    cancelBehavior: 'back',
+    message: '登录后才能生成并保存你的个性化求职任务与成长计划。',
+  });
+};
 
 const expandedTasks = reactive(new Set<number>());
 const subtaskMap = reactive(new Map<number, AgentTask[]>());
@@ -442,6 +453,7 @@ const formatEventTime = (raw?: string) => {
 };
 
 const loadAll = async () => {
+  if (!ensurePageAuth()) return;
   loadError.value = '';
   const [profile, today, risk, plan, state, review, tasks, events] = await Promise.allSettled([
     getAgentProfileApi(),
@@ -468,6 +480,7 @@ const loadAll = async () => {
 };
 
 const completeTask = async (taskId: number) => {
+  if (!ensurePageAuth()) return;
   try {
     await completeAgentTaskApi(taskId);
     openTasks.value = openTasks.value.filter(t => t.taskId !== taskId);
@@ -481,6 +494,7 @@ const completeTask = async (taskId: number) => {
 };
 
 const dismissTask = async (taskId: number) => {
+  if (!ensurePageAuth()) return;
   try {
     await dismissAgentTaskApi(taskId);
     openTasks.value = openTasks.value.filter(t => t.taskId !== taskId);
@@ -490,6 +504,7 @@ const dismissTask = async (taskId: number) => {
 };
 
 const expandTask = async (task: AgentTask) => {
+  if (!ensurePageAuth()) return;
   if (expandedTasks.has(task.taskId)) {
     expandedTasks.delete(task.taskId);
     return;
@@ -513,6 +528,7 @@ const toggleTask = (taskId: number) => {
 };
 
 const ensurePlan = async () => {
+  if (!ensurePageAuth()) return;
   try {
     agentPlan.value = await ensureCareerAgentPlanApi();
     uni.showToast({ title: t('agent.hub.planUpdated'), icon: 'success' });
@@ -807,6 +823,311 @@ onMounted(() => {
 .hub-event-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2rpx; }
 .hub-event-label { font-size: 12.5px; color: var(--text-secondary, #64748b); font-weight: 600; }
 .hub-event-time { font-size: 11px; color: var(--text-tertiary, #8e8e93); }
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.hub-page,
+.hub-scroll {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.hub-refresh {
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.hub-refresh-icon {
+  color: #3f51b5;
+}
+
+.hub-brand-kicker {
+  margin: 8rpx 28rpx 14rpx;
+  color: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.hub-section {
+  margin: 16rpx 28rpx 24rpx;
+  padding: 26rpx;
+  border: 1rpx solid #e0dfdb;
+  border-radius: 16rpx;
+  background: #fffdfa;
+  box-shadow: 0 12rpx 32rpx rgba(44, 43, 41, 0.05);
+}
+
+.hub-section-head {
+  padding-bottom: 14rpx;
+  border-bottom: 1rpx solid #edece8;
+}
+
+.hub-section-title,
+.hub-headline,
+.hub-task-title,
+.hub-risk-primary,
+.hub-plan-role,
+.hub-stat-val {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hub-section-title {
+  color: #2c2b29;
+  font-size: 14px;
+}
+
+.hub-headline {
+  color: #2c2b29;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.hub-focus,
+.hub-reason-text,
+.hub-task-desc,
+.hub-risk-summary,
+.hub-plan-milestone,
+.hub-focus-item,
+.hub-review-highlight,
+.hub-event-label,
+.hub-pct-label,
+.hub-risk-row-title,
+.hub-subtask-title {
+  color: #5a5956;
+  line-height: 1.65;
+}
+
+.hub-task-count,
+.hub-review-date,
+.hub-progress-text,
+.hub-stat-label,
+.hub-event-time,
+.hub-empty-text {
+  color: #8b8a86;
+}
+
+.hub-stage-pill,
+.hub-action,
+.hub-task-btn,
+.hub-expand-btn,
+.hub-primary-done,
+.hub-missing-chip,
+.hub-badge,
+.hub-plan-health {
+  border-radius: 6rpx;
+}
+
+.hub-stage-pill {
+  border: 1rpx solid rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+}
+
+.hub-stage-text {
+  color: #3f51b5;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+}
+
+.hub-reason-box {
+  border-color: #e0dfdb;
+  border-radius: 10rpx;
+  background: #f5f5f0;
+}
+
+.hub-outcome-box {
+  border-left: 4rpx solid #b8975a;
+  border-color: rgba(184, 151, 90, 0.32);
+  border-left-color: #b8975a;
+  background: #f6f1e7;
+}
+
+.hub-reason-label {
+  color: #9a783f;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.05em;
+}
+
+.hub-primary-cta,
+.hub-plan-btn {
+  border-radius: 10rpx;
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.hub-primary-cta {
+  height: 78rpx;
+}
+
+.hub-primary-cta-text,
+.hub-primary-cta-arrow,
+.hub-plan-btn-text {
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.hub-primary-done {
+  height: 78rpx;
+  border: 1rpx solid #3f51b5;
+  background: #faf9f6;
+}
+
+.hub-primary-done-text {
+  color: #3f51b5;
+}
+
+.hub-progress-bar,
+.hub-pct-bar {
+  background: #efeee9;
+}
+
+.hub-progress-fill {
+  background: #c23b22;
+}
+
+.pct-low { background: #8b8a86; }
+.pct-medium { background: #b8975a; }
+.pct-high { background: #7b8d6e; }
+
+.hub-action,
+.hub-task-btn,
+.hub-expand-btn {
+  border: 1rpx solid #d8d6cf;
+  background: #faf9f6;
+}
+
+.hub-action-primary,
+.hub-task-done {
+  border-color: #c23b22;
+  background: #f8ece8;
+}
+
+.hub-action-primary .hub-action-text,
+.hub-task-done .hub-task-btn-text {
+  color: #c23b22;
+}
+
+.hub-task,
+.hub-subtask,
+.hub-event-row {
+  border-color: #edece8;
+}
+
+.hub-task-title,
+.hub-risk-primary,
+.hub-plan-role,
+.hub-stat-val {
+  color: #2c2b29;
+}
+
+.hub-badge {
+  border: 1rpx solid transparent;
+}
+
+.diff-easy,
+.risk-low,
+.chip-low {
+  border-color: rgba(123, 141, 110, 0.38);
+  background: #eef1eb;
+}
+
+.diff-easy .hub-badge-text,
+.risk-low .hub-risk-pill-text,
+.chip-low .hub-missing-chip-text {
+  color: #66775c;
+}
+
+.diff-medium,
+.risk-medium,
+.chip-medium {
+  border-color: rgba(184, 151, 90, 0.38);
+  background: #f6f1e7;
+}
+
+.diff-medium .hub-badge-text,
+.risk-medium .hub-risk-pill-text,
+.chip-medium .hub-missing-chip-text {
+  color: #9a783f;
+}
+
+.diff-hard,
+.risk-high,
+.chip-high {
+  border-color: rgba(194, 59, 34, 0.34);
+  background: #f8ece8;
+}
+
+.diff-hard .hub-badge-text,
+.risk-high .hub-risk-pill-text,
+.chip-high .hub-missing-chip-text {
+  color: #c23b22;
+}
+
+.hub-badge-time {
+  border-color: rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+}
+
+.hub-badge-time .hub-badge-text {
+  color: #3f51b5;
+}
+
+.hub-subtasks {
+  border-left-color: #b8975a;
+}
+
+.hub-subtask-done-btn {
+  border: 1rpx solid rgba(123, 141, 110, 0.4);
+  border-radius: 6rpx;
+  background: #eef1eb;
+}
+
+.hub-subtask-done-text,
+.health-on_track,
+.trend-decreasing {
+  color: #6b8e5a;
+}
+
+.health-needs_refresh,
+.dot-medium {
+  color: #c4984a;
+}
+
+.health-missing,
+.trend-rising {
+  color: #c23b22;
+}
+
+.dot-high { background: #c23b22; }
+.dot-medium { background: #c4984a; }
+.dot-low { background: #6b8e5a; }
+
+.hub-review-stats,
+.hub-state-stats {
+  gap: 12rpx;
+}
+
+.hub-stat {
+  padding: 12rpx 8rpx;
+  border: 1rpx solid #edece8;
+  border-radius: 8rpx;
+  background: #faf9f6;
+}
+
+.hub-event-icon-wrap {
+  border: 1rpx solid #e0dfdb;
+  border-radius: 6rpx;
+}
+
+.ev-green { background: #eef1eb; color: #6b8e5a; }
+.ev-gray { background: #efeee9; color: #5a5956; }
+.ev-orange { background: #f6f1e7; color: #b8975a; }
+.ev-blue { background: #eef2f5; color: #5a7b9a; }
+.ev-purple { background: #efeff7; color: #3f51b5; }
 
 /* Dark mode: this hub has many custom local surfaces, so keep the
    contrast rules page-scoped instead of relying only on generic cards. */
@@ -1147,6 +1468,164 @@ onMounted(() => {
   margin-top: 0;
   color: #cbd5e1 !important;
   text-align: right;
+}
+
+.hub-page.is-dark .hub-reason-box {
+  border-color: #494844;
+  background: #33332f;
+}
+
+.hub-page.is-dark .hub-outcome-box {
+  border-color: rgba(223, 197, 143, 0.42);
+  border-left-color: #b8975a;
+  background: rgba(184, 151, 90, 0.16);
+}
+
+.hub-page.is-dark .hub-reason-label {
+  color: #dfc58f;
+}
+
+.hub-page.is-dark .hub-reason-text {
+  color: #c4c2bc;
+}
+
+/* Keep dark mode inside the same four-colour editorial system. */
+.hub-page.is-dark,
+.hub-page.is-dark .hub-scroll,
+.hub-page.is-dark .hub-bottom-spacer {
+  background: #1c1b19;
+}
+
+.hub-page.is-dark .hub-section {
+  border-color: #494844;
+  background: #242320;
+}
+
+.hub-page.is-dark .hub-refresh {
+  border-color: rgba(170, 179, 234, 0.46);
+  background: rgba(63, 81, 181, 0.24);
+}
+
+.hub-page.is-dark .hub-refresh-icon,
+.hub-page.is-dark .hub-stage-text {
+  color: #aab3ea;
+}
+
+.hub-page.is-dark .hub-pct-bar,
+.hub-page.is-dark .hub-progress-bar {
+  border-color: #575650;
+  background: #45443f;
+}
+
+.hub-page.is-dark .hub-pct-fill,
+.hub-page.is-dark .hub-progress-fill {
+  box-shadow: none;
+}
+
+.hub-page.is-dark .hub-progress-fill {
+  background: #c23b22;
+}
+
+.hub-page.is-dark .pct-low {
+  background: #8b8a86;
+}
+
+.hub-page.is-dark .pct-medium {
+  background: #b8975a;
+}
+
+.hub-page.is-dark .pct-high {
+  background: #7b8d6e;
+}
+
+.hub-page.is-dark .hub-stage-pill,
+.hub-page.is-dark .hub-plan-health {
+  border-color: rgba(170, 179, 234, 0.46) !important;
+  background: rgba(63, 81, 181, 0.24) !important;
+}
+
+.hub-page.is-dark .chip-high,
+.hub-page.is-dark .risk-high,
+.hub-page.is-dark .diff-hard {
+  border-color: rgba(226, 123, 102, 0.52) !important;
+  background: rgba(194, 59, 34, 0.22) !important;
+}
+
+.hub-page.is-dark .chip-high .hub-missing-chip-text,
+.hub-page.is-dark .risk-high .hub-risk-pill-text,
+.hub-page.is-dark .diff-hard .hub-badge-text {
+  color: #e27b66 !important;
+}
+
+.hub-page.is-dark .chip-medium,
+.hub-page.is-dark .risk-medium,
+.hub-page.is-dark .diff-medium {
+  border-color: rgba(223, 197, 143, 0.5) !important;
+  background: rgba(184, 151, 90, 0.22) !important;
+}
+
+.hub-page.is-dark .chip-medium .hub-missing-chip-text,
+.hub-page.is-dark .risk-medium .hub-risk-pill-text,
+.hub-page.is-dark .diff-medium .hub-badge-text {
+  color: #dfc58f !important;
+}
+
+.hub-page.is-dark .chip-low,
+.hub-page.is-dark .risk-low,
+.hub-page.is-dark .diff-easy {
+  border-color: rgba(184, 198, 175, 0.5) !important;
+  background: rgba(123, 141, 110, 0.22) !important;
+}
+
+.hub-page.is-dark .chip-low .hub-missing-chip-text,
+.hub-page.is-dark .risk-low .hub-risk-pill-text,
+.hub-page.is-dark .diff-easy .hub-badge-text,
+.hub-page.is-dark .hub-subtask-done-text {
+  color: #b8c6af !important;
+}
+
+.hub-page.is-dark .hub-badge-time {
+  border-color: rgba(170, 179, 234, 0.46) !important;
+  background: rgba(63, 81, 181, 0.24) !important;
+}
+
+.hub-page.is-dark .hub-badge-time .hub-badge-text {
+  color: #aab3ea !important;
+}
+
+.hub-page.is-dark .hub-subtask-done-btn {
+  border-color: rgba(184, 198, 175, 0.46);
+  background: rgba(123, 141, 110, 0.22);
+}
+
+.hub-page.is-dark .ev-green {
+  border-color: rgba(184, 198, 175, 0.46);
+  background: rgba(123, 141, 110, 0.22);
+  color: #b8c6af;
+}
+
+.hub-page.is-dark .ev-gray {
+  border-color: #575650;
+  background: #33332f;
+  color: #c4c2bc;
+}
+
+.hub-page.is-dark .ev-orange {
+  border-color: rgba(223, 197, 143, 0.48);
+  background: rgba(184, 151, 90, 0.22);
+  color: #dfc58f;
+}
+
+.hub-page.is-dark .ev-blue {
+  border-color: rgba(170, 179, 234, 0.48);
+  background: rgba(63, 81, 181, 0.24);
+  color: #aab3ea;
+}
+
+.hub-page.is-dark .ev-purple {
+  border-color: rgba(226, 123, 102, 0.48);
+  background: rgba(194, 59, 34, 0.22);
+  color: #e27b66;
 }
 
 </style>

@@ -167,17 +167,20 @@ import { computed, onMounted, ref } from 'vue';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { useTheme } from '@/utils/theme';
 import { getProfileSnapshotApi, updateOnboardingApi } from '@/api/user';
-import { refreshProfileTagsApi } from '@/api/profileTags';
-import { ONBOARDING_SETUP_KEY, PENDING_ONBOARDING_KEY } from '@/utils/onboardingSync';
+import { PENDING_ONBOARDING_KEY } from '@/utils/onboardingSync';
 import { isRealUser } from '@/utils/auth';
-import { readStoredOnboardingSetup, snapshotToOnboardingSetup, type StoredOnboardingSetup } from '@/utils/onboardingGate';
+import {
+  markOnboardingSeen,
+  readStoredOnboardingSetup,
+  snapshotToOnboardingSetup,
+  type StoredOnboardingSetup,
+} from '@/utils/onboardingGate';
+import { consumeConsentReturnUrl } from '@/utils/consent';
 
 type Stage = 'student' | 'new_graduate' | 'internship_seeker' | 'career_switcher' | 'experienced';
 type ResumeState = 'ready' | 'draft' | 'none' | 'unsure';
 
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
-const ONBOARDING_KEY = 'onboarding_v1_seen';
-const SETUP_KEY = ONBOARDING_SETUP_KEY;
 const PENDING_KEY = PENDING_ONBOARDING_KEY;
 
 const steps = [0, 1, 2, 3, 4];
@@ -258,6 +261,10 @@ const primaryText = computed(() => current.value < steps.length - 1 ? '下一步
 onMounted(async () => {
   refreshTheme();
   topSafeHeight.value = getMpSafeAreaMetrics().contentTop;
+  if (!isRealUser()) {
+    uni.switchTab({ url: '/pages/home/index' });
+    return;
+  }
   await prefillSetup();
 });
 
@@ -336,19 +343,11 @@ const persistSetup = async () => {
     onboardingCompletedAt: new Date().toISOString(),
   };
 
-  uni.setStorageSync(SETUP_KEY, setup);
+  markOnboardingSeen(setup);
   uni.setStorageSync(PENDING_KEY, setup);
-  uni.setStorageSync(ONBOARDING_KEY, '1');
 
-  if (isRealUser()) {
-    await updateOnboardingApi(setup);
-    try {
-      await refreshProfileTagsApi();
-    } catch {
-      // Tag refresh is best-effort; onboarding snapshot is already persisted.
-    }
-    uni.removeStorageSync(PENDING_KEY);
-  }
+  await updateOnboardingApi(setup);
+  uni.removeStorageSync(PENDING_KEY);
 };
 
 const finish = async () => {
@@ -366,7 +365,15 @@ const finish = async () => {
   } finally {
     saving.value = false;
   }
-  setTimeout(() => uni.switchTab({ url: '/pages/home/index' }), 450);
+  if (!isRealUser()) return;
+  setTimeout(() => {
+    const returnUrl = consumeConsentReturnUrl();
+    if (returnUrl) {
+      uni.reLaunch({ url: returnUrl });
+      return;
+    }
+    uni.switchTab({ url: '/pages/home/index' });
+  }, 450);
 };
 
 const handlePrimary = () => {
@@ -380,17 +387,25 @@ const handlePrimary = () => {
 
 <style scoped>
 .onboarding-page {
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: border-box;
+  background: var(--paper, #faf9f6);
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", sans-serif);
 }
 
 .top-safe-spacer { width: 100%; flex-shrink: 0; }
 
 .page-shell {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: var(--content-max-width, 640px);
   margin: 0 auto;
@@ -402,39 +417,44 @@ const handlePrimary = () => {
 .hero-kicker {
   display: block;
   font-size: 11px;
-  font-weight: 900;
-  color: var(--primary-color, #2563eb);
+  font-weight: 600;
+  color: var(--vermilion, #c23b22);
   margin-bottom: 8px;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.12em;
 }
 .hero-title {
   display: block;
   font-size: 28px;
-  line-height: 1.16;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 .hero-desc {
   display: block;
   margin-top: 9px;
   font-size: 13px;
-  line-height: 1.55;
-  color: var(--text-secondary, #64748b);
+  line-height: 1.75;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .progress-row { display: flex; gap: 7px; margin-bottom: 14px; }
 .progress-dot {
   flex: 1;
   height: 4px;
-  border-radius: 999px;
-  background: #dbe4f0;
+  border-radius: 2px;
+  background: var(--border-light, #ecebe7);
 }
-.progress-dot.active,
-.progress-dot.done { background: var(--primary-color, #2563eb); }
+.progress-dot.done { background: var(--sage, #7b8d6e); }
+.progress-dot.active { background: var(--vermilion, #c23b22); }
 
 .slides {
+  flex: 1;
   width: 100%;
-  height: 60vh;
-  min-height: 460px;
+  height: auto;
+  min-height: 0;
 }
 .slide,
 .slide-scroll,
@@ -445,24 +465,28 @@ const handlePrimary = () => {
 .mini-section-title {
   display: block;
   font-size: 12px;
-  font-weight: 900;
-  color: var(--primary-color, #2563eb);
+  font-weight: 600;
+  color: var(--vermilion, #c23b22);
   margin-bottom: 8px;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.06em;
 }
-.mini-section-title { margin-top: 20px; color: var(--text-secondary, #64748b); }
+.mini-section-title { margin-top: 20px; color: var(--ink-secondary, #5a5956); }
 .step-title {
   display: block;
   font-size: 22px;
-  line-height: 1.25;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 .step-desc {
   display: block;
   margin-top: 8px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 
 .option-grid,
@@ -478,9 +502,10 @@ const handlePrimary = () => {
 .resume-card,
 .priority-card,
 .field {
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 16px;
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 6px);
   box-sizing: border-box;
+  background: var(--card-bg, #fffefa);
 }
 .choice-card,
 .resume-card {
@@ -493,27 +518,27 @@ const handlePrimary = () => {
 .resume-card.selected,
 .priority-card.selected,
 .pill.selected {
-  border-color: var(--primary-color, #2563eb);
-  background: rgba(37, 99, 235, 0.08);
+  border-color: var(--vermilion, #c23b22);
+  background: var(--vermilion-soft, #f8ebe7);
 }
 .choice-icon,
 .resume-icon,
 .priority-icon {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: var(--radius-sm, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 22px;
 }
-.resume-icon { color: #2457d6; background: #dbeafe; }
-.tone-blue { background: #dbeafe; color: #1d4ed8; }
-.tone-green { background: #dcfce7; color: #15803d; }
-.tone-amber { background: #fef3c7; color: #b45309; }
-.tone-purple { background: #ede9fe; color: #6d28d9; }
-.tone-slate { background: #e2e8f0; color: #334155; }
+.resume-icon { color: var(--vermilion, #c23b22); background: var(--vermilion-soft, #f8ebe7); }
+.tone-blue { background: var(--indigo-soft, #eceefa); color: var(--indigo, #3f51b5); }
+.tone-green { background: var(--sage-soft, #edf1ea); color: var(--sage, #7b8d6e); }
+.tone-amber { background: var(--gold-soft, #f5efe4); color: var(--heritage-gold, #b8975a); }
+.tone-purple { background: var(--vermilion-soft, #f8ebe7); color: var(--vermilion, #c23b22); }
+.tone-slate { background: var(--paper-deep, #efeee9); color: var(--ink-secondary, #5a5956); }
 
 .choice-copy,
 .resume-copy {
@@ -528,15 +553,17 @@ const handlePrimary = () => {
 .priority-title {
   font-size: 15px;
   line-height: 1.3;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.04em;
 }
 .choice-desc,
 .resume-desc,
 .priority-desc {
   font-size: 12px;
   line-height: 1.45;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 
 .target-input-wrap {
@@ -544,21 +571,21 @@ const handlePrimary = () => {
   align-items: center;
   gap: 10px;
   margin-top: 18px;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 16px;
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-sm, 4px);
   padding: 0 14px;
   height: 54px;
   box-sizing: border-box;
 }
-.target-icon { font-size: 22px; color: var(--primary-color, #2563eb); }
+.target-icon { font-size: 22px; color: var(--vermilion, #c23b22); }
 .target-input,
 .field-input {
   flex: 1;
   height: 52px;
   font-size: 15px;
-  color: var(--text-primary, #0f172a);
+  color: var(--ink, #2c2b29);
 }
-.ph { color: var(--text-tertiary, #8e8e93); }
+.ph { color: var(--ink-placeholder, #aaa9a5); }
 
 .chips,
 .pill-grid {
@@ -569,31 +596,33 @@ const handlePrimary = () => {
 }
 .role-chip,
 .pill {
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 999px;
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-sm, 4px);
   padding: 9px 12px;
-  background: var(--surface-1, #ffffff);
+  background: var(--card-bg, #fffefa);
 }
 .role-chip text,
 .pill text {
   font-size: 13px;
-  font-weight: 800;
-  color: var(--text-secondary, #64748b);
+  font-weight: 600;
+  color: var(--ink-secondary, #5a5956);
 }
 .role-chip.selected,
-.pill.selected { border-color: var(--primary-color, #2563eb); }
+.pill.selected { border-color: var(--vermilion, #c23b22); background: var(--vermilion-soft, #f8ebe7); }
 .role-chip.selected text,
-.pill.selected text { color: var(--primary-color, #2563eb); }
+.pill.selected text { color: var(--vermilion, #c23b22); }
 
 .field {
   padding: 10px 14px 0;
-  background: var(--surface-1, #ffffff);
+  background: var(--card-bg, #fffefa);
 }
 .field-label {
   display: block;
   font-size: 12px;
-  font-weight: 900;
-  color: var(--text-secondary, #64748b);
+  font-weight: 600;
+  color: var(--ink-secondary, #5a5956);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.04em;
 }
 .field-input { width: 100%; }
 
@@ -609,32 +638,34 @@ const handlePrimary = () => {
   gap: 6px;
 }
 .priority-icon {
-  color: #2457d6;
-  background: #dbeafe;
+  color: var(--indigo, #3f51b5);
+  background: var(--indigo-soft, #eceefa);
 }
 .priority-title,
 .priority-desc { display: block; }
 
 .route-preview {
   margin-top: 18px;
-  border-left: 3px solid var(--primary-color, #2563eb);
+  border-left: 3px solid var(--heritage-gold, #b8975a);
   padding-left: 12px;
 }
 .route-label {
   display: block;
   font-size: 12px;
-  color: var(--text-tertiary, #8e8e93);
+  color: var(--ink-tertiary, #8b8a86);
   margin-bottom: 4px;
 }
 .route-value {
   display: block;
   font-size: 14px;
   line-height: 1.45;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
 }
 
 .bottom-bar {
+  flex-shrink: 0;
   width: 100%;
   max-width: var(--content-max-width, 640px);
   margin: 0 auto;
@@ -647,25 +678,28 @@ const handlePrimary = () => {
 .btn-secondary,
 .btn-primary {
   height: 50px;
-  border-radius: 16px;
+  border-radius: var(--btn-radius, 6px);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 600;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 .btn-secondary {
   width: 112px;
-  color: var(--text-secondary, #64748b);
-  background: var(--surface-3, #f1f5f9);
+  color: var(--ink-secondary, #5a5956);
+  background: var(--paper-soft, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
 }
 .btn-secondary.invisible { display: none; }
 .btn-primary {
   flex: 1;
   color: #ffffff;
-  background: var(--primary-color, #2563eb);
-  box-shadow: var(--shadow-sm);
+  background: var(--vermilion, #c23b22);
+  box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12);
 }
 .btn-primary.disabled { opacity: 0.55; }
 
@@ -685,8 +719,13 @@ const handlePrimary = () => {
 .is-dark .field { background: #1e293b; }
 
 @media (max-height: 720px) {
+  .page-shell { padding-top: 8px; }
+  .hero { padding-bottom: 10px; }
+  .hero-kicker { margin-bottom: 5px; }
   .hero-title { font-size: 24px; }
-  .slides { min-height: 410px; }
+  .hero-desc { margin-top: 5px; line-height: 1.5; }
+  .progress-row { margin-bottom: 9px; }
+  .bottom-bar { padding-top: 8px; padding-bottom: 16px; }
   .choice-card,
   .resume-card { padding: 11px; }
 }

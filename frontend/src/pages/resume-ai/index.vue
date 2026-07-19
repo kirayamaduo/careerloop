@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="resume-ai-page app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="resume-ai-page app-soft-bg" :custom-class="['resume-ai-page', themeClass, fontClass].join(' ')">
     <SlNavBar :title="t('resumeAi.title')" show-back @back="goBack" :safe-top="topSafeHeight" />
 
     <view class="resume-ai-content">
@@ -161,6 +161,7 @@ import { getProfileSnapshotApi } from '@/api/user';
 import { getAgentProfileApi } from '@/api/agent';
 import { normalizeRoleLabel } from '@/utils/displayText';
 import { useTheme } from '@/utils/theme';
+import { requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 import SlActionSheet from '@/style-library/components/SlActionSheet.vue';
@@ -340,6 +341,7 @@ const runTailorProgress = () => {
 };
 
 const startAnalysis = async () => {
+  if (!requireAuth({ message: '登录后才能使用 AI 简历诊断并保存分析结果。' })) return;
   if (!selectedResumeId.value) {
     uni.showToast({ title: t('resumeAi.selectResumeFirst'), icon: 'none' });
     return;
@@ -373,6 +375,7 @@ const startAnalysis = async () => {
 };
 
 const generateTailored = async () => {
+  if (!requireAuth({ message: '登录后才能生成并保存岗位定制简历。' })) return;
   if (!selectedResumeId.value) {
     uni.showToast({ title: t('resumeAi.selectResumeFirst'), icon: 'none' });
     return;
@@ -451,6 +454,10 @@ const gotoResumes = () => uni.switchTab({ url: '/pages/resume/index' });
 onMounted(async () => {
   refreshTheme();
   topSafeHeight.value = getMpSafeAreaMetrics().topSafeHeight;
+  if (!requireAuth({
+    redirect: 'reLaunch',
+    message: '登录后才能使用 AI 简历诊断和岗位定制。',
+  })) return;
   await loadResumes();
   await applyPrefill();
 });
@@ -890,4 +897,549 @@ onShow(() => {
 .is-dark .select-box.has-value .s-text { color: #f8fafc; }
 .is-dark .jd-input { color: #f8fafc; }
 .is-dark .progress-bar-container { background-color: var(--text-secondary, #64748b); }
+
+/* ================================================================
+ * CareerLoop editorial skin — warm paper + vermilion primary action.
+ * ================================================================ */
+.resume-ai-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.resume-ai-content {
+  background: #faf9f6;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.subtitle {
+  color: #5a5956;
+  line-height: 1.75;
+}
+
+.analysis-card,
+.result-card {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #faf9f6;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.05);
+}
+
+.analysis-card {
+  padding: 18px;
+}
+
+.section {
+  margin-bottom: 18px;
+}
+
+.section-title,
+.r-title,
+.score-basis-title,
+.point-title,
+.ts-title,
+.change-title,
+.loading-text {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.select-box {
+  min-height: 60px;
+  padding: 12px 13px;
+  border: 1px solid #d4d2cc;
+  border-radius: 6px;
+  background: #faf9f6;
+  box-sizing: border-box;
+}
+
+.select-box:active {
+  background: #f5f5f0;
+}
+
+.s-icon-wrap {
+  border: 1px solid #d4d2cc;
+  border-radius: 5px;
+  background: #f5f5f0;
+}
+
+.s-icon-text {
+  color: #3f51b5;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.s-text {
+  color: #8b8a86;
+}
+
+.select-box.has-value .s-text {
+  color: #2c2b29;
+}
+
+.s-chevron {
+  color: #8b8a86;
+}
+
+.jd-counter {
+  color: #8b8a86;
+  font-weight: 500;
+}
+
+.jd-counter-warn {
+  color: #b8975a;
+}
+
+.jd-input {
+  border: 1px solid #d4d2cc;
+  border-radius: 6px;
+  background: #faf9f6;
+  color: #2c2b29;
+  line-height: 1.7;
+}
+
+.ph {
+  color: #b0afab;
+}
+
+.btn-primary {
+  height: 50px;
+  line-height: 50px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: #c23b22 !important;
+  background-color: #c23b22 !important;
+  color: #faf9f6 !important;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.btn-primary:active {
+  background: #a9321d !important;
+  background-color: #a9321d !important;
+  opacity: 1;
+}
+
+.btn-primary[disabled] {
+  border-color: #d4d2cc;
+  background: #efeee9 !important;
+  background-color: #efeee9 !important;
+  color: #9f9d97 !important;
+}
+
+.assessment-banner {
+  padding: 13px 14px;
+  border: 1px solid rgba(63, 81, 181, 0.3);
+  border-left: 2px solid #3f51b5;
+  border-radius: 0 6px 6px 0;
+  background: #f5f5f0;
+}
+
+.ab-title {
+  color: #3f51b5;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.ab-body {
+  color: #5a5956;
+  line-height: 1.6;
+}
+
+.ab-chip {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid #d4d2cc;
+  border-radius: 4px;
+  background: #faf9f6;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.ab-chip-text {
+  color: #3f51b5;
+  font-weight: 500;
+}
+
+.result-card {
+  padding: 20px 17px;
+}
+
+.r-header {
+  padding-bottom: 16px;
+  border-bottom-color: #e0dfdb;
+}
+
+.r-title {
+  font-size: 18px;
+}
+
+.r-sub {
+  color: #8b8a86;
+}
+
+.score-ring {
+  width: 72px;
+  height: 64px;
+  border-width: 1px;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.score-ring.ring-good {
+  border-color: #7b8d6e;
+  background: rgba(123, 141, 110, 0.08);
+}
+
+.score-ring.ring-good .score-val {
+  color: #637457;
+}
+
+.score-ring.ring-warn {
+  border-color: #b8975a;
+  background: rgba(184, 151, 90, 0.08);
+}
+
+.score-ring.ring-warn .score-val {
+  color: #8f713d;
+}
+
+.score-ring.ring-bad {
+  border-color: #c23b22;
+  background: rgba(194, 59, 34, 0.06);
+}
+
+.score-ring.ring-bad .score-val {
+  color: #c23b22;
+}
+
+.score-val {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.score-basis {
+  padding: 11px 12px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.score-basis-title {
+  color: #3f51b5;
+}
+
+.score-basis-text,
+.point-text {
+  color: #5a5956;
+  line-height: 1.7;
+}
+
+.point-block {
+  padding-left: 12px;
+  border-left-width: 2px;
+}
+
+.point-block.strengths {
+  border-left-color: #7b8d6e;
+}
+
+.point-block.weaknesses {
+  border-left-color: #c23b22;
+}
+
+.point-block.suggestions {
+  border-left-color: #3f51b5;
+}
+
+.point-block.strengths .point-title {
+  color: #637457;
+}
+
+.point-block.weaknesses .point-title {
+  color: #c23b22;
+}
+
+.point-block.suggestions .point-title {
+  color: #3f51b5;
+}
+
+.btn-secondary {
+  height: 48px;
+  line-height: 48px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #c23b22 !important;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.btn-secondary:active {
+  background: rgba(194, 59, 34, 0.08) !important;
+  background-color: rgba(194, 59, 34, 0.08) !important;
+}
+
+.tailor-success-card {
+  padding: 20px 18px;
+  border: 1px solid #9ba990;
+  border-radius: 8px;
+  background: rgba(123, 141, 110, 0.07);
+}
+
+.ts-icon,
+.ts-title,
+.ts-hint {
+  color: #637457;
+}
+
+.ts-title {
+  font-weight: 600;
+}
+
+.ts-hint {
+  font-weight: 500;
+}
+
+.ts-sub {
+  color: #5a5956;
+}
+
+.change-list {
+  padding: 12px;
+  border: 1px solid #d9d8d3;
+  border-radius: 6px;
+  background: rgba(250, 249, 246, 0.7);
+}
+
+.change-title,
+.change-text {
+  color: #5a5956;
+}
+
+.change-index {
+  border-radius: 4px;
+  background: #7b8d6e;
+  font-weight: 600;
+}
+
+.ts-btn-primary,
+.ts-btn-secondary {
+  border-radius: 6px;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: none;
+}
+
+.ts-btn-primary {
+  border: 1px solid #c23b22;
+  background: #c23b22 !important;
+  background-color: #c23b22 !important;
+  color: #faf9f6 !important;
+}
+
+.ts-btn-primary:active {
+  background: #a9321d !important;
+  background-color: #a9321d !important;
+}
+
+.ts-btn-secondary {
+  border: 1px solid #3f51b5;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #3f51b5 !important;
+}
+
+.ts-btn-secondary:active {
+  background: rgba(63, 81, 181, 0.07) !important;
+  background-color: rgba(63, 81, 181, 0.07) !important;
+}
+
+.loading-overlay {
+  background: rgba(250, 249, 246, 0.94);
+  backdrop-filter: none;
+}
+
+.spinner {
+  border-color: #e0dfdb;
+  border-top-color: #c23b22;
+}
+
+.loading-text {
+  color: #2c2b29;
+}
+
+.progress-bar-container {
+  height: 4px;
+  border-radius: 1px;
+  background: #e0dfdb;
+}
+
+.progress-bar-fill {
+  border-radius: 1px;
+  background: #c23b22;
+}
+
+.is-dark.resume-ai-page,
+.is-dark .resume-ai-content {
+  background: #1f1f1d;
+}
+
+.is-dark .analysis-card,
+.is-dark .result-card,
+.is-dark .select-box,
+.is-dark .jd-input {
+  border-color: #45443f;
+  background: #292926;
+  box-shadow: none;
+}
+
+.is-dark .section-title,
+.is-dark .r-title,
+.is-dark .loading-text {
+  color: #f5f5f0;
+}
+
+.is-dark .subtitle,
+.is-dark .point-text,
+.is-dark .score-basis-text,
+.is-dark .s-text {
+  color: #c4c2bc;
+}
+
+.is-dark .assessment-banner,
+.is-dark .score-basis,
+.is-dark .change-list {
+  border-color: #575650;
+  background: #33332f;
+}
+
+.is-dark .assessment-banner {
+  border-left-color: #8794d9;
+}
+
+.is-dark .ab-title,
+.is-dark .ab-chip-text {
+  color: #aab3ea;
+}
+
+.is-dark .ab-body {
+  color: #c4c2bc;
+}
+
+.is-dark .ab-chip {
+  border-color: #575650;
+  background: #292926;
+}
+
+.is-dark .tailor-success-card {
+  border-color: #66735e;
+  background: rgba(123, 141, 110, 0.09);
+}
+
+.is-dark .score-ring.ring-good {
+  border-color: #7b8d6e;
+  background: rgba(123, 141, 110, 0.1);
+}
+
+.is-dark .score-ring.ring-good .score-val {
+  color: #a8b69f;
+}
+
+.is-dark .score-ring.ring-warn {
+  border-color: #b8975a;
+  background: rgba(184, 151, 90, 0.1);
+}
+
+.is-dark .score-ring.ring-warn .score-val {
+  color: #d0b278;
+}
+
+.is-dark .score-ring.ring-bad {
+  border-color: #c23b22;
+  background: rgba(194, 59, 34, 0.1);
+}
+
+.is-dark .score-ring.ring-bad .score-val {
+  color: #e27b66;
+}
+
+.is-dark .point-block.strengths {
+  border-left-color: #7b8d6e;
+}
+
+.is-dark .point-block.strengths .point-title {
+  color: #a8b69f;
+}
+
+.is-dark .point-block.weaknesses {
+  border-left-color: #c23b22;
+}
+
+.is-dark .point-block.weaknesses .point-title {
+  color: #e27b66;
+}
+
+.is-dark .point-block.suggestions {
+  border-left-color: #8794d9;
+}
+
+.is-dark .point-block.suggestions .point-title {
+  color: #aab3ea;
+}
+
+.is-dark .ts-title,
+.is-dark .ts-hint {
+  color: #a8b69f;
+}
+
+.is-dark .ts-sub,
+.is-dark .change-title,
+.is-dark .change-text {
+  color: #c4c2bc;
+}
+
+.is-dark .loading-overlay {
+  background: rgba(31, 31, 29, 0.94);
+}
+
+.is-dark .btn-secondary {
+  border-color: #d8644d;
+  background: transparent !important;
+  color: #e27b66 !important;
+}
+
+.is-dark .s-icon-wrap {
+  border-color: #575650;
+  background: #33332f;
+}
+
+.is-dark .s-icon-text {
+  color: #aab3ea;
+}
+
+.btn-primary[disabled] {
+  border-color: #d8d6cf;
+  background: #e0dfdb !important;
+  background-color: #e0dfdb !important;
+  color: #5a5956 !important;
+}
+
+.is-dark .btn-primary[disabled] {
+  border-color: #575650;
+  background: #33332f !important;
+  background-color: #33332f !important;
+  color: #c4c2bc !important;
+}
 </style>

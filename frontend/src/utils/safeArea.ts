@@ -18,9 +18,14 @@ const FALLBACK_NAV_HEIGHT = 44;
 const CAPSULE_GAP = 12;
 
 export function getMpSafeAreaMetrics(): MpSafeAreaMetrics {
-  const systemInfo = uni.getSystemInfoSync();
-  const statusBarHeight = systemInfo.statusBarHeight || 20;
-  const windowWidth = systemInfo.windowWidth || 375;
+  const getWindowInfo = (uni as unknown as {
+    getWindowInfo?: () => { statusBarHeight?: number; windowWidth?: number };
+  }).getWindowInfo;
+  const windowInfo = typeof getWindowInfo === 'function'
+    ? getWindowInfo()
+    : { statusBarHeight: 20, windowWidth: 375 };
+  const statusBarHeight = windowInfo.statusBarHeight || 20;
+  const windowWidth = windowInfo.windowWidth || 375;
   let menuTop = statusBarHeight + 8;
   let menuHeight = 32;
   let menuWidth = FALLBACK_MENU_WIDTH;

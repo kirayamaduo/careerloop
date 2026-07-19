@@ -19,7 +19,7 @@ const hasObjectValue = (value: unknown): value is Record<string, unknown> => {
   });
 };
 
-const ONBOARDING_SNAPSHOT_TIMEOUT_MS = 1500;
+const ONBOARDING_SNAPSHOT_TIMEOUT_MS = 3000;
 
 const withTimeout = async <T>(
   start: (registerTask: (task: UniApp.RequestTask) => void) => Promise<T>,
@@ -52,7 +52,19 @@ export const readStoredOnboardingSetup = (): StoredOnboardingSetup | null => {
   if (!stored || typeof stored !== 'object') return null;
   const setup = stored as StoredOnboardingSetup;
   const uid = Number(uni.getStorageSync('userId'));
-  return uid && setup.userId === uid ? setup : null;
+  if (!Number.isInteger(uid) || uid <= 0) return null;
+  if (setup.userId === uid) return setup;
+
+  // Migrate the short-lived legacy shape written before setup records were
+  // account-scoped. Only trust it together with the legacy completion marker,
+  // then immediately scope it to the currently authenticated user.
+  const legacySeen = uni.getStorageSync(ONBOARDING_SEEN_KEY);
+  if (setup.userId == null && legacySeen === '1') {
+    const migrated = { ...setup, userId: uid };
+    markOnboardingSeen(migrated);
+    return migrated;
+  }
+  return null;
 };
 
 export const hasSeenOnboardingForCurrentUser = (): boolean => {
@@ -108,11 +120,16 @@ export const snapshotToOnboardingSetup = (snapshot?: UserProfileSnapshot | null)
 
 export const markOnboardingSeen = (setup?: StoredOnboardingSetup | null) => {
   const uid = Number(uni.getStorageSync('userId'));
+  if (!Number.isInteger(uid) || uid <= 0) return;
   if (setup) uni.setStorageSync(ONBOARDING_SETUP_KEY, { ...setup, userId: uid });
   uni.setStorageSync(ONBOARDING_SEEN_KEY, { userId: uid, seenAt: new Date().toISOString() });
 };
 
 export const shouldForceOnboarding = async (): Promise<boolean> => {
+  // Guests and anonymous users use the product preview/login flow. They must
+  // not be sent into a wizard whose result cannot be synced.
+  if (!isRealUser()) return false;
+
   if (hasSeenOnboardingForCurrentUser()) return false;
 
   const localSetup = readStoredOnboardingSetup();
@@ -120,8 +137,6 @@ export const shouldForceOnboarding = async (): Promise<boolean> => {
     markOnboardingSeen(localSetup);
     return false;
   }
-
-  if (!isRealUser()) return true;
 
   try {
     const snapshot = await withTimeout(
@@ -138,8 +153,9 @@ export const shouldForceOnboarding = async (): Promise<boolean> => {
     }
     return true;
   } catch {
-    // Prefer the first-run gate over a blank launch if the snapshot endpoint is
-    // unavailable; returning users can still leave onboarding or edit details.
-    return true;
+    // Connectivity is not evidence that onboarding is incomplete. Let the
+    // user enter and retry the check next launch instead of trapping returning
+    // users in a mandatory wizard during a backend/network incident.
+    return false;
   }
 };

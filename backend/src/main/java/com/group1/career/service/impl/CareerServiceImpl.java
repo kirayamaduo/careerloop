@@ -44,16 +44,16 @@ public class CareerServiceImpl implements CareerService {
     }
 
     @Override
-    public List<UserCareerProgress> getUserProgress(Long userId) {
-        return progressRepository.findByUserId(userId);
+    public List<UserCareerProgress> getUserProgress(Long authenticatedUserId) {
+        return progressRepository.findByUserId(authenticatedUserId);
     }
 
     @Override
     @Transactional
-    public void unlockNode(Long userId, Long nodeId) {
-        UserCareerProgress progress = progressRepository.findByUserIdAndNodeId(userId, nodeId)
+    public void unlockNode(Long authenticatedUserId, Long nodeId) {
+        UserCareerProgress progress = progressRepository.findByUserIdAndNodeId(authenticatedUserId, nodeId)
                 .orElse(UserCareerProgress.builder()
-                        .userId(userId)
+                        .userId(authenticatedUserId)
                         .nodeId(nodeId)
                         .status("UNLOCKED")
                         .build());
@@ -65,8 +65,8 @@ public class CareerServiceImpl implements CareerService {
 
     @Override
     @Transactional
-    public void completeNode(Long userId, Long nodeId) {
-        UserCareerProgress progress = progressRepository.findByUserIdAndNodeId(userId, nodeId)
+    public void completeNode(Long authenticatedUserId, Long nodeId) {
+        UserCareerProgress progress = progressRepository.findByUserIdAndNodeId(authenticatedUserId, nodeId)
                 .orElseThrow(() -> new BizException(ErrorCode.PARAM_ERROR));
 
         progress.setStatus("COMPLETED");
@@ -74,9 +74,9 @@ public class CareerServiceImpl implements CareerService {
 
         // Daily check-in. Best-effort.
         try {
-            checkInService.recordAction(userId, "SKILL_NODE");
+            checkInService.recordAction(authenticatedUserId, "SKILL_NODE");
         } catch (Exception e) {
-            log.warn("[career] check-in record failed for user {}: {}", userId, e.toString());
+            log.warn("[career] check-in record failed for user {}: {}", authenticatedUserId, e.toString());
         }
     }
 

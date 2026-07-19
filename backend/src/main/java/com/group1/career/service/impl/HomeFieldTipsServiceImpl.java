@@ -54,42 +54,52 @@ public class HomeFieldTipsServiceImpl implements HomeFieldTipsService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public List<HomeConsultationFeedDto> buildConsultationFeed(
-            Long userId,
+    public List<HomeConsultationFeedDto> buildPublicConsultationFeed(
             long seed,
             int limit,
             List<HomeConsultation> consultationPool,
             List<HomeArticle> articlePool
     ) {
         if (limit <= 0) return List.of();
+        return topUpFromDatabase(new ArrayList<>(), consultationPool, articlePool, seed, limit);
+    }
 
-        if (userId != null && userId > 0) {
-            String cacheKey = CACHE_PREFIX + LocalDate.now() + ":" + userId;
-            String cached = redisTemplate.opsForValue().get(cacheKey);
-            if (cached != null && !cached.isBlank()) {
-                try {
-                    return objectMapper.readValue(cached, new TypeReference<>() { });
-                } catch (Exception e) {
-                    log.debug("[home-tips] cache parse failed: {}", e.toString());
-                }
-            }
-
-            List<HomeConsultationFeedDto> aiTips = generatePersonalisedTips(userId, limit);
-            List<HomeConsultationFeedDto> merged = new ArrayList<>(aiTips == null ? List.of() : aiTips);
-            if (merged.size() < limit) {
-                merged = topUpFromDatabase(merged, consultationPool, articlePool, seed, limit);
-            }
-            if (!merged.isEmpty()) {
-                try {
-                    redisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(merged), Duration.ofHours(20));
-                } catch (Exception e) {
-                    log.debug("[home-tips] cache write failed: {}", e.toString());
-                }
-            }
-            return merged;
+    @Override
+    public List<HomeConsultationFeedDto> buildPersonalizedConsultationFeed(
+            long authenticatedUserId,
+            long seed,
+            int limit,
+            List<HomeConsultation> consultationPool,
+            List<HomeArticle> articlePool
+    ) {
+        if (limit <= 0) return List.of();
+        if (authenticatedUserId <= 0) {
+            throw new IllegalArgumentException("authenticatedUserId must be positive");
         }
 
-        return topUpFromDatabase(new ArrayList<>(), consultationPool, articlePool, seed, limit);
+        String cacheKey = CACHE_PREFIX + LocalDate.now() + ":" + authenticatedUserId;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null && !cached.isBlank()) {
+            try {
+                return objectMapper.readValue(cached, new TypeReference<>() { });
+            } catch (Exception e) {
+                log.debug("[home-tips] cache parse failed: {}", e.toString());
+            }
+        }
+
+        List<HomeConsultationFeedDto> aiTips = generatePersonalisedTips(authenticatedUserId, limit);
+        List<HomeConsultationFeedDto> merged = new ArrayList<>(aiTips == null ? List.of() : aiTips);
+        if (merged.size() < limit) {
+            merged = topUpFromDatabase(merged, consultationPool, articlePool, seed, limit);
+        }
+        if (!merged.isEmpty()) {
+            try {
+                redisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(merged), Duration.ofHours(20));
+            } catch (Exception e) {
+                log.debug("[home-tips] cache write failed: {}", e.toString());
+            }
+        }
+        return merged;
     }
 
     private List<HomeConsultationFeedDto> generatePersonalisedTips(long userId, int limit) {

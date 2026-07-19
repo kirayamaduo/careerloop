@@ -10,14 +10,18 @@ import com.group1.career.model.entity.InterviewMessage;
 import com.group1.career.repository.InterviewMessageRepository;
 import com.group1.career.repository.InterviewRepository;
 import com.group1.career.service.CheckInService;
+import com.group1.career.service.BodyLanguageService;
 import com.group1.career.model.NotificationTypes;
 import com.group1.career.service.InterviewService;
 import com.group1.career.service.NotificationService;
 import com.group1.career.service.UserProfileSnapshotService;
+import com.group1.career.service.WechatSubscribeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,6 +38,8 @@ public class InterviewServiceImpl implements InterviewService {
     private final NotificationService notificationService;
     private final UserProfileSnapshotService snapshotService;
     private final CheckInService checkInService;
+    private final BodyLanguageService bodyLanguageService;
+    private final WechatSubscribeService wechatSubscribeService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -79,27 +85,21 @@ public class InterviewServiceImpl implements InterviewService {
         Interview interview = interviewRepository.findById(interviewId)
                 .orElseThrow(() -> new BizException(ErrorCode.PARAM_ERROR));
 
-        interview.setStatus("COMPLETED");
-        interview.setFinalScore(finalScore);
-        interview.setEndedAt(LocalDateTime.now());
-
-        if (interview.getStartedAt() != null) {
-            Duration duration = Duration.between(interview.getStartedAt(), interview.getEndedAt());
-            interview.setDurationSeconds((int) duration.getSeconds());
+        if (!"ONGOING".equals(interview.getStatus())) {
+            return interview;
         }
 
-        Interview saved = interviewRepository.save(interview);
+        boolean hasCandidateAnswer =
+                messageRepository.existsByInterviewIdAndRoleIgnoreCase(interviewId, "USER");
+        if (!hasCandidateAnswer) {
+            return cancelInterview(interviewId);
+        }
 
-        // Surface a notification on the Messages > System tab so the user
-        // sees their interview is wrapped up and can jump straight to the
-        // AI evaluation report.
-        notificationService.push(
-                saved.getUserId(),
-                NotificationTypes.INTERVIEW_REPORT,
-                "面试报告已生成",
-                "你的“" + saved.getPositionName() + "”模拟面试已结束，点击查看 AI 复盘报告。",
-                "/pages/interview/report?interviewId=" + saved.getInterviewId()
-        );
+        interview.setStatus("COMPLETED");
+        interview.setFinalScore(finalScore);
+        finishTiming(interview);
+
+        Interview saved = interviewRepository.save(interview);
 
         // The detailed report (with strong/weak dimensions) hasn't landed
         // yet at this point -- saveReport will refresh the snapshot once
@@ -113,6 +113,23 @@ public class InterviewServiceImpl implements InterviewService {
             log.warn("[interview] check-in record failed for user {}: {}", saved.getUserId(), e.toString());
         }
 
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Interview cancelInterview(Long interviewId) {
+        Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new BizException(ErrorCode.PARAM_ERROR));
+        if (!"ONGOING".equals(interview.getStatus())) {
+            return interview;
+        }
+        interview.setStatus("CANCELLED");
+        interview.setFinalScore(null);
+        finishTiming(interview);
+        Interview saved = interviewRepository.save(interview);
+        bodyLanguageService.clear(interviewId);
+        log.info("Cancelled interview {} without completion side effects", interviewId);
         return saved;
     }
 
@@ -139,15 +156,34 @@ public class InterviewServiceImpl implements InterviewService {
     }
 
     @Override
+    public Interview lockForReport(Long interviewId, Long userId) {
+        Interview interview = interviewRepository.findByIdForUpdate(interviewId)
+                .orElseThrow(() -> new BizException(ErrorCode.PARAM_ERROR));
+        if (!interview.getUserId().equals(userId)) {
+            log.warn("Ownership violation: user {} tried to generate report for interview {} owned by {}",
+                    userId, interviewId, interview.getUserId());
+            throw new BizException(ErrorCode.FORBIDDEN);
+        }
+        return interview;
+    }
+
+    @Override
     @Transactional
     public Interview saveReport(Long interviewId, String reportJson, Integer overallScore) {
         Interview interview = getInterviewById(interviewId);
+        if (!"COMPLETED".equals(interview.getStatus())) {
+            throw new BizException("Only completed interviews can generate reports");
+        }
+        boolean firstReport = interview.getReportJson() == null || interview.getReportJson().isBlank();
         interview.setReportJson(reportJson);
         if (overallScore != null) {
             interview.setFinalScore(overallScore);
         }
         Interview saved = interviewRepository.save(interview);
         mergeIntoSnapshot(saved, reportJson);
+        if (firstReport) {
+            notifyReportReadyAfterCommit(saved);
+        }
         return saved;
     }
 
@@ -241,5 +277,49 @@ public class InterviewServiceImpl implements InterviewService {
         if (name == null || name.isBlank()) return;
         if (score >= 80) strong.add(name);
         else if (score < 60) weak.add(name);
+    }
+
+    private void finishTiming(Interview interview) {
+        interview.setEndedAt(LocalDateTime.now());
+        if (interview.getStartedAt() == null) return;
+        Duration duration = Duration.between(interview.getStartedAt(), interview.getEndedAt());
+        interview.setDurationSeconds((int) Math.max(0, duration.getSeconds()));
+    }
+
+    private void notifyReportReadyAfterCommit(Interview interview) {
+        Runnable notify = () -> {
+            try {
+                notificationService.push(
+                        interview.getUserId(),
+                        NotificationTypes.INTERVIEW_REPORT,
+                        "面试报告已生成",
+                        "你的“" + interview.getPositionName() + "”模拟面试报告已就绪，点击查看 AI 复盘。",
+                        "/pages/interview/report?interviewId=" + interview.getInterviewId()
+                );
+            } catch (Exception e) {
+                log.warn("[interview] report notification failed for interview {}: exception={}",
+                        interview.getInterviewId(), e.getClass().getSimpleName());
+            }
+            try {
+                wechatSubscribeService.sendInterviewReport(
+                        interview.getUserId(),
+                        interview.getFinalScore() == null ? 0 : interview.getFinalScore(),
+                        interview.getPositionName()
+                );
+            } catch (Exception e) {
+                log.warn("[interview] wx report notification failed for interview {}: {}",
+                        interview.getInterviewId(), e.getClass().getSimpleName());
+            }
+        };
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            notify.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notify.run();
+            }
+        });
     }
 }

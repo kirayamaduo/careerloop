@@ -113,13 +113,12 @@ public class UserIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        // Re-registering with the same email returns 200 HTTP (we never
-        // 500 the client) but a non-200 biz code so the UI can render a
-        // friendly message.
+        // Re-registering with the same email returns a stable business error
+        // so the UI can render a friendly message without a false system error.
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500));
+                .andExpect(jsonPath("$.code").value(4002));
     }
 }

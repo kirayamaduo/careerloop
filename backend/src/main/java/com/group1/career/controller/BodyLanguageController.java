@@ -35,10 +35,29 @@ public class BodyLanguageController {
         if (req.getInterviewId() == null) {
             return Result.error(400, "interviewId is required");
         }
+        if (req.getFrameBase64() == null || req.getFrameBase64().isBlank()) {
+            return Result.error(400, "frameBase64 is required");
+        }
+        if (req.getFrameBase64().length() > BodyLanguageService.MAX_BASE64_CHARS) {
+            return Result.error(413, "Frame payload is too large");
+        }
         // Ownership keeps a malicious client from injecting frames into
         // someone else's interview to skew their report.
         interviewService.assertOwnership(req.getInterviewId(), uid);
-        bodyLanguageService.recordFrame(req.getInterviewId(), req.getFrameBase64());
+        BodyLanguageService.SubmissionResult outcome =
+                bodyLanguageService.recordFrame(uid, req.getInterviewId(), req.getFrameBase64());
+        if (outcome == BodyLanguageService.SubmissionResult.RATE_LIMITED
+                || outcome == BodyLanguageService.SubmissionResult.BUSY) {
+            return Result.error(429, "Frame sampling is too frequent");
+        }
+        if (outcome == BodyLanguageService.SubmissionResult.TOO_LARGE) {
+            return Result.error(413, "Frame payload is too large");
+        }
+        if (outcome == BodyLanguageService.SubmissionResult.INVALID) {
+            return Result.error(400, "Invalid frame payload");
+        }
+        // DISABLED / NO_VALID_SIGNAL / SIDECAR_FAILED are best-effort drops:
+        // the interview continues and no fabricated score enters the report.
         return Result.success();
     }
 

@@ -3,6 +3,16 @@
     <SlNavBar :title="t('checkin.navTitle')" show-back @back="goBack" :safe-top="topSafeHeight" />
 
     <view class="checkin-content">
+      <view v-if="loading" class="checkin-state app-card-soft">
+        <text class="checkin-state-icon ri-loader-4-line checkin-spinning"></text>
+        <text class="checkin-state-title">{{ t('checkin.loading') }}</text>
+      </view>
+      <view v-else-if="loadError" class="checkin-state app-card-soft">
+        <text class="checkin-state-icon ri-wifi-off-line"></text>
+        <text class="checkin-state-title">{{ loadError }}</text>
+        <view class="checkin-retry" @click="retryLoad"><text>{{ t('checkin.retry') }}</text></view>
+      </view>
+      <template v-else>
       <view class="hero-card">
         <view class="hero-row">
           <view class="hero-streak">
@@ -60,6 +70,7 @@
       </view>
 
       <view class="bottom-safe"></view>
+      </template>
     </view>
   </SlPage>
 </template>
@@ -71,6 +82,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { getCheckInStatusApi, getCheckInCalendarApi, type CheckInStatus, type CheckInDay } from '@/api/checkin';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
@@ -80,6 +92,8 @@ const topSafeHeight = ref(52);
 
 const status = ref<CheckInStatus | null>(null);
 const calendar = ref<CheckInDay[]>([]);
+const loading = ref(true);
+const loadError = ref('');
 
 const goBack = () => uni.navigateBack({ delta: 1 });
 
@@ -171,13 +185,30 @@ const navTo = (url: string) => {
 };
 
 const load = async () => {
+  if (!isRealUser()) {
+    loading.value = false;
+    loadError.value = t('checkin.loginRequired');
+    return;
+  }
+  loading.value = true;
+  loadError.value = '';
   try {
     const [s, c] = await Promise.all([getCheckInStatusApi(), getCheckInCalendarApi()]);
     status.value = s;
     calendar.value = c || [];
   } catch (e: any) {
-    uni.showToast({ title: e?.message || t('checkin.loadFailed'), icon: 'none' });
+    loadError.value = e?.message || t('checkin.loadFailed');
+  } finally {
+    loading.value = false;
   }
+};
+
+const retryLoad = () => {
+  if (!isRealUser()) {
+    requireAuth({ message: t('checkin.loginRequired') });
+    return;
+  }
+  load();
 };
 
 onMounted(() => {
@@ -196,6 +227,40 @@ onShow(() => {
   padding: 8px var(--page-gutter, 20px) 24px;
   box-sizing: border-box;
 }
+
+.checkin-state {
+  min-height: 280px;
+  margin-top: 12px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.checkin-state-icon { font-size: 40px; color: #3f51b5; }
+.checkin-state-title {
+  margin-top: 12px;
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+.checkin-retry {
+  min-width: 120px;
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #c23b22;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.checkin-spinning { animation: checkin-spin .8s linear infinite; }
+@keyframes checkin-spin { to { transform: rotate(360deg); } }
 
 .hero-card {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -303,4 +368,155 @@ onShow(() => {
 .is-dark .week-cell-active { background: var(--primary-color, #2563eb); box-shadow: none; }
 .is-dark .week-cell-active .week-cell-day,
 .is-dark .week-cell-active .week-cell-dow { color: #ffffff; }
+
+/* Competition visual system ------------------------------------------------ */
+.hero-card {
+  color: #2c2b29;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #c23b22;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.streak-num {
+  color: #c23b22;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.streak-label,
+.hero-progress-label,
+.hero-tip {
+  color: #5a5956;
+  opacity: 1;
+}
+
+.hero-progress-text {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.hero-bar {
+  background: #e0dfdb;
+  border-radius: 2px;
+}
+
+.hero-bar-fill {
+  background: #3f51b5;
+  border-radius: 2px;
+}
+
+.actions-card,
+.week-card {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.actions-title,
+.week-title,
+.action-name {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.action-row {
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+}
+
+.action-done {
+  background: rgba(107, 142, 90, 0.08);
+  border-color: rgba(107, 142, 90, 0.42);
+}
+
+.action-icon {
+  border-radius: 4px;
+}
+
+.tone-blue {
+  color: #3f51b5;
+  background: rgba(63, 81, 181, 0.09);
+}
+
+.tone-orange {
+  color: #b8975a;
+  background: rgba(184, 151, 90, 0.11);
+}
+
+.tone-violet {
+  color: #c23b22;
+  background: rgba(194, 59, 34, 0.08);
+}
+
+.action-desc,
+.week-meta {
+  color: #5a5956;
+}
+
+.action-done .action-desc {
+  color: #6b8e5a;
+}
+
+.week-cell {
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.week-cell-active {
+  background: #3f51b5;
+  border-color: #3f51b5;
+  box-shadow: none;
+}
+
+.week-cell-today {
+  border-color: #c23b22;
+}
+
+.badge-row {
+  color: #80652f;
+  background: rgba(184, 151, 90, 0.12);
+  border: 1px solid rgba(184, 151, 90, 0.32);
+  border-radius: 4px;
+}
+
+.badge-text {
+  color: #80652f;
+}
+
+.is-dark .hero-card,
+.is-dark .actions-card,
+.is-dark .week-card {
+  color: #faf9f6;
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .hero-progress-text,
+.is-dark .actions-title,
+.is-dark .week-title,
+.is-dark .action-name {
+  color: #faf9f6;
+}
+
+.is-dark .streak-label,
+.is-dark .hero-progress-label,
+.is-dark .hero-tip,
+.is-dark .action-desc,
+.is-dark .week-meta {
+  color: #c6c4be;
+}
+
+.is-dark .action-row,
+.is-dark .week-cell {
+  background: #1c1b19;
+  border-color: #494844;
+}
 </style>

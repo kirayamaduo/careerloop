@@ -116,19 +116,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from '@/locales';
-import { isLoggedIn, LOGIN_PAGE } from '@/utils/auth';
+import { isGuest, isRealUser, LOGIN_PAGE } from '@/utils/auth';
 import { shouldForceOnboarding } from '@/utils/onboardingGate';
-import request from '@/utils/request';
+import {
+  consumeConsentReturnUrl,
+  recordCurrentConsentOnServer,
+  storeCurrentConsent,
+} from '@/utils/consent';
 import { useTheme } from '@/utils/theme';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
-
-/** Bump this when a major policy update requires all users to re-consent. */
-const AGREEMENT_VERSION = '1.0';
-
-/** localStorage key includes the version so old keys are ignored on upgrade. */
-const CONSENT_KEY = `consent_v${AGREEMENT_VERSION}`;
 
 const ageChecked = ref(false);
 const termsChecked = ref(false);
@@ -176,32 +174,40 @@ const closeDoc = () => {
   }
 };
 
-/** Fire-and-forget: persist consent to server after login. */
-const recordConsentOnServer = () => {
-  if (!isLoggedIn()) return;
-  request({
-    url: '/consents',
-    method: 'POST',
-    data: {
-      agreementVersion: AGREEMENT_VERSION,
-      platform: 'miniprogram',
-    },
-  }).catch(() => {/* best-effort, non-blocking */});
-};
-
 const onAgree = async () => {
   if (!canAgree.value) {
     uni.showToast({ title: t('consent.checkBoth'), icon: 'none' });
     return;
   }
-  uni.setStorageSync(CONSENT_KEY, '1');
-  recordConsentOnServer();
-  if (isLoggedIn()) {
-    if (await shouldForceOnboarding()) {
-      uni.reLaunch({ url: '/pages/onboarding/index' });
+  storeCurrentConsent();
+
+  const resumeAfterConsent = () => {
+    const returnUrl = consumeConsentReturnUrl();
+    if (returnUrl) {
+      uni.reLaunch({ url: returnUrl });
       return;
     }
     uni.switchTab({ url: '/pages/home/index' });
+  };
+
+  if (isRealUser()) {
+    recordCurrentConsentOnServer().catch(() => {
+      // A temporary network failure must not trap the user. Login retries
+      // the audit write after the next authenticated session.
+    });
+    const forceOnboarding = await shouldForceOnboarding();
+    if (!isRealUser()) {
+      // Keep the saved deep link. A successful re-login will consume it.
+      uni.reLaunch({ url: LOGIN_PAGE });
+      return;
+    }
+    if (forceOnboarding) {
+      uni.reLaunch({ url: '/pages/onboarding/index' });
+      return;
+    }
+    resumeAfterConsent();
+  } else if (isGuest()) {
+    resumeAfterConsent();
   } else {
     uni.reLaunch({ url: LOGIN_PAGE });
   }
@@ -602,4 +608,181 @@ const onDisagree = () => {
 .is-dark .hero-title { color: #f8fafc; }
 .is-dark .doc-card { background: #1e293b; box-shadow: none; border: 1px solid #334155; }
 .is-dark .doc-section { color: #f8fafc; }
+
+/* Competition visual system ------------------------------------------------ */
+.consent-page {
+  background: #faf9f6;
+}
+
+.brand-header {
+  padding-top: 20px;
+  padding-bottom: 24px;
+}
+
+.brand-logo-wrap {
+  width: 58px;
+  height: 58px;
+  color: #c23b22;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+}
+
+.brand-logo-text {
+  color: #c23b22;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.brand-name,
+.consent-title,
+.hero-title,
+.doc-modal-title,
+.doc-section {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.brand-slogan,
+.consent-desc,
+.menu-meta,
+.check-label,
+.doc-body,
+.hero-subtitle {
+  color: #5a5956;
+}
+
+.consent-card,
+.menu-card,
+.doc-card {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.menu-icon-wrap {
+  color: #3f51b5;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.menu-text {
+  color: #2c2b29;
+  font-weight: 600;
+}
+
+.menu-item:not(:last-child)::after {
+  background: #edece8;
+}
+
+.checkbox {
+  background: #ffffff;
+  border: 1px solid #b9b7b1;
+  border-radius: 3px;
+}
+
+.checkbox.checked {
+  background: #3f51b5;
+  border-color: #3f51b5;
+}
+
+.check-link {
+  color: #3f51b5;
+}
+
+.btn-agree,
+.doc-btn-close {
+  background: #c23b22;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.btn-agree.btn-disabled {
+  color: #8b8a86;
+  background: #efeee9;
+  border: 1px solid #e0dfdb;
+}
+
+.btn-agree.btn-disabled .btn-agree-text {
+  color: #8b8a86;
+}
+
+.doc-modal-mask {
+  background: rgba(44, 43, 41, 0.42);
+}
+
+.doc-modal {
+  background: #faf9f6;
+  border-radius: 8px 8px 0 0;
+}
+
+.doc-modal-header,
+.doc-modal-footer {
+  border-color: #e0dfdb;
+}
+
+.doc-close-btn {
+  background: #efeee9;
+  border-radius: 4px;
+}
+
+.doc-card {
+  box-shadow: none;
+}
+
+.consent-page.is-dark {
+  background: #1c1b19;
+}
+
+.consent-page.is-dark .brand-name,
+.consent-page.is-dark .consent-title,
+.is-dark .hero-title,
+.is-dark .doc-modal-title,
+.is-dark .doc-section {
+  color: #faf9f6;
+}
+
+.consent-page.is-dark .brand-slogan,
+.consent-page.is-dark .consent-desc,
+.consent-page.is-dark .menu-meta,
+.consent-page.is-dark .check-label,
+.is-dark .doc-body,
+.is-dark .hero-subtitle {
+  color: #c6c4be;
+}
+
+.consent-page.is-dark .brand-logo-wrap,
+.consent-page.is-dark .consent-card,
+.consent-page.is-dark .menu-card,
+.is-dark .doc-card,
+.is-dark .doc-modal {
+  background: #242320;
+  border-color: #494844;
+}
+
+.consent-page.is-dark .menu-text {
+  color: #faf9f6;
+}
+
+.consent-page.is-dark .checkbox {
+  background: #1c1b19;
+  border-color: #75736d;
+}
+
+.consent-page.is-dark .doc-close-btn {
+  background: #33332f;
+}
+
+.consent-page.is-dark .doc-close-icon {
+  color: #faf9f6;
+}
+
+.consent-page.is-dark .btn-agree.btn-disabled .btn-agree-text {
+  color: #94a3b8;
+}
 </style>

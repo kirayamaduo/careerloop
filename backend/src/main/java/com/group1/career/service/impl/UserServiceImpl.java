@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private static final String EMAIL_PASSWORD = "EMAIL_PASSWORD";
     private static final String WECHAT = "WECHAT";
     private static final String DEFAULT_ROLE_CODE = "STUDENT";
+    private static final int DELETION_GRACE_DAYS = 30;
 
     /** Avatars are loaded on every page that shows the user; keep the link alive a bit longer. */
     private static final long AVATAR_TTL_SECONDS = 30 * 60;
@@ -60,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
         Optional<UserAuth> existingAuth = userAuthRepository.findByIdentifierAndIdentityType(normalizedIdentifier, identityType);
         if (existingAuth.isPresent()) {
-            throw new RuntimeException("User already exists");
+            throw new BizException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
         User user = User.builder()
@@ -90,24 +92,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public User login(String identityType, String identifier, String credential) {
         validateIdentityType(identityType, EMAIL_PASSWORD);
         String normalizedIdentifier = normalizeIdentifier(identifier);
 
         UserAuth userAuth = userAuthRepository.findByIdentifierAndIdentityType(normalizedIdentifier, identityType)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BizException(401, "邮箱或密码错误"));
 
         if (!passwordEncoder.matches(credential, userAuth.getCredential())) {
-            throw new RuntimeException("Invalid credential");
+            // Keep the public response identical for unknown accounts and bad
+            // passwords so this endpoint cannot be used for enumeration.
+            throw new BizException(401, "邮箱或密码错误");
         }
 
         User user = getUserById(userAuth.getUserId());
-        if (user.getDeletedAt() != null) {
-            throw new BizException(ErrorCode.ACCOUNT_DELETED);
-        }
-        if (user.getStatus() != null && user.getStatus() == 0) {
-            throw new BizException(ErrorCode.ACCOUNT_BANNED);
-        }
+        restoreAfterVerifiedLoginIfEligible(user);
 
         userAuth.setLastLoginTime(LocalDateTime.now());
         userAuthRepository.save(userAuth);
@@ -124,7 +124,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(Long userId, String nickname, String avatarUrl,
-                           String school, String major, Integer graduationYear) {
+                           String school, String major, Integer graduationYear,
+                           boolean clearGraduationYear) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -132,7 +133,8 @@ public class UserServiceImpl implements UserService {
         if (avatarUrl != null) user.setAvatarUrl(avatarUrl);
         if (school != null) user.setSchool(school);
         if (major != null) user.setMajor(major);
-        if (graduationYear != null) user.setGraduationYear(graduationYear);
+        if (clearGraduationYear) user.setGraduationYear(null);
+        else if (graduationYear != null) user.setGraduationYear(graduationYear);
 
         return userRepository.save(user);
     }
@@ -144,17 +146,7 @@ public class UserServiceImpl implements UserService {
                 "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
                 wechatAppId, wechatSecret, code);
 
-        // WeChat's jscode2session returns JSON with Content-Type: text/plain,
-        // so we need a converter that accepts text/plain as JSON.
-        RestTemplate restTemplate = new RestTemplate();
-        org.springframework.http.converter.json.MappingJackson2HttpMessageConverter converter =
-                new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter();
-        converter.setSupportedMediaTypes(java.util.List.of(
-                org.springframework.http.MediaType.APPLICATION_JSON,
-                org.springframework.http.MediaType.TEXT_PLAIN));
-        restTemplate.getMessageConverters().add(0, converter);
-        @SuppressWarnings("unchecked")
-        Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+        Map<String, Object> response = fetchWechatSession(url);
 
         if (response == null || (response.containsKey("errcode") && (Integer) response.get("errcode") != 0)) {
             log.error("WeChat login failed: {}", response);
@@ -170,12 +162,7 @@ public class UserServiceImpl implements UserService {
         if (userAuthOpt.isPresent()) {
             UserAuth userAuth = userAuthOpt.get();
             User existing = getUserById(userAuth.getUserId());
-            if (existing.getDeletedAt() != null) {
-                throw new BizException(ErrorCode.ACCOUNT_DELETED);
-            }
-            if (existing.getStatus() != null && existing.getStatus() == 0) {
-                throw new BizException(ErrorCode.ACCOUNT_BANNED);
-            }
+            restoreAfterVerifiedLoginIfEligible(existing);
             userAuth.setLastLoginTime(LocalDateTime.now());
             userAuthRepository.save(userAuth);
             return existing;
@@ -194,6 +181,23 @@ public class UserServiceImpl implements UserService {
         return newUser;
     }
 
+    /**
+     * Small seam for deterministic login/recovery tests; production still
+     * performs the same jscode2session request.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> fetchWechatSession(String url) {
+        // WeChat returns JSON with Content-Type: text/plain, so accept both.
+        RestTemplate restTemplate = new RestTemplate();
+        org.springframework.http.converter.json.MappingJackson2HttpMessageConverter converter =
+                new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(java.util.List.of(
+                org.springframework.http.MediaType.APPLICATION_JSON,
+                org.springframework.http.MediaType.TEXT_PLAIN));
+        restTemplate.getMessageConverters().add(0, converter);
+        return restTemplate.getForObject(url, Map.class);
+    }
+
     @Override
     public boolean isEmailRegistered(String email) {
         String normalized = normalizeIdentifier(email);
@@ -208,6 +212,28 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userAuth.setCredential(passwordEncoder.encode(newCredential));
         userAuthRepository.save(userAuth);
+        revokeSessionsOrFail(userAuth.getUserId());
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String currentCredential, String newCredential) {
+        UserAuth userAuth = userAuthRepository.findByUserId(userId).stream()
+                .filter(auth -> EMAIL_PASSWORD.equals(auth.getIdentityType()))
+                .findFirst()
+                .orElseThrow(() -> new BizException(400, "当前账号未设置邮箱密码"));
+        if (!passwordEncoder.matches(currentCredential, userAuth.getCredential())) {
+            throw new BizException(400, "当前密码错误");
+        }
+        userAuth.setCredential(passwordEncoder.encode(newCredential));
+        userAuthRepository.save(userAuth);
+        revokeSessionsOrFail(userId);
+    }
+
+    @Override
+    @Transactional
+    public void revokeSessions(Long userId) {
+        revokeSessionsOrFail(userId);
     }
 
     private void validateIdentityType(String identityType, String expectedType) {
@@ -229,12 +255,13 @@ public class UserServiceImpl implements UserService {
             return;
         }
         user.setDeletedAt(LocalDateTime.now());
+        user.setAuthVersion(nextAuthVersion(user));
         userRepository.save(user);
         deletionLogRepository.save(AccountDeletionLog.builder()
                 .userId(userId)
                 .ipHash(ipHash)
                 .build());
-        log.info("[F25] User {} requested account deletion", userId);
+        log.info("[F25] One account requested deletion");
     }
 
     @Override
@@ -242,9 +269,60 @@ public class UserServiceImpl implements UserService {
     public void cancelDeletion(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
+        if (user.getDeletedAt() != null
+                && !LocalDateTime.now().isBefore(
+                        user.getDeletedAt().plusDays(DELETION_GRACE_DAYS))) {
+            throw new BizException(ErrorCode.ACCOUNT_DELETED);
+        }
         user.setDeletedAt(null);
         userRepository.save(user);
-        log.info("[F25] User {} cancelled account deletion request", userId);
+        markPendingDeletionCancelled(userId);
+        log.info("[F25] One account cancelled a deletion request");
+    }
+
+    /**
+     * Identity verification happens before this method. A verified login is
+     * therefore the secure recovery proof for a still-pending deletion.
+     * Banned accounts are checked first and can never use recovery to reactivate.
+     */
+    private void restoreAfterVerifiedLoginIfEligible(User user) {
+        if (user.getStatus() != null && user.getStatus() != 1) {
+            throw new BizException(ErrorCode.ACCOUNT_BANNED);
+        }
+        if (user.getDeletedAt() == null) return;
+
+        LocalDateTime deadline = user.getDeletedAt().plusDays(DELETION_GRACE_DAYS);
+        if (!LocalDateTime.now().isBefore(deadline)) {
+            throw new BizException(ErrorCode.ACCOUNT_DELETED);
+        }
+
+        user.setDeletedAt(null);
+        user.setAccountRestored(true);
+        userRepository.save(user);
+        markPendingDeletionCancelled(user.getUserId());
+        long remainingDays = Math.max(0L, ChronoUnit.DAYS.between(LocalDateTime.now(), deadline));
+        log.info("[F25] Restored verified account during deletion grace period ({} days remaining)",
+                remainingDays);
+    }
+
+    private void markPendingDeletionCancelled(Long userId) {
+        deletionLogRepository
+                .findTopByUserIdAndStatusOrderByCreatedAtDesc(userId, "PENDING")
+                .ifPresent(logRow -> {
+                    logRow.setStatus("CANCELLED");
+                    logRow.setCancelledAt(LocalDateTime.now());
+                    deletionLogRepository.save(logRow);
+                });
+    }
+
+    private void revokeSessionsOrFail(Long userId) {
+        if (userId == null || userRepository.incrementAuthVersion(userId) != 1) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+    }
+
+    private long nextAuthVersion(User user) {
+        return (user.getAuthVersion() == null ? 0L : user.getAuthVersion()) + 1L;
     }
 
     @Override

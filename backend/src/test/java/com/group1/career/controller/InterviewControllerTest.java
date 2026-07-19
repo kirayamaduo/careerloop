@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,6 +100,30 @@ public class InterviewControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.interviewId").value(1))
                 .andExpect(jsonPath("$.data.status").value("ONGOING"));
+    }
+
+    @Test
+    @DisplayName("API Test: Start Interview cancels stale ongoing session instead of completing it")
+    void testStartInterview_CancelsStaleSession() throws Exception {
+        InterviewController.StartInterviewRequest request = new InterviewController.StartInterviewRequest();
+        request.setPositionName("Frontend Engineer");
+        request.setDifficulty("Normal");
+        request.setMode("TEXT");
+
+        when(interviewService.getUserInterviews(TEST_UID)).thenReturn(List.of(
+                Interview.builder().interviewId(44L).userId(TEST_UID).status("ONGOING").build()
+        ));
+        when(interviewService.startInterview(eq(TEST_UID), isNull(), anyString(), anyString(), eq("TEXT")))
+                .thenReturn(Interview.builder()
+                        .interviewId(45L).userId(TEST_UID).status("ONGOING").build());
+
+        mockMvc.perform(post("/api/interviews/start")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.interviewId").value(45));
+
+        verify(interviewService).cancelInterview(44L);
     }
 
     @Test

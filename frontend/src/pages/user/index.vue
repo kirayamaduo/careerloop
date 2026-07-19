@@ -54,26 +54,46 @@
           <text class="website-link-title">{{ t('profile.websiteLinkTitle') }}</text>
           <text class="website-link-desc">{{ t('profile.websiteLinkDesc') }}</text>
         </view>
-        <view class="website-link-state"><text>{{ t('profile.websiteLinkSecure') }}</text></view>
+        <view
+          class="website-link-state"
+          :class="{ 'website-link-state-unavailable': !websiteLinkConfigured }"
+        ><text>{{ websiteLinkConfigured ? t('profile.websiteLinkSecure') : t('profile.websiteLinkUnavailableShort') }}</text></view>
       </view>
-      <view v-if="websiteLinkCode" class="website-code-panel">
+      <template v-if="websiteLinkConfigured">
+        <view v-if="websiteLinkCode" class="website-code-panel">
+          <view>
+            <text class="website-code-label">{{ t('profile.websiteLinkCodeLabel') }}</text>
+            <text class="website-code">{{ websiteLinkCode }}</text>
+            <text class="website-code-expiry">{{ websiteLinkExpiryText }}</text>
+          </view>
+          <view class="website-code-copy" @click="copyWebsiteLinkCode">
+            <text class="ri-file-copy-line"></text>
+            <text>{{ t('profile.websiteLinkCopy') }}</text>
+          </view>
+        </view>
+        <view class="website-destination">
+          <view class="website-step"><text class="website-step-index">1</text><text>{{ t('profile.websiteLinkStepOpen') }}</text></view>
+          <view class="website-url-row" @click="copyWebsiteDestination">
+            <text class="website-url">{{ websitePassportUrl }}</text>
+            <text class="ri-file-copy-line"></text>
+          </view>
+          <view class="website-step"><text class="website-step-index">2</text><text>{{ t('profile.websiteLinkStepEnter') }}</text></view>
+        </view>
+        <view
+          class="website-link-action"
+          :class="{ disabled: websiteLinkLoading }"
+          @click="generateWebsiteLinkCode"
+        >
+          <text>{{ websiteLinkLoading ? t('profile.websiteLinkGenerating') : (websiteLinkCode ? t('profile.websiteLinkRegenerate') : t('profile.websiteLinkGenerate')) }}</text>
+          <text class="ri-arrow-right-line"></text>
+        </view>
+      </template>
+      <view v-else class="website-link-unavailable">
+        <text class="website-link-unavailable-icon ri-shield-keyhole-line"></text>
         <view>
-          <text class="website-code-label">{{ t('profile.websiteLinkCodeLabel') }}</text>
-          <text class="website-code">{{ websiteLinkCode }}</text>
-          <text class="website-code-expiry">{{ websiteLinkExpiryText }}</text>
+          <text class="website-link-unavailable-title">{{ t('profile.websiteLinkUnavailable') }}</text>
+          <text class="website-link-unavailable-desc">{{ t('profile.websiteLinkUnavailableDesc') }}</text>
         </view>
-        <view class="website-code-copy" @click="copyWebsiteLinkCode">
-          <text class="ri-file-copy-line"></text>
-          <text>{{ t('profile.websiteLinkCopy') }}</text>
-        </view>
-      </view>
-      <view
-        class="website-link-action"
-        :class="{ disabled: websiteLinkLoading }"
-        @click="generateWebsiteLinkCode"
-      >
-        <text>{{ websiteLinkLoading ? t('profile.websiteLinkGenerating') : (websiteLinkCode ? t('profile.websiteLinkRegenerate') : t('profile.websiteLinkGenerate')) }}</text>
-        <text class="ri-arrow-right-line"></text>
       </view>
       <text class="website-link-note">{{ t('profile.websiteLinkNote') }}</text>
     </view>
@@ -140,6 +160,13 @@
         <text class="menu-text">{{ t('profile.systemMessages') }}</text>
         <text class="menu-arrow">›</text>
       </view>
+      <!-- #ifdef MP-WEIXIN -->
+      <view class="menu-item" v-if="isLoggedIn" @click="enableWechatReminders">
+        <view class="app-icon-tile app-icon-tile--cyan menu-icon-wrap"><text class="menu-icon ri-notification-badge-line"></text></view>
+        <text class="menu-text">{{ t('profile.wechatReminderTitle') }}</text>
+        <text class="menu-action-text">{{ wechatReminderLoading ? t('profile.wechatReminderLoading') : t('profile.wechatReminderEnable') }}</text>
+      </view>
+      <!-- #endif -->
     </view>
 
     <!-- Menu group 2: Appearance & Accessibility -->
@@ -155,6 +182,18 @@
           <view class="pill" :class="{ 'pill-active': theme === 'dark' }" @click="applyTheme('dark')">
             <text class="ri-moon-line"></text>
           </view>
+          <view class="pill" :class="{ 'pill-active': theme === 'green' }" @click="applyTheme('green')">
+            <text class="ri-leaf-line"></text>
+          </view>
+        </view>
+      </view>
+      <view class="menu-item">
+        <view class="app-icon-tile app-icon-tile--cyan menu-icon-wrap"><text class="menu-icon ri-font-size-2"></text></view>
+        <text class="menu-text">{{ t('profile.fontSize') }}</text>
+        <view class="font-pills">
+          <view class="pill" :class="{ 'pill-active': font === 'compact' }" @click="applyFont('compact')"><text>{{ t('profile.fontSmall') }}</text></view>
+          <view class="pill" :class="{ 'pill-active': font === 'standard' }" @click="applyFont('standard')"><text>{{ t('profile.fontMedium') }}</text></view>
+          <view class="pill" :class="{ 'pill-active': font === 'large' }" @click="applyFont('large')"><text>{{ t('profile.fontLarge') }}</text></view>
         </view>
       </view>
       <view class="menu-item">
@@ -170,7 +209,7 @@
             class="pill"
             :class="{ 'pill-active': currentLang === 'en-US' }"
             @click="applyLang('en-US')"
-          ><text>EN</text></view>
+          ><text>EN·Beta</text></view>
         </view>
       </view>
     </view>
@@ -226,12 +265,12 @@
         </view>
         <view class="form-group">
           <text class="field-label">{{ t('profile.graduationYear') }}</text>
-          <input class="field-input ui-input" v-model="editForm.gradYear" type="number" :placeholder="t('profile.gradYearPlaceholder')" placeholder-class="ph" />
+          <input class="field-input ui-input" v-model="editForm.graduationYear" type="number" maxlength="4" :placeholder="t('profile.gradYearPlaceholder')" placeholder-class="ph" />
         </view>
 
         <view class="modal-actions">
           <button class="btn-secondary" @click="showProfileEdit = false">{{ t('common.cancel') }}</button>
-          <button class="btn-primary" @click="saveProfile">{{ t('common.save') }}</button>
+          <button class="btn-primary" :disabled="savingProfile" @click="saveProfile">{{ savingProfile ? t('profile.saving') : t('common.save') }}</button>
         </view>
       </view>
     </view>
@@ -239,29 +278,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import { onShow, onPageScroll } from '@dcloudio/uni-app';
 import { useI18n } from '@/locales';
-import { clearAuthState, LOGIN_PAGE } from '@/utils/auth';
+import { clearAuthState, isRealUser, LOGIN_PAGE, requireAuth } from '@/utils/auth';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { getUserInterviewsApi } from '@/api/interview';
 import { listMyResumesApi } from '@/api/resume';
-import { updateUserApi, getUserInfoApi, requestDeletionApi } from '@/api/user';
+import { updateUserApi, getUserInfoApi, requestDeletionApi, logoutApi } from '@/api/user';
 import { uploadFileApi } from '@/api/file';
-import { getProfileTagsApi, refreshProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
+import { getProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
 import { createWebsiteLinkCodeApi } from '@/api/integration';
 import { isCloudKeyword } from '@/utils/profileTagFilters';
-import { useTheme, type ThemeKey } from '@/utils/theme';
+import { useTheme, type FontKey, type ThemeKey } from '@/utils/theme';
 import { setLocale, currentLocale, type LangCode } from '@/locales/index';
 import SlScrollTopBar from '@/style-library/components/SlScrollTopBar.vue';
+import { requestConfiguredSubscribe } from '@/utils/wxSubscribe';
 
 const { t } = useI18n();
-const { theme, themeClass, fontClass, setTheme } = useTheme();
+const { theme, font, themeClass, fontClass, setTheme, setFont } = useTheme();
 const currentLang = ref<LangCode>(currentLocale());
 
 const applyTheme = (themeKey: ThemeKey) => {
   setTheme(themeKey);
-  uni.showToast({ title: themeKey === 'dark' ? t('profile.themeDarkToast') : t('profile.themeLightToast'), icon: 'none' });
+  const toastKey = themeKey === 'dark'
+    ? 'profile.themeDarkToast'
+    : themeKey === 'green'
+      ? 'profile.themeGreenToast'
+      : 'profile.themeLightToast';
+  uni.showToast({ title: t(toastKey), icon: 'none' });
+};
+
+const applyFont = (fontKey: FontKey) => {
+  setFont(fontKey);
+  uni.showToast({ title: t('profile.fontUpdated'), icon: 'none' });
 };
 
 const applyLang = (lang: LangCode) => {
@@ -285,7 +335,7 @@ const userInfo = ref({
   avatarViewUrl: '',
   school: '',
   major: '',
-  gradYear: '',
+  graduationYear: '',
 });
 const userId = ref('');
 
@@ -311,18 +361,40 @@ const profileTags = ref<UserProfileTag[]>([]);
 const rightAvoidWidth = ref(20);
 
 const showProfileEdit = ref(false);
-const editForm = ref({ nickname: '', school: '', major: '', gradYear: '' });
+const editForm = ref({ nickname: '', school: '', major: '', graduationYear: '' });
+const savingProfile = ref(false);
+const wechatReminderLoading = ref(false);
 const websiteLinkCode = ref('');
 const websiteLinkExpiresAt = ref(0);
 const websiteLinkLoading = ref(false);
 let websiteLinkExpiryTimer: ReturnType<typeof setTimeout> | undefined;
+let websiteLinkAuthorizationConfirmed = false;
+
+const isTrustedWebsitePassportUrl = (raw: string) => {
+  const value = raw.trim();
+  const match = value.match(/^https:\/\/([a-z0-9.-]+)(?::([0-9]{1,5}))?(\/[^?#]*)?$/i);
+  if (!match) return false;
+  const hostname = match[1].toLowerCase();
+  const port = match[2] ? Number(match[2]) : 443;
+  const pathname = (match[3] || '/').replace(/\/+$/, '') || '/';
+  if (!hostname.includes('.') || hostname === 'localhost' || hostname.endsWith('.local')) return false;
+  if (/^[0-9.]+$/.test(hostname) || hostname.includes('..')) return false;
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return false;
+  return pathname === '/passport';
+};
+
+const configuredWebsitePassportUrl = String(import.meta.env.VITE_WEBSITE_PASSPORT_URL || '').trim();
+const websitePassportUrl = isTrustedWebsitePassportUrl(configuredWebsitePassportUrl)
+  ? configuredWebsitePassportUrl
+  : '';
+const websiteLinkConfigured = computed(() => !!websitePassportUrl);
 const websiteLinkExpiryText = computed(() => {
   if (!websiteLinkExpiresAt.value) return '';
   const minutes = Math.max(1, Math.ceil((websiteLinkExpiresAt.value - Date.now()) / 60_000));
   return t('profile.websiteLinkExpires', { n: minutes });
 });
 
-const isLoggedIn = computed(() => !!userId.value);
+const isLoggedIn = computed(() => isRealUser());
 const CLOUD_POINTS = [
   [50, 44, 0], [25, 28, -7], [74, 29, 6], [28, 62, 5], [72, 62, -6], [50, 72, 4],
   [15, 46, -4], [86, 45, 5], [39, 18, 3], [61, 18, -3], [38, 84, -5], [63, 84, 5],
@@ -363,7 +435,7 @@ const openProfileEdit = () => {
     nickname: userInfo.value.nickname || '',
     school: userInfo.value.school || '',
     major: userInfo.value.major || '',
-    gradYear: userInfo.value.gradYear || '',
+    graduationYear: userInfo.value.graduationYear || '',
   };
   showProfileEdit.value = true;
 };
@@ -374,6 +446,28 @@ const goResumes = () => {
 
 const generateWebsiteLinkCode = async () => {
   if (websiteLinkLoading.value) return;
+  if (!requireAuth({
+    redirect: 'reLaunch',
+    message: '登录后才能授权网站端读取你的成长护照。',
+  })) return;
+  if (!websiteLinkConfigured.value) {
+    uni.showToast({ title: t('profile.websiteLinkUnavailable'), icon: 'none' });
+    return;
+  }
+  if (!websiteLinkAuthorizationConfirmed) {
+    const authorized = await new Promise<boolean>((resolve) => {
+      uni.showModal({
+        title: t('profile.websiteLinkConsentTitle'),
+        content: t('profile.websiteLinkConsentContent'),
+        confirmText: t('profile.websiteLinkConsentConfirm'),
+        cancelText: t('common.cancel'),
+        success: (result) => resolve(result.confirm),
+        fail: () => resolve(false),
+      });
+    });
+    if (!authorized) return;
+    websiteLinkAuthorizationConfirmed = true;
+  }
   websiteLinkLoading.value = true;
   try {
     const result = await createWebsiteLinkCodeApi();
@@ -402,11 +496,30 @@ const copyWebsiteLinkCode = () => {
   });
 };
 
+const copyWebsiteDestination = () => {
+  if (!websitePassportUrl) {
+    uni.showToast({ title: t('profile.websiteLinkUnavailable'), icon: 'none' });
+    return;
+  }
+  uni.setClipboardData({
+    data: websitePassportUrl,
+    success: () => uni.showToast({
+      title: t('profile.websiteLinkDestinationCopied'),
+      icon: 'success',
+    }),
+  });
+};
+
 const SWITCH_TAB_PATHS = new Set([
   '/pages/home/index',
   '/pages/assistant/index',
   '/pages/resume/index',
   '/pages/user/index',
+]);
+
+const AUTH_REQUIRED_PATHS = new Set([
+  '/pages/interview/history',
+  '/pages/user/feedback',
 ]);
 
 const navTo = (url: string) => {
@@ -415,6 +528,9 @@ const navTo = (url: string) => {
     return;
   }
   const base = url.split('?')[0];
+  if (AUTH_REQUIRED_PATHS.has(base) && !requireAuth()) {
+    return;
+  }
   if (SWITCH_TAB_PATHS.has(base)) {
     uni.switchTab({
       url: base,
@@ -429,38 +545,52 @@ const navTo = (url: string) => {
 };
 
 const saveProfile = async () => {
-  userInfo.value.nickname = editForm.value.nickname.trim() || userInfo.value.nickname;
-  userInfo.value.school = editForm.value.school;
-  userInfo.value.major = editForm.value.major;
-  userInfo.value.gradYear = editForm.value.gradYear;
-
-  // Sync to local storage immediately for snappy UI
-  uni.setStorageSync('userInfo', userInfo.value);
-  showProfileEdit.value = false;
-
-  // Persist to backend if user is logged in
-  const numericId = Number(userId.value);
-  if (numericId > 0) {
-    try {
-      const gradYearNum = editForm.value.gradYear ? Number(editForm.value.gradYear) : undefined;
-      const updated = await updateUserApi(numericId, {
-        nickname: editForm.value.nickname.trim() || undefined,
-        school: editForm.value.school || undefined,
-        major: editForm.value.major || undefined,
-        graduationYear: gradYearNum && !isNaN(gradYearNum) ? gradYearNum : undefined,
-      });
-      // Update local storage with server response to stay in sync
-      uni.setStorageSync('userInfo', { ...userInfo.value, ...updated });
-      try {
-        await refreshProfileTagsApi();
-        await loadProfileTags();
-      } catch {
-        // Best-effort sync for portrait word cloud.
-      }
-    } catch { /* localStorage already updated, best-effort backend sync */ }
+  if (savingProfile.value || !isLoggedIn.value) return;
+  const graduationYearText = editForm.value.graduationYear.trim();
+  const graduationYear = graduationYearText ? Number(graduationYearText) : undefined;
+  if (graduationYearText && (
+    !Number.isInteger(graduationYear)
+    || graduationYear! < 1970
+    || graduationYear! > 2100
+  )) {
+    uni.showToast({ title: t('profile.gradYearInvalid'), icon: 'none' });
+    return;
   }
+  const numericId = Number(userId.value);
+  if (!Number.isInteger(numericId) || numericId <= 0) return;
 
-  uni.showToast({ title: t('profile.profileSaved'), icon: 'success' });
+  savingProfile.value = true;
+  try {
+    const updated = await updateUserApi(numericId, {
+      nickname: editForm.value.nickname.trim() || userInfo.value.nickname,
+      // Empty strings are intentional: users must be able to clear optional
+      // profile fields instead of having omission mean "keep old value".
+      school: editForm.value.school.trim(),
+      major: editForm.value.major.trim(),
+      graduationYear,
+      clearGraduationYear: !graduationYearText,
+    });
+    userInfo.value = {
+      ...userInfo.value,
+      ...updated,
+      graduationYear: updated.graduationYear == null
+        ? ''
+        : String(updated.graduationYear),
+    };
+    uni.setStorageSync('userInfo', userInfo.value);
+    showProfileEdit.value = false;
+    uni.showToast({ title: t('profile.profileSaved'), icon: 'success' });
+    // The profile update endpoint already refreshes tags. Only fetch the
+    // resulting list so the word cloud reflects the saved profile.
+    await loadProfileTags();
+  } catch (e: any) {
+    uni.showToast({
+      title: e?.message || t('profile.updateFailed'),
+      icon: 'none',
+    });
+  } finally {
+    savingProfile.value = false;
+  }
 };
 
 /**
@@ -514,7 +644,7 @@ const handleDeleteAccount = () => {
     content: t('profile.deleteAccountContent'),
     confirmText: t('profile.deleteAccountContinue'),
     cancelText: t('common.cancel'),
-    confirmColor: '#ef4444',
+    confirmColor: '#c23b22',
     success: (res) => {
       if (!res.confirm) return;
       uni.showModal({
@@ -524,7 +654,7 @@ const handleDeleteAccount = () => {
         placeholderText: t('profile.deleteConfirmPhrase'),
         confirmText: t('profile.deleteConfirmPhrase'),
         cancelText: t('common.cancel'),
-        confirmColor: '#ef4444',
+        confirmColor: '#c23b22',
         success: async (res2) => {
           if (!res2.confirm) return;
           if ((res2 as any).content?.trim() !== t('profile.deleteConfirmPhrase')) {
@@ -535,7 +665,7 @@ const handleDeleteAccount = () => {
             uni.showLoading({ title: t('profile.processing'), mask: true });
             await requestDeletionApi();
             uni.hideLoading();
-            clearAuthState();
+            clearAuthState({ purgeAccountDrafts: true });
             uni.showModal({
               title: t('profile.deleteSubmittedTitle'),
               content: t('profile.deleteSubmittedContent'),
@@ -556,12 +686,25 @@ const handleLogout = () => {
   uni.showModal({
     title: t('profile.signOutConfirmTitle'),
     content: t('profile.signOutConfirmContent'),
-    confirmColor: '#ef4444',
-    success: (res) => {
+    confirmColor: '#c23b22',
+    success: async (res) => {
       if (res.confirm) {
+        try {
+          uni.showLoading({ title: t('profile.signingOut'), mask: true });
+          await logoutApi();
+          uni.hideLoading();
+        } catch (error) {
+          uni.hideLoading();
+          // A global 401 handler already cleared and redirected an expired
+          // session. For an actual network/server failure, keep the credential
+          // locally so the user can retry a real server-side revocation.
+          if (!isRealUser()) return;
+          uni.showToast({ title: t('profile.signOutFailed'), icon: 'none', duration: 2500 });
+          return;
+        }
         clearAuthState();
         userId.value = '';
-        userInfo.value = { nickname: '', avatarUrl: '', avatarViewUrl: '', school: '', major: '', gradYear: '' };
+        userInfo.value = { nickname: '', avatarUrl: '', avatarViewUrl: '', school: '', major: '', graduationYear: '' };
         uni.showToast({ title: t('common.success'), icon: 'success' });
         setTimeout(() => {
           uni.reLaunch({ url: LOGIN_PAGE });
@@ -569,6 +712,30 @@ const handleLogout = () => {
       }
     },
   });
+};
+
+const enableWechatReminders = async () => {
+  if (wechatReminderLoading.value || !isRealUser()) return;
+  wechatReminderLoading.value = true;
+  try {
+    const result = await requestConfiguredSubscribe();
+    if (!result.configured) {
+      uni.showToast({ title: t('profile.wechatReminderUnavailable'), icon: 'none' });
+    } else if (!result.synced) {
+      uni.showToast({ title: t('profile.wechatReminderSyncFailed'), icon: 'none' });
+    } else if (result.accepted > 0) {
+      uni.showToast({
+        title: t('profile.wechatReminderEnabled', { n: result.accepted }),
+        icon: 'success',
+      });
+    } else {
+      uni.showToast({ title: t('profile.wechatReminderNotEnabled'), icon: 'none' });
+    }
+  } catch {
+    uni.showToast({ title: t('profile.wechatReminderFailed'), icon: 'none' });
+  } finally {
+    wechatReminderLoading.value = false;
+  }
 };
 
 const loadStats = async (uid: number) => {
@@ -601,7 +768,13 @@ const loadProfileTags = async () => {
 const refreshUserFromBackend = async (numericId: number) => {
   try {
     const fresh = await getUserInfoApi(numericId);
-    userInfo.value = { ...userInfo.value, ...fresh };
+    userInfo.value = {
+      ...userInfo.value,
+      ...fresh,
+      graduationYear: fresh.graduationYear == null
+        ? ''
+        : String(fresh.graduationYear),
+    };
     uni.setStorageSync('userInfo', userInfo.value);
   } catch { /* offline or token invalid — keep cached values, page still renders */ }
 };
@@ -622,11 +795,17 @@ const loadProfile = async () => {
   userId.value = uni.getStorageSync('userId') || '';
   const info = uni.getStorageSync('userInfo');
   if (info) {
-    userInfo.value = { ...userInfo.value, ...info };
+    userInfo.value = {
+      ...userInfo.value,
+      ...info,
+      graduationYear: info.graduationYear == null
+        ? String(info.gradYear || '')
+        : String(info.graduationYear),
+    };
     editForm.value.school = userInfo.value.school || '';
     editForm.value.nickname = userInfo.value.nickname || '';
     editForm.value.major = userInfo.value.major || '';
-    editForm.value.gradYear = userInfo.value.gradYear || '';
+    editForm.value.graduationYear = userInfo.value.graduationYear || '';
   }
 
   const safeMetrics = getMpSafeAreaMetrics();
@@ -640,6 +819,10 @@ const loadProfile = async () => {
     loadProfileTags();
   }
 };
+
+onUnmounted(() => {
+  if (websiteLinkExpiryTimer) clearTimeout(websiteLinkExpiryTimer);
+});
 </script>
 
 <style scoped>
@@ -648,7 +831,7 @@ const loadProfile = async () => {
   flex-direction: column;
   padding: 0 var(--page-gutter, 20px);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif);
   box-sizing: border-box;
   min-height: 100vh;
 }
@@ -666,8 +849,10 @@ const loadProfile = async () => {
 .page-title {
   display: block;
   font-size: var(--font-hero, 28px);
-  font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 
 .page-subtitle {
@@ -675,7 +860,7 @@ const loadProfile = async () => {
   margin-top: 4px;
   font-size: var(--font-caption, 13px);
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 
 /* Edit/Complete chip on the header card — affords tappability with both
@@ -683,19 +868,22 @@ const loadProfile = async () => {
 .header-edit {
   margin-left: auto;
   display: flex; align-items: center; gap: 2px;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--paper-soft, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
   padding: 8px 6px 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm, 4px);
   min-height: 32px;
 }
-.header-edit:active { background: rgba(255, 255, 255, 0.28); }
-.header-edit-text { color: #ffffff; font-size: 13px; font-weight: 600; }
-.header-edit-arrow { color: #ffffff; font-size: 16px; line-height: 1; padding-right: 6px; }
+.header-edit:active { background: var(--paper-deep, #efeee9); }
+.header-edit-text { color: var(--vermilion, #c23b22); font-size: 13px; font-weight: 600; }
+.header-edit-arrow { color: var(--vermilion, #c23b22); font-size: 16px; line-height: 1; padding-right: 6px; }
 
 /* Header card */
 .header-card {
-  background: var(--gradient-primary);
-  border-radius: var(--radius-lg, 20px); padding: 24px 20px; margin: 12px 0 16px;
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-top: 3px solid var(--vermilion, #c23b22);
+  border-radius: var(--radius-md, 6px); padding: 24px 20px; margin: 12px 0 16px;
   display: flex; align-items: center; gap: 16px;
   box-shadow: var(--shadow-card);
 }
@@ -704,14 +892,14 @@ const loadProfile = async () => {
   flex-direction: column; align-items: flex-start; gap: 8px;
 }
 
-.guest-title { font-size: 20px; font-weight: 700; color: #ffffff; }
+.guest-title { font-size: 20px; font-weight: 600; color: var(--ink, #2c2b29); font-family: var(--font-serif, "Songti SC", STSong, serif); }
 
-.guest-desc { font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-bottom: 4px; }
+.guest-desc { font-size: 13px; color: var(--ink-secondary, #5a5956); margin-bottom: 4px; }
 
 .btn-login {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--vermilion, #c23b22);
   color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 14px; font-weight: 600; border-radius: var(--radius-sm, 12px);
+  font-size: 14px; font-weight: 600; border-radius: var(--btn-radius, 6px);
   padding: 0 var(--page-gutter, 20px); height: 36px; line-height: 36px;
 }
 
@@ -721,33 +909,34 @@ const loadProfile = async () => {
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--paper-soft, #f5f5f0);
 }
 
 .avatar-img {
   display: block;
   width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--border-color, #e0dfdb);
   box-sizing: border-box;
 }
 
 .header-info { flex: 1; }
 
 .header-name {
-  font-size: var(--font-title, 18px); font-weight: 700; color: #ffffff;
+  font-size: var(--font-title, 18px); font-weight: 600; color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
   display: block; margin-bottom: 4px;
 }
 
-.header-school { font-size: var(--font-caption, 13px); color: rgba(255, 255, 255, 0.9); }
+.header-school { font-size: var(--font-caption, 13px); color: var(--ink-secondary, #5a5956); }
 
-.edit-btn { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; display: inline-block; margin-top: 4px; }
+.edit-btn { background: var(--paper-soft, #f5f5f0); color: var(--vermilion, #c23b22); padding: 4px 10px; border: 1px solid var(--border-color, #e0dfdb); border-radius: var(--radius-sm, 4px); display: inline-block; margin-top: 4px; }
 
 /* Stats */
 .stats-bar {
   display: flex; align-items: center;
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-md, 16px);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-sm);
   padding: 16px 0; margin-bottom: 24px;
 }
@@ -755,7 +944,7 @@ const loadProfile = async () => {
 .website-link-card {
   margin: 0 0 20px;
   padding: 16px;
-  border-top: 3px solid var(--brand-color, #3f51b5);
+  border-top: 3px solid var(--vermilion, #c23b22);
 }
 .website-link-head {
   display: flex;
@@ -778,9 +967,10 @@ const loadProfile = async () => {
 .website-link-title {
   display: block;
   color: var(--text-primary, #2c2b29);
-  font-family: "Iowan Old Style", "Songti SC", STSong, serif;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 .website-link-desc {
   display: block;
@@ -792,18 +982,51 @@ const loadProfile = async () => {
 .website-link-state {
   flex-shrink: 0;
   padding: 4px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm, 4px);
   background: var(--sage-soft, #edf1ea);
   color: var(--sage, #7b8d6e);
   font-size: 10px;
   font-weight: 800;
 }
+.website-link-state-unavailable {
+  color: var(--text-tertiary, #8b8a86);
+  background: var(--paper-soft, #f5f5f0);
+}
+.website-link-unavailable {
+  margin-top: 14px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-secondary, #5a5956);
+  background: var(--paper-soft, #f5f5f0);
+  border: 1px dashed var(--border-color, #e0dfdb);
+  border-radius: var(--radius-sm, 4px);
+}
+.website-link-unavailable-icon {
+  flex-shrink: 0;
+  color: var(--heritage-gold, #b8975a);
+  font-size: 20px;
+}
+.website-link-unavailable-title {
+  display: block;
+  color: var(--text-primary, #2c2b29);
+  font-size: 13px;
+  font-weight: 800;
+}
+.website-link-unavailable-desc {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-secondary, #5a5956);
+  font-size: 11px;
+  line-height: 1.5;
+}
 .website-code-panel {
   margin-top: 14px;
   padding: 12px;
-  border-radius: 8px;
-  border: 1px dashed var(--brand-color, #3f51b5);
-  background: var(--brand-soft, #eceefa);
+  border-radius: var(--radius-sm, 4px);
+  border: 1px dashed var(--heritage-gold, #b8975a);
+  background: var(--gold-soft, #f5efe4);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -818,29 +1041,77 @@ const loadProfile = async () => {
 .website-code {
   display: block;
   margin: 2px 0;
-  color: var(--brand-color, #3f51b5);
+  color: var(--vermilion, #c23b22);
   font-size: 24px;
   line-height: 1.1;
   font-weight: 900;
   letter-spacing: 0.16em;
 }
 .website-code-copy {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 10px;
-  border-radius: 7px;
+  border-radius: var(--btn-radius, 6px);
   display: flex;
   align-items: center;
   gap: 5px;
   color: #fff;
-  background: var(--brand-color, #3f51b5);
+  background: var(--vermilion, #c23b22);
   font-size: 12px;
   font-weight: 700;
+}
+.website-destination {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--paper-soft, #f5f5f0);
+}
+.website-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #5a5956);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.website-step-index {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--indigo, #3f51b5);
+  font-size: 11px;
+  font-weight: 700;
+}
+.website-url-row {
+  min-height: 44px;
+  margin: 8px 0;
+  padding: 0 10px 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--indigo, #3f51b5);
+  background: var(--card-bg, #fffefa);
+  border: 1px dashed var(--indigo, #3f51b5);
+  border-radius: var(--radius-sm, 4px);
+}
+.website-url {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .website-link-action {
   min-height: 44px;
   margin-top: 12px;
   padding: 0 14px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 6px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -858,7 +1129,10 @@ const loadProfile = async () => {
   line-height: 1.45;
 }
 .is-dark .website-link-icon,
-.is-dark .website-code-panel {
+.is-dark .website-code-panel,
+.is-dark .website-destination,
+.is-dark .website-url-row,
+.is-dark .website-link-unavailable {
   background: #26364d;
   border-color: #8290dd;
 }
@@ -880,42 +1154,45 @@ const loadProfile = async () => {
 .tag-cloud-title {
   display: block;
   font-size: 16px;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 .tag-cloud-subtitle {
   display: block;
   margin-top: 3px;
   font-size: 11.5px;
   line-height: 1.4;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 .tag-cloud-edit {
   padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--primary-soft, #eff6ff);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--vermilion-soft, #f8ebe7);
+  border: 1px solid rgba(194, 59, 34, 0.22);
 }
 .tag-cloud-edit-text {
   font-size: 12px;
-  font-weight: 900;
-  color: var(--primary-color, #2563eb);
+  font-weight: 600;
+  color: var(--vermilion, #c23b22);
 }
 .tag-cloud {
   position: relative;
   height: 360rpx;
   overflow: hidden;
-  border-radius: 24rpx;
+  border-radius: 12rpx;
   background:
-    radial-gradient(circle at 24% 28%, rgba(37,99,235,.09), transparent 34%),
-    radial-gradient(circle at 72% 68%, rgba(20,184,166,.10), transparent 36%),
-  var(--surface-2, #f8fafc);
-  border: 1px solid var(--border-color, #e5e7eb);
+    radial-gradient(circle at 24% 28%, rgba(63,81,181,.07), transparent 34%),
+    radial-gradient(circle at 72% 68%, rgba(123,141,110,.09), transparent 36%),
+    var(--paper-soft, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
 }
 .tag-cloud-empty {
   height: 220rpx;
-  border-radius: 24rpx;
-  border: 1px dashed rgba(37,99,235,.24);
-  background: var(--surface-2, #f8fafc);
+  border-radius: 12rpx;
+  border: 1px dashed rgba(184,151,90,.48);
+  background: var(--gold-soft, #f5efe4);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -926,15 +1203,16 @@ const loadProfile = async () => {
   display: block;
   font-size: 14px;
   line-height: 1.25;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
 }
 .tag-cloud-empty-desc {
   display: block;
   margin-top: 8rpx;
   font-size: 11.5px;
   line-height: 1.45;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 .tag-cloud-word {
   position: absolute;
@@ -946,33 +1224,34 @@ const loadProfile = async () => {
 .tag-cloud-word-text {
   display: block;
   line-height: 1.12;
-  font-weight: 900;
-  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
   text-shadow: 0 1px 0 rgba(255,255,255,.76);
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tag-cat-skill .tag-cloud-word-text { color: #047857; }
-.tag-cat-background .tag-cloud-word-text { color: #1d4ed8; }
-.tag-cat-growth .tag-cloud-word-text { color: #b45309; }
-.tag-cat-goal .tag-cloud-word-text { color: #6d28d9; }
+.tag-cat-skill .tag-cloud-word-text { color: var(--sage, #7b8d6e); }
+.tag-cat-background .tag-cloud-word-text { color: var(--indigo, #3f51b5); }
+.tag-cat-growth .tag-cloud-word-text { color: var(--heritage-gold, #b8975a); }
+.tag-cat-goal .tag-cloud-word-text { color: var(--vermilion, #c23b22); }
 
 .stat-item {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; gap: 4px;
 }
 
-.stat-val { font-size: var(--font-title, 18px); font-weight: 800; color: var(--text-primary, #0f172a); }
+.stat-val { font-size: var(--font-title, 18px); font-weight: 600; color: var(--ink, #2c2b29); font-family: var(--font-serif, "Songti SC", STSong, serif); }
 
-.stat-label { font-size: var(--font-micro, 11px); color: var(--text-tertiary, #8e8e93); font-weight: 500; }
+.stat-label { font-size: var(--font-micro, 11px); color: var(--ink-tertiary, #8b8a86); font-weight: 500; }
 
-.stat-divider { width: 1px; height: 24px; background: var(--border-color, #b8c8d8); }
+.stat-divider { width: 1px; height: 24px; background: var(--border-color, #e0dfdb); }
 
 /* Menu */
 .group-label {
   font-size: var(--font-caption, 13px);
   font-weight: 500;
-  color: var(--text-tertiary, #8e8e93);
+  color: var(--ink-tertiary, #8b8a86);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: block;
@@ -981,7 +1260,7 @@ const loadProfile = async () => {
 }
 
 .menu-card {
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-md, 6px);
   overflow: hidden; margin-bottom: 24px;
 }
 
@@ -993,14 +1272,14 @@ const loadProfile = async () => {
 .menu-item:not(:last-child)::after {
   content: ''; position: absolute;
   bottom: 0; left: 52px; right: 0;
-  height: 1px; background: var(--border-color, #e2e8f0);
+  height: 1px; background: var(--border-light, #ecebe7);
 }
 
 .menu-icon-wrap {
   margin-right: 12px;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 4px);
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -1009,7 +1288,7 @@ const loadProfile = async () => {
 .menu-text {
   flex: 1;
   font-size: var(--font-body, 15px);
-  color: var(--text-primary, #0f172a);
+  color: var(--ink, #2c2b29);
   font-weight: 500;
   min-width: 0;
   overflow: hidden;
@@ -1017,7 +1296,15 @@ const loadProfile = async () => {
   white-space: nowrap;
 }
 
-.menu-arrow { font-size: 20px; color: #c7c7cc; flex-shrink: 0; }
+.menu-action-text {
+  flex-shrink: 0;
+  margin-left: 10px;
+  color: var(--primary-color, #2563eb);
+  font-size: var(--font-caption, 13px);
+  font-weight: 600;
+}
+
+.menu-arrow { font-size: 20px; color: var(--ink-placeholder, #aaa9a5); flex-shrink: 0; }
 
 .dark-switch { transform: scale(0.85); }
 
@@ -1027,27 +1314,28 @@ const loadProfile = async () => {
 /* Reduced pill size for more compact layout */
 .pill {
   min-width: 36px; min-height: 36px;
-  padding: 4px 12px; border-radius: 8px;
-  font-size: var(--font-caption, 13px); font-weight: 600; color: var(--text-secondary, #64748b);
-  background: var(--surface-3, #f1f5f9);
+  padding: 4px 12px; border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-caption, 13px); font-weight: 600; color: var(--ink-secondary, #5a5956);
+  background: var(--paper-soft, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
   display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, color 0.15s;
 }
 
-.pill-active { background: var(--primary-color, #2563eb); color: #ffffff; }
+.pill-active { background: var(--vermilion, #c23b22); border-color: var(--vermilion, #c23b22); color: #ffffff; }
 
 /* Logout */
 .btn-logout {
-  width: 100%; height: 48px; background: var(--danger-color, #ef4444);
+  width: 100%; height: 48px; background: var(--vermilion, #c23b22);
   color: #ffffff; font-size: var(--font-body, 15px); font-weight: 600;
-  border-radius: var(--radius-md, 16px); border: none;
+  border-radius: var(--btn-radius, 6px); border: none;
   display: flex; align-items: center; justify-content: center; padding: 0;
   box-shadow: var(--shadow-xs, 0 1px 3px rgba(0,0,0,0.08), 0 1px 8px rgba(0,0,0,0.05));
 }
 
 .btn-logout::after { border: none; }
 
-.btn-logout:active { background: #dc2626; }
+.btn-logout:active { background: #a8321e; }
 
 .bottom-safe {
   height: calc(var(--tab-bar-height, 50px) + 16px);
@@ -1062,31 +1350,31 @@ const loadProfile = async () => {
 }
 
 .modal-content.bottom-sheet {
-  width: 100%; background: var(--card-bg, #ffffff);
-  border-radius: 24px 24px 0 0; padding: 16px 20px 32px;
+  width: 100%; background: var(--card-bg, #fffefa);
+  border-radius: var(--radius-lg, 8px) var(--radius-lg, 8px) 0 0; padding: 16px 20px 32px;
   box-sizing: border-box;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid var(--border-color, #e0dfdb);
 }
 
 .sheet-handle {
-  width: 36px; height: 5px; border-radius: 3px; background: #e2e8f0;
+  width: 36px; height: 4px; border-radius: 2px; background: var(--border-strong, #ceccc5);
   margin: 0 auto 16px;
 }
 
-.modal-title { font-size: var(--font-title, 18px); font-weight: 700; color: var(--text-primary, #0f172a); display: block; margin-bottom: 24px; text-align: center; }
+.modal-title { font-size: var(--font-title, 18px); font-weight: 600; color: var(--ink, #2c2b29); display: block; margin-bottom: 24px; text-align: center; font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.05em; }
 
 .form-group { margin-bottom: 16px; }
-.field-label { font-size: var(--font-caption, 13px); font-weight: 600; color: var(--text-secondary, #64748b); margin-bottom: 8px; display: block; }
-.field-input { width: 100%; height: 48px; border: 1px solid #e2e8f0; border-radius: var(--radius-sm, 12px); padding: 0 16px; font-size: var(--font-body, 15px); box-sizing: border-box; background: var(--surface-2, #f8fafc); }
+.field-label { font-size: var(--font-caption, 13px); font-weight: 600; color: var(--ink-secondary, #5a5956); margin-bottom: 8px; display: block; font-family: var(--font-serif, "Songti SC", STSong, serif); }
+.field-input { width: 100%; height: 48px; border: 1px solid var(--border-color, #e0dfdb); border-radius: var(--radius-sm, 4px); padding: 0 16px; font-size: var(--font-body, 15px); box-sizing: border-box; background: var(--card-bg, #fffefa); color: var(--ink, #2c2b29); }
 
 .modal-actions { display: flex; gap: 12px; margin-top: 32px; }
-.btn-secondary { flex: 1; height: 48px; background: var(--surface-3, #f1f5f9); color: var(--text-secondary, #64748b); font-weight: 600; border-radius: var(--radius-sm, 12px); border: none; line-height: 48px; }
-.btn-primary { flex: 2; height: 48px; background: var(--primary-color, #2563eb); color: #fff; font-weight: 600; border-radius: var(--radius-sm, 12px); border: none; line-height: 48px; }
+.btn-secondary { flex: 1; height: 48px; background: var(--paper-soft, #f5f5f0); color: var(--ink-secondary, #5a5956); font-weight: 600; border-radius: var(--btn-radius, 6px); border: 1px solid var(--border-color, #e0dfdb); line-height: 48px; }
+.btn-primary { flex: 2; height: 48px; background: var(--vermilion, #c23b22); color: #fff; font-weight: 600; border-radius: var(--btn-radius, 6px); border: none; line-height: 48px; }
 
 /* Danger row (Delete Account) */
-.menu-text-danger { color: var(--danger-color, #ef4444) !important; }
-.menu-arrow-danger { color: #ef4444 !important; }
-.menu-item-danger:active { background: #fff1f2; }
+.menu-text-danger { color: var(--vermilion, #c23b22) !important; }
+.menu-arrow-danger { color: var(--vermilion, #c23b22) !important; }
+.menu-item-danger:active { background: var(--vermilion-soft, #f8ebe7); }
 
 /* Dark mode */
 .is-dark { background: #0f172a; }
@@ -1106,7 +1394,7 @@ const loadProfile = async () => {
 
 .is-dark .pill { background: #334155; color: var(--text-tertiary, #8e8e93); }
 
-.is-dark .pill-active { background: var(--primary-color, #2563eb); color: #ffffff; }
+.is-dark .pill-active { background: var(--vermilion, #c23b22); color: #ffffff; }
 
 .is-dark .modal-content { background: #1e293b; }
 .is-dark .sheet-handle { background: #334155; }
@@ -1122,15 +1410,16 @@ const loadProfile = async () => {
 
 .header-card {
   overflow: visible;
-  border: none;
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  box-shadow: var(--shadow-card);
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #c23b22;
+  background: #fffefa;
+  box-shadow: 0 2px 10px rgba(44,43,41,.035);
 }
 
 .stats-bar {
   overflow: visible;
-  border: 1.5px solid #b0bfd0;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #e0dfdb;
+  box-shadow: 0 2px 10px rgba(44,43,41,.035);
 }
 
 .menu-card {
@@ -1140,7 +1429,7 @@ const loadProfile = async () => {
 }
 
 .menu-item:not(:last-child)::after {
-  background: #c0ccd8;
+  background: #ecebe7;
 }
 
 .is-dark .stats-bar,

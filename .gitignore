@@ -29,6 +29,10 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Python caches (body-language sidecar tests)
+__pycache__/
+*.py[cod]
+
 # Ignored Reference Folders
 AI-Career-Mini-Program/
 
@@ -36,3 +40,9 @@ AI-Career-Mini-Program/
 *.md
 !README.md
 backend/test_output.log
+
+# Local visual QA artifacts
+frontend/.playwright-cli/
+report_screenshots/
+tmp/
+frontend/output/playwright/

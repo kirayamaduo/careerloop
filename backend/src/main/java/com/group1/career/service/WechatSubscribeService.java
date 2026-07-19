@@ -12,6 +12,16 @@ import java.util.Map;
 public interface WechatSubscribeService {
 
     /**
+     * Return the mini-program template IDs that are both configured on this
+     * server and backed by a real send flow.
+     *
+     * <p>The keys are the stable frontend contract:
+     * {@code weekly}, {@code assessment}, and {@code interview}. Unconfigured
+     * templates are omitted.</p>
+     */
+    Map<String, String> getConfiguredTemplates();
+
+    /**
      * Record that a user has granted subscribe permission for one or more templates.
      * Increments {@code remaining} in {@code wx_subscribe_quota} for each accepted template.
      *

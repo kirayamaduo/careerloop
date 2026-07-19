@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
+import { enterGuestMode } from '@/utils/auth';
 
 const LANDING_KEY = 'zhihui_landing_seen';
 const topSafeHeight = ref(52);
@@ -100,7 +101,7 @@ const start = () => {
 
 const preview = () => {
   markSeen();
-  uni.setStorageSync('zhihui_preview_home', '1');
+  enterGuestMode();
   uni.switchTab({ url: '/pages/home/index' });
 };
 </script>
@@ -108,10 +109,13 @@ const preview = () => {
 <style scoped>
 .landing-page {
   min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  background: #f6f8fb;
-  color: #101828;
+  overflow-x: hidden;
+  background: var(--paper, #faf9f6);
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", sans-serif);
   box-sizing: border-box;
 }
 
@@ -133,18 +137,19 @@ const preview = () => {
 .brand-mark {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
-  background: #155eef;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--vermilion, #c23b22);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 24px rgba(21, 94, 239, 0.22);
+  box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12);
 }
 
 .brand-mark-text {
   color: #ffffff;
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 600;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
 }
 
 .brand-copy {
@@ -155,14 +160,17 @@ const preview = () => {
 
 .brand-name {
   font-size: 20px;
-  font-weight: 900;
-  color: #101828;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.08em;
 }
 
 .brand-tag {
   font-size: 12px;
-  color: #667085;
-  font-weight: 700;
+  color: var(--ink-tertiary, #8b8a86);
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 .hero-title {
@@ -170,9 +178,11 @@ const preview = () => {
   margin-top: 28px;
   max-width: 620px;
   font-size: 38px;
-  line-height: 1.08;
-  font-weight: 900;
-  color: #101828;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 
 .hero-desc {
@@ -181,7 +191,7 @@ const preview = () => {
   max-width: 600px;
   font-size: 15px;
   line-height: 1.7;
-  color: #475467;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .signal-board {
@@ -193,20 +203,23 @@ const preview = () => {
 
 .score-panel,
 .task-panel {
-  border: 1px solid #d9e2ef;
-  background: #ffffff;
-  border-radius: 18px;
+  border: 1px solid var(--border-color, #e0dfdb);
+  background: var(--card-bg, #fffefa);
+  border-radius: var(--radius-md, 6px);
   padding: 16px;
   box-sizing: border-box;
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
+  box-shadow: 0 2px 10px rgba(44, 43, 41, 0.035);
 }
+.task-panel { border-top: 3px solid var(--heritage-gold, #b8975a); }
 
 .score-label,
 .task-kicker {
   display: block;
   font-size: 12px;
-  font-weight: 800;
-  color: #667085;
+  font-weight: 600;
+  color: var(--vermilion, #c23b22);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.06em;
 }
 
 .score-value {
@@ -214,19 +227,20 @@ const preview = () => {
   margin-top: 6px;
   font-size: 34px;
   line-height: 1;
-  font-weight: 900;
-  color: #155eef;
+  font-weight: 600;
+  color: var(--vermilion, #c23b22);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
 }
 
 .score-pending {
   font-size: 28px;
-  color: #344054;
+  color: var(--ink, #2c2b29);
 }
 
 .score-bar {
   height: 7px;
   border-radius: 999px;
-  background: #e4eaf3;
+  background: var(--paper-deep, #efeee9);
   margin-top: 12px;
   overflow: hidden;
 }
@@ -235,18 +249,18 @@ const preview = () => {
   width: 0;
   height: 100%;
   border-radius: 999px;
-  background: #155eef;
+  background: var(--vermilion, #c23b22);
 }
 
 .score-bar-pending {
-  background: repeating-linear-gradient(90deg, #e4eaf3 0, #e4eaf3 10px, #f0f4f9 10px, #f0f4f9 18px);
+  background: repeating-linear-gradient(90deg, #e0dfdb 0, #e0dfdb 10px, #efeee9 10px, #efeee9 18px);
 }
 
 .score-note {
   display: block;
   margin-top: 10px;
   font-size: 12px;
-  color: #475467;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .task-title {
@@ -254,8 +268,10 @@ const preview = () => {
   margin-top: 8px;
   font-size: 17px;
   line-height: 1.35;
-  font-weight: 900;
-  color: #101828;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.04em;
 }
 
 .task-desc {
@@ -263,7 +279,7 @@ const preview = () => {
   margin-top: 8px;
   font-size: 12px;
   line-height: 1.55;
-  color: #667085;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .value-strip {
@@ -279,15 +295,15 @@ const preview = () => {
   align-items: center;
   gap: 13px;
   padding: 13px 14px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #e4eaf3;
+  border-radius: var(--radius-md, 6px);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
 }
 
 .value-icon {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: var(--radius-sm, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -298,9 +314,9 @@ const preview = () => {
   font-size: 22px;
 }
 
-.tone-blue { background: #dbeafe; color: #1d4ed8; }
-.tone-green { background: #dcfce7; color: #15803d; }
-.tone-amber { background: #fef3c7; color: #b45309; }
+.tone-blue { background: var(--indigo-soft, #eceefa); color: var(--indigo, #3f51b5); }
+.tone-green { background: var(--sage-soft, #edf1ea); color: var(--sage, #7b8d6e); }
+.tone-amber { background: var(--gold-soft, #f5efe4); color: var(--heritage-gold, #b8975a); }
 
 .value-copy {
   display: flex;
@@ -311,14 +327,16 @@ const preview = () => {
 
 .value-title {
   font-size: 15px;
-  font-weight: 900;
-  color: #101828;
+  font-weight: 600;
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.04em;
 }
 
 .value-desc {
   font-size: 12px;
   line-height: 1.45;
-  color: #667085;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .bottom-actions {
@@ -328,19 +346,21 @@ const preview = () => {
 .primary-btn,
 .secondary-btn {
   height: 52px;
-  border-radius: 16px;
+  border-radius: var(--btn-radius, 6px);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 600;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 
 .primary-btn {
   color: #ffffff;
-  background: #155eef;
-  box-shadow: 0 12px 24px rgba(21, 94, 239, 0.24);
+  background: var(--vermilion, #c23b22);
+  box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12);
 }
 
 .primary-btn text {
@@ -349,8 +369,9 @@ const preview = () => {
 
 .secondary-btn {
   margin-top: 10px;
-  color: #344054;
-  background: #eef3f8;
+  color: var(--ink, #2c2b29);
+  background: var(--paper-soft, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
 }
 
 @media (max-height: 720px) {

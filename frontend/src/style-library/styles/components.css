@@ -37,7 +37,7 @@ textarea.ui-input {
 
 button {
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
 }
 
 .ui-btn,
@@ -46,10 +46,11 @@ button {
 .btn-send,
 .btn-choose,
 .btn-upload-cloud {
-  border-radius: var(--btn-radius, 14px);
+  border-radius: var(--btn-radius, 6px);
   min-height: var(--btn-height-md, 48px);
   line-height: var(--btn-height-md, 48px);
   font-weight: 600;
+  letter-spacing: 0.04em;
   border: 1px solid transparent;
 }
 
@@ -73,7 +74,7 @@ button {
 .sl-page {
   min-height: 100vh;
   background-color: var(--surface-1, #faf9f6);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif);
 }
 
 .app-card-soft {
@@ -137,14 +138,15 @@ button {
 
 .sl-button {
   border: 1px solid transparent;
-  border-radius: var(--btn-radius, 14px);
+  border-radius: var(--btn-radius, 6px);
   min-height: 40px;
   line-height: 40px;
   font-size: 14px;
   font-weight: 600;
   padding: 0 16px;
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.04em;
 }
 
 .sl-button--primary {
@@ -188,7 +190,7 @@ button {
 .sl-input {
   width: 100%;
   height: 40px;
-  border-radius: var(--radius-sm, 12px);
+  border-radius: var(--radius-sm, 4px);
   background: var(--surface-1, #ffffff);
   border: 1px solid var(--border-color, #b8c8d8);
   padding: 0 12px;
@@ -225,9 +227,10 @@ button {
 
 .sl-navbar__title {
   font-size: var(--font-section, 17px);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary, #2c2b29);
-  font-family: "Iowan Old Style", "Songti SC", STSong, serif;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  letter-spacing: 0.05em;
 }
 
 .sl-navbar__back {
@@ -282,7 +285,7 @@ button {
   display: flex;
   align-items: center;
   background: var(--surface-1, #ffffff);
-  border-radius: 19px;
+  border-radius: var(--radius-md, 6px);
   padding: 0 12px;
   border: 1px solid var(--border-color, #b8c8d8);
   box-sizing: border-box;

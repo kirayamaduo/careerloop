@@ -1,7 +1,9 @@
 package com.group1.career.controller;
 
 import com.group1.career.common.Result;
+import com.group1.career.exception.BizException;
 import com.group1.career.service.FileService;
+import com.group1.career.utils.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,11 @@ public class FileController {
     @PostMapping("/upload")
     public Result<String> upload(@RequestParam("file") MultipartFile file,
                                  @RequestParam(value = "folder", defaultValue = "resumes") String folder) {
-        return Result.success(fileService.uploadFile(file, folder));
+        Long uid = SecurityUtil.requireCurrentUserId();
+        String kind = folder == null ? "resumes" : folder.trim().toLowerCase();
+        if (!"resumes".equals(kind) && !"avatars".equals(kind)) {
+            throw new BizException("Unsupported upload category");
+        }
+        return Result.success(fileService.uploadFile(file, kind + "/" + uid));
     }
 }
-

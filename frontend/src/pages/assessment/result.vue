@@ -287,13 +287,6 @@ const loadResult = async () => {
   }
 };
 
-const goMap = () => {
-  if (record.value?.resultSummary) {
-    uni.setStorageSync('assessment_recommended_role', record.value.resultSummary);
-  }
-  uni.navigateTo({ url: '/pages/map/index?from=assessment' });
-};
-
 /**
  * The first AI-suggested role for this profile. Used as the headline CTA
  * label so the user can jump straight from "I'm an INFP" to "okay, let me
@@ -304,6 +297,21 @@ const primarySuggestedRole = computed(() => {
   const roles = insight.value.suggestedRoles;
   return roles && roles.length > 0 ? roles[0] : '';
 });
+
+const goMap = async () => {
+  const role = primarySuggestedRole.value;
+  if (role) {
+    uni.setStorageSync('assessment_recommended_role', role);
+    try {
+      await updatePreferencesApi({ targetRole: role });
+    } catch {
+      // Keep the navigation usable offline; the role hint still selects the
+      // closest public career path locally.
+    }
+  }
+  const roleQuery = role ? `&role=${encodeURIComponent(role)}` : '';
+  uni.navigateTo({ url: `/pages/map/index?from=assessment${roleQuery}` });
+};
 
 /**
  * Bridge from assessment → interview without making the user re-type the role.
@@ -325,8 +333,10 @@ const practiceInterview = async () => {
 };
 
 const goBack = () => {
-  // Use redirect so we don't loop back into the quiz when the user pops.
-  uni.redirectTo({ url: '/pages/assessment/index' });
+  uni.navigateBack({
+    delta: 1,
+    fail: () => uni.redirectTo({ url: '/pages/assessment/index' }),
+  });
 };
 
 onMounted(() => {
@@ -350,8 +360,8 @@ onShow(() => {
 .result-container {
   min-height: 100vh;
   padding: 24px 20px;
-  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  padding-bottom: calc(228px + env(safe-area-inset-bottom, 0px));
+  font-family: var(--font-sans, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif);
   box-sizing: border-box;
 }
 
@@ -578,4 +588,230 @@ onShow(() => {
 
 .is-dark .p-content,
 .is-dark .result-subtitle { color: #94a3b8; }
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.result-container {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.result-header {
+  padding: 34px 20px;
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #3f51b5;
+  border-radius: 8px;
+  background: #f5f5f0;
+  color: #2c2b29;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.06);
+}
+
+.result-subtitle {
+  color: #8b8a86;
+  opacity: 1;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.08em;
+}
+
+.result-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.tags-container {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tag {
+  padding: 5px 12px;
+  border: 1px solid #d8d6cf;
+  border-radius: 4px;
+  background: #faf9f6;
+  color: #5a5956;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.section-title,
+.section-title-text,
+.p-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.section-title {
+  margin: 10px 0 14px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #edece8;
+  font-size: 18px;
+}
+
+.section-title-text {
+  font-size: 18px;
+}
+
+.ai-badge {
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: #3f51b5;
+  color: #fffdfa;
+}
+
+.radar-card,
+.analysis-card,
+.loading-state,
+.error-state {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.score-basis {
+  border: 1px solid rgba(184, 151, 90, 0.32);
+  border-radius: 6px;
+  background: #f6f1e7;
+}
+
+.score-basis-title {
+  color: #9a783f;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.05em;
+}
+
+.score-basis-text,
+.p-content {
+  color: #5a5956;
+  line-height: 1.75;
+}
+
+.skill-name,
+.skill-score {
+  color: #2c2b29;
+}
+
+.bar-bg {
+  background: #efeee9;
+}
+
+.fill-logic { background: #3f51b5; }
+.fill-creative { background: #b8975a; }
+.fill-exec { background: #7b8d6e; }
+.fill-team { background: #5a7b9a; }
+.fill-pressure { background: #c23b22; }
+
+.divider {
+  background: #edece8;
+}
+
+.role-chip {
+  padding: 5px 10px;
+  border: 1px solid rgba(123, 141, 110, 0.45);
+  border-radius: 4px;
+  background: #eef1eb;
+  color: #66775c;
+}
+
+.bottom-action {
+  gap: 10px;
+  background: rgba(250, 249, 246, 0.97);
+  border-top: 1px solid #e0dfdb;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.btn-primary {
+  height: 50px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.btn-primary.practice-cta {
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.btn-primary.practice-cta:active,
+.btn-primary:active {
+  background: #a9321d;
+}
+
+.btn-primary-text,
+.btn-secondary-text {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary.btn-secondary-tone {
+  border-color: #3f51b5;
+  background: #faf9f6;
+}
+
+.btn-primary.btn-secondary-tone .btn-primary-text {
+  color: #3f51b5;
+}
+
+.btn-primary.btn-secondary-tone:active {
+  background: #efeff7;
+}
+
+.btn-secondary-text {
+  color: #5a5956;
+}
+
+.spinner {
+  border-color: #e0dfdb;
+  border-top-color: #c23b22;
+}
+
+.loading-text {
+  color: #5a5956;
+}
+
+.btn-retry {
+  border-radius: 6px;
+  background: #c23b22;
+}
+
+.result-container.is-dark .result-header {
+  border-color: #475569;
+  border-top-color: #e27b66;
+  background: #1e293b;
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.result-container.is-dark .result-title {
+  color: #f8fafc;
+}
+
+.result-container.is-dark .result-subtitle {
+  color: #cbd5e1;
+}
+
+.result-container.is-dark .role-chip {
+  border-color: rgba(184, 198, 175, 0.44);
+  background: rgba(123, 141, 110, 0.22);
+  color: #b8c6af;
+}
+
+.result-container.is-dark .score-basis {
+  border-color: rgba(223, 197, 143, 0.42);
+  background: rgba(184, 151, 90, 0.18);
+}
+
+.result-container.is-dark .score-basis-title,
+.result-container.is-dark .score-basis-text {
+  color: #dfc58f;
+}
 </style>

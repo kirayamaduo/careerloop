@@ -10,6 +10,7 @@ import java.util.List;
 public interface InterviewMessageRepository extends JpaRepository<InterviewMessage, Long> {
     List<InterviewMessage> findByInterviewIdOrderByCreatedAtAsc(Long interviewId);
 
+    boolean existsByInterviewIdAndRoleIgnoreCase(Long interviewId, String role);
+
     void deleteByInterviewId(Long interviewId);
 }
-

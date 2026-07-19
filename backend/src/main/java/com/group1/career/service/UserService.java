@@ -16,9 +16,13 @@ public interface UserService {
      * @param nickname  display name
      */
     User updateUser(Long userId, String nickname, String avatarUrl,
-                    String school, String major, Integer graduationYear);
+                    String school, String major, Integer graduationYear,
+                    boolean clearGraduationYear);
 
     void resetPassword(String identifier, String newCredential);
+    void changePassword(Long userId, String currentCredential, String newCredential);
+    /** Invalidate every JWT issued with the user's current auth generation. */
+    void revokeSessions(Long userId);
     boolean isEmailRegistered(String email);
 
     /**
@@ -41,4 +45,3 @@ public interface UserService {
      */
     void cancelDeletion(Long userId);
 }
-

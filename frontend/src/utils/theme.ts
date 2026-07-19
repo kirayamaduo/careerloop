@@ -93,21 +93,21 @@ function _applyTabBarStyle(t: ThemeKey) {
       if (t === 'dark') {
         uni.setTabBarStyle({
           color: '#94a3b8',
-          selectedColor: '#8290dd',
+          selectedColor: '#c23b22',
           backgroundColor: '#0f172a',
           borderStyle: 'black',
         });
       } else if (t === 'green') {
         uni.setTabBarStyle({
-          color: '#64748b',
-          selectedColor: '#059669',
-          backgroundColor: '#f0fdf4',
+          color: '#5a5956',
+          selectedColor: '#c23b22',
+          backgroundColor: '#f4f5f0',
           borderStyle: 'white',
         });
       } else {
         uni.setTabBarStyle({
           color: '#8b8a86',
-          selectedColor: '#3f51b5',
+          selectedColor: '#c23b22',
           backgroundColor: '#faf9f6',
           borderStyle: 'white',
         });

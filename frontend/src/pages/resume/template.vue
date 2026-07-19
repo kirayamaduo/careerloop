@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="app-soft-bg" :custom-class="['resume-template-page', themeClass, fontClass].join(' ')">
     <SlNavBar show-back @back="goBack" :safe-top="topSafe" />
 
     <!-- Header -->
@@ -135,6 +135,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { generateResumeFromTemplateApi } from '@/api/resume';
 import { useTheme } from '@/utils/theme';
+import { requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
@@ -165,6 +166,7 @@ const stepValid = computed(() => {
 });
 
 const nextStep = () => {
+  if (!requireAuth({ message: '登录后才能创建并保存你的 AI 简历。' })) return;
   if (!stepValid.value) {
     uni.showToast({ title: t('resumeTemplate.requiredError'), icon: 'none' });
     return;
@@ -180,6 +182,8 @@ const onDegreeChange = (e: any) => { form.value.degree = degreeOptions[e.detail.
 const onYearChange = (e: any) => { form.value.graduationYear = e.detail.value; };
 
 const handleGenerate = async () => {
+  if (submitting.value) return;
+  if (!requireAuth({ message: '登录后才能生成并保存你的 AI 简历。' })) return;
   if (!form.value.name.trim() || !form.value.targetRole.trim()) {
     uni.showToast({ title: t('resumeTemplate.requiredError'), icon: 'none' });
     currentStep.value = 1;
@@ -207,10 +211,6 @@ const handleGenerate = async () => {
 </script>
 
 <style scoped>
-.sl-page :deep(.page) {
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-  box-sizing: border-box;
-}
 
 /* ── Header ── */
 .page-header {
@@ -395,4 +395,222 @@ const handleGenerate = async () => {
 .is-dark .bottom-bar { background: rgba(15, 23, 42, 0.95); border-color: var(--text-secondary, #64748b); }
 .is-dark .btn-back { background: #1e293b; border-color: var(--text-secondary, #64748b); }
 .is-dark .btn-back-text { color: var(--text-tertiary, #8e8e93); }
+
+/* Website-aligned warm-paper form */
+.page-header {
+  padding: 2px 20px 18px;
+}
+
+.page-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.page-subtitle {
+  margin-top: 4px;
+  color: #5a5956;
+  line-height: 1.65;
+}
+
+.progress-track {
+  height: 3px;
+  border-radius: 1px;
+  background: #e0dfdb;
+}
+
+.progress-fill {
+  height: 3px;
+  border-radius: 1px;
+  background: #c23b22;
+}
+
+.progress-label {
+  color: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.step-body {
+  gap: 16px;
+}
+
+.field-group {
+  gap: 7px;
+}
+
+.field-label {
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.req {
+  color: #c23b22;
+}
+
+.char-count {
+  color: #8b8a86;
+}
+
+.field-input,
+.field-picker,
+.field-textarea {
+  border: 1px solid #d4d2cc;
+  border-radius: 6px;
+  background: #faf9f6;
+  color: #2c2b29;
+  box-shadow: none;
+}
+
+.field-input,
+.field-picker {
+  min-height: 48px;
+}
+
+.field-input:focus,
+.picker-filled {
+  border-color: #3f51b5;
+}
+
+.picker-text {
+  color: #b0afab;
+}
+
+.picker-text-filled {
+  color: #2c2b29;
+}
+
+.picker-arrow {
+  color: #8b8a86;
+}
+
+.field-textarea {
+  line-height: 1.7;
+}
+
+.tip-card {
+  padding: 12px 13px;
+  border: 1px solid rgba(63, 81, 181, 0.28);
+  border-left: 2px solid #3f51b5;
+  border-radius: 0 6px 6px 0;
+  background: #f5f5f0;
+}
+
+.tip-icon {
+  color: #3f51b5;
+}
+
+.tip-text {
+  color: #5a5956;
+  line-height: 1.65;
+}
+
+.bottom-bar {
+  padding-top: 10px;
+  border-top: 1px solid #e0dfdb;
+  background: rgba(250, 249, 246, 0.97);
+  box-shadow: none;
+}
+
+.btn-back,
+.btn-next,
+.btn-generate {
+  height: 50px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.btn-back {
+  border: 1px solid #d4d2cc;
+  background: #faf9f6;
+}
+
+.btn-back:active {
+  background: #efeee9;
+}
+
+.btn-back-text {
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.btn-next,
+.btn-generate {
+  border: 1px solid #c23b22;
+  background: #c23b22;
+}
+
+.btn-next:active,
+.btn-generate:active {
+  background: #a9321d;
+  opacity: 1;
+}
+
+.btn-next-text,
+.btn-generate-text {
+  color: #faf9f6;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.btn-disabled {
+  border-color: #e0dfdb !important;
+  background: #efeee9 !important;
+}
+
+.btn-disabled .btn-next-text,
+.btn-disabled .btn-generate-text {
+  color: #a4a29c !important;
+}
+
+.is-dark .page-title {
+  color: #f5f5f0;
+}
+
+.is-dark .page-subtitle,
+.is-dark .field-label {
+  color: #c4c2bc;
+}
+
+.is-dark .field-input,
+.is-dark .field-picker,
+.is-dark .field-textarea,
+.is-dark .btn-back {
+  border-color: #575650;
+  background: #292926;
+  color: #f5f5f0;
+}
+
+.is-dark .picker-text-filled {
+  color: #f5f5f0;
+}
+
+.is-dark .tip-card {
+  border-color: rgba(145, 157, 225, 0.38);
+  border-left-color: #8794d9;
+  background: #292926;
+}
+
+.is-dark .tip-text {
+  color: #c4c2bc;
+}
+
+.is-dark .bottom-bar {
+  border-color: #45443f;
+  background: rgba(31, 31, 29, 0.97);
+}
+
+.is-dark .btn-next,
+.is-dark .btn-generate {
+  border-color: #c23b22;
+  background: #c23b22;
+}
 </style>

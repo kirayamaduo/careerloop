@@ -667,4 +667,211 @@ onShow(() => {
 .is-dark .method-text { color: #94a3b8; }
 .is-dark .source-year-chart { background: #0f172a; }
 .is-dark .chart-point { border-color: #1e293b; }
+
+/* Competition visual system ------------------------------------------------ */
+.hero,
+.visual-card,
+.chart-card,
+.trend-card,
+.source-card,
+.method-card,
+.state-card {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.hero {
+  background: #f5f5f0;
+  border-top: 3px solid #c23b22;
+}
+
+.hero-kicker {
+  color: #c23b22;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.hero-title,
+.visual-title,
+.section-title,
+.source-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hero-sub,
+.visual-meta,
+.state-text,
+.trend-value,
+.legend-text,
+.source-excerpt,
+.method-text,
+.method-meta {
+  color: #5a5956;
+}
+
+.visual-stat {
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.visual-stat-value,
+.year-bar-count,
+.source-type-count,
+.trend-year,
+.point-label {
+  color: #3f51b5;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.postgrad-text {
+  color: #6b8e5a;
+}
+
+.source-text {
+  color: #b8975a;
+}
+
+.source-year-chart {
+  background: #f5f5f0;
+  border: 1px solid #edece8;
+  border-radius: 4px;
+}
+
+.year-bar-fill {
+  background: #3f51b5;
+  border-radius: 3px 3px 0 0;
+  box-shadow: none;
+}
+
+.source-type-track,
+.trend-bar {
+  background: #efeee9;
+  border-radius: 2px;
+}
+
+.source-type-fill {
+  background: #b8975a;
+  border-radius: 2px;
+}
+
+.legend-employment,
+.point-employment,
+.trend-fill.employment {
+  background: #3f51b5;
+}
+
+.legend-postgrad,
+.point-postgrad,
+.trend-fill.postgrad {
+  background: #6b8e5a;
+}
+
+.line-employment {
+  --line-color: #3f51b5;
+}
+
+.line-postgrad {
+  --line-color: #6b8e5a;
+}
+
+.trend-fill {
+  border-radius: 2px;
+}
+
+.source-tag {
+  color: #5a5956;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 3px;
+}
+
+.source-btn {
+  color: #2c2b29;
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.source-btn.primary {
+  color: #faf9f6;
+  background: #c23b22;
+  border-color: #c23b22;
+}
+
+.method-step {
+  color: #3f51b5;
+  background: rgba(63, 81, 181, 0.08);
+  border: 1px solid rgba(63, 81, 181, 0.22);
+  border-radius: 3px;
+}
+
+.is-dark .hero,
+.is-dark .visual-card,
+.is-dark .chart-card,
+.is-dark .trend-card,
+.is-dark .source-card,
+.is-dark .method-card,
+.is-dark .state-card {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .hero-title,
+.is-dark .visual-title,
+.is-dark .section-title,
+.is-dark .source-title {
+  color: #faf9f6;
+}
+
+.is-dark .visual-stat,
+.is-dark .source-btn,
+.is-dark .source-tag,
+.is-dark .source-year-chart {
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.is-dark .hero-sub,
+.is-dark .visual-meta,
+.is-dark .state-text,
+.is-dark .trend-value,
+.is-dark .legend-text,
+.is-dark .source-excerpt,
+.is-dark .method-text,
+.is-dark .method-meta {
+  color: #c6c4be;
+}
+
+.is-dark .source-type-track,
+.is-dark .trend-bar {
+  background: #45443f;
+}
+
+.visual-stat-value,
+.year-bar-count,
+.source-type-count,
+.trend-year,
+.trend-label,
+.trend-value,
+.legend-text,
+.source-tag,
+.source-btn,
+.method-step {
+  font-weight: 600;
+}
+
+.hero-title,
+.visual-title,
+.section-title,
+.source-title {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+}
 </style>

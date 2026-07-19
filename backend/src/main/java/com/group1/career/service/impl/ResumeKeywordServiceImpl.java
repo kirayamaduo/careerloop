@@ -238,7 +238,8 @@ public class ResumeKeywordServiceImpl implements ResumeKeywordService {
             resume.setParsedContent(objectMapper.writeValueAsString(Map.of("rawContent", text)));
             resumeRepository.save(resume);
         } catch (Exception e) {
-            throw new BizException("Failed to persist parsed resume text: " + e.getMessage());
+            log.error("Failed to persist parsed resume text", e);
+            throw new BizException("Failed to persist parsed resume text");
         }
     }
 

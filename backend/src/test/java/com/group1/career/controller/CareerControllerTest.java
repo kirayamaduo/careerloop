@@ -5,6 +5,7 @@ import com.group1.career.interceptor.AuthInterceptor;
 import com.group1.career.model.entity.CareerNode;
 import com.group1.career.model.entity.CareerPath;
 import com.group1.career.model.entity.UserCareerProgress;
+import com.group1.career.service.AdminAuthService;
 import com.group1.career.service.CareerPlanService;
 import com.group1.career.service.CareerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +41,9 @@ public class CareerControllerTest {
 
     @MockitoBean
     private CareerPlanService careerPlanService;
+
+    @MockitoBean
+    private AdminAuthService adminAuthService;
 
     @MockitoBean
     private AuthInterceptor authInterceptor;
@@ -99,16 +104,21 @@ public class CareerControllerTest {
     @Test
     @DisplayName("API Test: Get User Progress")
     public void testGetUserProgress_Success() throws Exception {
-        Long userId = 1L;
+        Long authenticatedUserId = 7L;
         List<UserCareerProgress> progress = Arrays.asList(
-                UserCareerProgress.builder().id(1L).userId(userId).nodeId(1L).status("COMPLETED").build()
+                UserCareerProgress.builder().id(1L).userId(authenticatedUserId).nodeId(1L).status("COMPLETED").build()
         );
-        when(careerService.getUserProgress(userId)).thenReturn(progress);
+        when(careerService.getUserProgress(authenticatedUserId)).thenReturn(progress);
 
-        mockMvc.perform(get("/api/careers/progress/{userId}", userId))
+        // The legacy path id is deliberately different. The controller must
+        // use only the authenticated request attribute populated from the JWT.
+        mockMvc.perform(get("/api/careers/progress/{userId}", 999L)
+                        .requestAttr("userId", authenticatedUserId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].userId").value(userId))
+                .andExpect(jsonPath("$.data[0].userId").value(authenticatedUserId))
                 .andExpect(jsonPath("$.data[0].status").value("COMPLETED"));
+        verify(careerService).getUserProgress(authenticatedUserId);
+        verify(authInterceptor).preHandle(any(), any(), any());
     }
 
     @Test
@@ -120,11 +130,13 @@ public class CareerControllerTest {
         doNothing().when(careerService).unlockNode(anyLong(), anyLong());
 
         mockMvc.perform(post("/api/careers/progress/unlock")
+                        .requestAttr("userId", 7L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value("Node unlocked successfully"));
+        verify(careerService).unlockNode(7L, 10L);
     }
 
     @Test
@@ -136,21 +148,51 @@ public class CareerControllerTest {
         doNothing().when(careerService).completeNode(anyLong(), anyLong());
 
         mockMvc.perform(post("/api/careers/progress/complete")
+                        .requestAttr("userId", 7L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value("Node completed successfully"));
+        verify(careerService).completeNode(7L, 10L);
+    }
+
+    @Test
+    @DisplayName("API Test: Timeline ignores caller-supplied userId")
+    public void testTimeline_UsesAuthenticatedUser() throws Exception {
+        when(careerService.getPathNodes(3)).thenReturn(List.of(
+                CareerNode.builder().nodeId(10L).name("Java Basics").level(1).build()
+        ));
+        when(careerService.getUserProgress(7L)).thenReturn(List.of(
+                UserCareerProgress.builder()
+                        .userId(7L)
+                        .nodeId(10L)
+                        .status("COMPLETED")
+                        .build()
+        ));
+
+        mockMvc.perform(get("/api/careers/timeline")
+                        .param("pathId", "3")
+                        .param("userId", "999")
+                        .requestAttr("userId", 7L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.l1Nodes[0].status").value("COMPLETED"));
+
+        verify(careerService).getUserProgress(7L);
     }
 
     @Test
     @DisplayName("API Test: Initialize Paths")
     public void testInitializePaths_Success() throws Exception {
         doNothing().when(careerService).initializeDefaultPaths();
+        doNothing().when(adminAuthService).requireAdmin(7L);
 
-        mockMvc.perform(post("/api/careers/initialize"))
+        mockMvc.perform(post("/api/careers/initialize")
+                        .requestAttr("userId", 7L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value("Career paths initialized successfully"));
+        verify(adminAuthService).requireAdmin(7L);
     }
 }

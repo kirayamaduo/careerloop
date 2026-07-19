@@ -63,6 +63,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { submitFeedbackApi, type FeedbackCategory } from '@/api/feedback';
 import { useTheme } from '@/utils/theme';
+import { requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
@@ -87,6 +88,7 @@ const form = ref({
 const goBack = () => uni.navigateBack();
 
 const doSubmit = async () => {
+  if (!requireAuth({ message: '登录后提交反馈，便于我们跟进处理结果。' })) return;
   const text = form.value.content.trim();
   if (!text) {
     uni.showToast({ title: t('feedback.contentRequired'), icon: 'none' });
@@ -231,4 +233,103 @@ onShow(() => {
 .is-dark .fb-input { background: #1e293b; border-color: #334155; color: #f8fafc; }
 .is-dark .cat-chip { background: #1e293b; border-color: #334155; }
 .is-dark .cat-label { color: #cbd5e1; }
+
+/* Competition visual system ------------------------------------------------ */
+.hero-block {
+  border-bottom: 1px solid #edece8;
+}
+
+.hero-icon {
+  color: #c23b22;
+}
+
+.hero-title,
+.section-label {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.hero-desc {
+  color: #5a5956;
+}
+
+.cat-chip {
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.cat-active {
+  background: rgba(63, 81, 181, 0.07);
+  border-color: #3f51b5;
+}
+
+.cat-label {
+  color: #5a5956;
+}
+
+.cat-active .cat-label {
+  color: #3f51b5;
+}
+
+.fb-textarea,
+.fb-input {
+  color: #2c2b29;
+  background: #ffffff;
+  border: 1px solid #d8d7d2;
+  border-radius: 6px;
+}
+
+.req {
+  color: #c23b22;
+}
+
+.btn-submit {
+  color: #faf9f6;
+  background: #c23b22;
+  border-radius: 6px;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.btn-submit[disabled] {
+  color: #8b8a86;
+  background: #efeee9;
+  border: 1px solid #e0dfdb;
+}
+
+.is-dark .hero-title,
+.is-dark .section-label {
+  color: #faf9f6;
+}
+
+.is-dark .hero-desc {
+  color: #c6c4be;
+}
+
+.is-dark .cat-chip,
+.is-dark .fb-textarea,
+.is-dark .fb-input {
+  color: #faf9f6;
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .cat-chip.cat-active {
+  border-color: #aab3ea !important;
+  background: rgba(63, 81, 181, 0.3) !important;
+}
+
+.is-dark .cat-chip.cat-active .cat-label {
+  color: #f8fafc !important;
+}
+
+.is-dark .btn-submit[disabled] {
+  border-color: #475569;
+  background: #334155;
+  color: #94a3b8;
+}
 </style>

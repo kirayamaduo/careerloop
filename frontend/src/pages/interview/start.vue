@@ -248,11 +248,15 @@ const goBack = () => {
 };
 
 onShow(() => {
+  // A cached start page becomes active again after the interview page is
+  // popped; re-enable the CTA for the next intentional session.
+  loading.value = false;
   refreshTheme();
   uni.setNavigationBarTitle({ title: t('interview.startPageTitle') });
 });
 
 const startInterview = async () => {
+  if (loading.value) return;
   if (!selectedPosition.value) {
     uni.showToast({ title: t('interview.chooseFirst'), icon: 'none' });
     return;
@@ -289,13 +293,17 @@ const startInterview = async () => {
       interviewMode: selectedMode.value,
     }).catch(() => { /* snapshot writes are non-blocking */ });
 
-    uni.showToast({ title: t('interview.start'), icon: 'success' });
     const targetPath = selectedMode.value === 'voice'
       ? `/pages/interview/room?interviewId=${interview.interviewId}`
       : `/pages/interview/chat?interviewId=${interview.interviewId}`;
-    setTimeout(() => {
-      uni.navigateTo({ url: targetPath });
-    }, 800);
+    uni.showToast({ title: t('interview.start'), icon: 'success' });
+    await new Promise<void>((resolve, reject) => {
+      uni.navigateTo({
+        url: targetPath,
+        success: () => resolve(),
+        fail: (error) => reject(error),
+      });
+    });
   } catch (error: any) {
     console.error(error);
     uni.showToast({ title: error?.message || t('interview.startFailed'), icon: 'none' });
@@ -619,4 +627,207 @@ const startInterview = async () => {
 }
 
 /* #endif */
+
+/* Competition visual system ------------------------------------------------ */
+.start-page {
+  color: #2c2b29;
+  background: #faf9f6;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.start-content {
+  padding-top: 18px;
+}
+
+.header {
+  padding: 24px 20px;
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #c23b22;
+  border-radius: 6px;
+  background: #f5f5f0;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.header-kicker {
+  color: #c23b22;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.subtitle {
+  color: #5a5956;
+}
+
+.form-card,
+.expect-card {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.label,
+.expect-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.label-hint {
+  color: #3f51b5;
+  background: transparent;
+  border: 1px solid rgba(63, 81, 181, 0.32);
+  border-radius: 4px;
+}
+
+.mode-card,
+.diff-card {
+  color: #2c2b29;
+  background: #faf9f6;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+}
+
+.mode-icon,
+.expect-icon {
+  color: #3f51b5;
+  background: #efeee9;
+  border-radius: 4px;
+}
+
+.mode-badge {
+  color: #6b8e5a;
+  background: transparent;
+  border: 1px solid rgba(107, 142, 90, 0.4);
+  border-radius: 3px;
+}
+
+.mode-name,
+.diff-name,
+.expect-h {
+  color: #2c2b29;
+  font-weight: 600;
+}
+
+.mode-desc,
+.diff-desc,
+.expect-p {
+  color: #5a5956;
+}
+
+.mode-card.active,
+.diff-card.active {
+  color: #faf9f6;
+  background: #3f51b5;
+  border-color: #3f51b5;
+}
+
+.mode-card.active .mode-icon {
+  background: rgba(250, 249, 246, 0.16);
+}
+
+.picker-box {
+  background: #faf9f6;
+  border: 1px solid #d8d7d2;
+  border-radius: 6px;
+}
+
+.picker-box:active,
+.picker-filled {
+  background: #ffffff;
+  border-color: #3f51b5;
+}
+
+.expect-icon-chat {
+  color: #b8975a;
+}
+
+.expect-icon-score {
+  color: #6b8e5a;
+}
+
+.sticky-cta {
+  background: #faf9f6;
+  border-top: 1px solid #e0dfdb;
+}
+
+.btn-primary {
+  height: 50px;
+  background: #c23b22;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.btn-primary:active {
+  background: #a8311d;
+}
+
+.btn-disabled {
+  background: #efeee9;
+  border: 1px solid #e0dfdb;
+}
+
+.btn-primary-label {
+  color: #faf9f6;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.start-page.is-dark .header,
+.start-page.is-dark .form-card,
+.start-page.is-dark .expect-card {
+  background: #242320;
+  border-color: #494844;
+}
+
+.start-page.is-dark .title,
+.start-page.is-dark .label,
+.start-page.is-dark .expect-title {
+  color: #faf9f6;
+}
+
+.start-page.is-dark {
+  background: #1c1b19;
+}
+
+.start-page.is-dark .mode-card:not(.active),
+.start-page.is-dark .diff-card:not(.active),
+.start-page.is-dark .picker-box {
+  color: #faf9f6;
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.start-page.is-dark .mode-name,
+.start-page.is-dark .diff-name,
+.start-page.is-dark .expect-h,
+.start-page.is-dark .has-val {
+  color: #faf9f6;
+}
+
+.start-page.is-dark .mode-desc,
+.start-page.is-dark .diff-desc,
+.start-page.is-dark .expect-p {
+  color: #c6c4be;
+}
+
+.start-page.is-dark .sticky-cta {
+  background: #1c1b19;
+  border-color: #494844;
+}
+
+.start-page.is-dark .mode-card:not(.active) .mode-icon,
+.start-page.is-dark .expect-icon {
+  background: #33332f;
+  color: #aab3ea;
+}
 </style>

@@ -121,5 +121,35 @@ public class FileServiceTest {
         verify(ossClient).putObject(anyString(), anyString(), any(InputStream.class));
         verify(ossClient).shutdown();
     }
-}
 
+    @Test
+    @DisplayName("Delete object reports success and always closes the OSS client")
+    void deleteObjectSuccessIsObservable() {
+        when(ossConfig.getBucketName()).thenReturn("test-bucket");
+
+        assertTrue(fileService.deleteObject("resumes/object.pdf"));
+
+        verify(ossClient).deleteObject("test-bucket", "resumes/object.pdf");
+        verify(ossClient).shutdown();
+    }
+
+    @Test
+    @DisplayName("Delete object reports OSS failure so account purge can retry")
+    void deleteObjectFailureIsObservable() {
+        when(ossConfig.getBucketName()).thenReturn("test-bucket");
+        doThrow(new com.aliyun.oss.ClientException("network unavailable"))
+                .when(ossClient).deleteObject("test-bucket", "avatars/object.jpg");
+
+        assertFalse(fileService.deleteObject("avatars/object.jpg"));
+
+        verify(ossClient).shutdown();
+    }
+
+    @Test
+    @DisplayName("Malformed legacy URL is rejected without opening an OSS client")
+    void malformedDeleteReferenceFailsClosed() {
+        assertFalse(fileService.deleteObject("https://bucket.example.com"));
+
+        verify(fileService, never()).createOssClient();
+    }
+}

@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="app-soft-bg" :custom-class="['webview-container', themeClass, fontClass].join(' ')">
     <SlNavBar :title="title" show-back @back="goBack" :safe-top="topSafe" />
     <web-view v-if="url && shouldUseWebview" :src="url" @error="handleError"></web-view>
     <view class="fallback" v-if="showFallback || !shouldUseWebview">
@@ -100,11 +100,6 @@ const copyUrl = () => {
 </script>
 
 <style scoped>
-.sl-page :deep(.webview-container) {
-  width: 100vw;
-  min-height: 100vh;
-}
-
 .fallback {
   padding: 40px 20px;
   height: 100%;
@@ -229,4 +224,59 @@ const copyUrl = () => {
 .is-dark .webview-helper { background: #1e293b; border-color: #334155; }
 .is-dark .helper-source { color: #f8fafc; }
 .is-dark .helper-tip { color: #94a3b8; }
+
+/* Competition visual system ------------------------------------------------ */
+.fallback-card,
+.webview-helper {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.06);
+}
+
+.fb-icon {
+  color: #3f51b5;
+}
+
+.fb-text,
+.helper-source {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.fb-desc,
+.helper-tip {
+  color: #5a5956;
+}
+
+.fb-source {
+  color: #c23b22;
+}
+
+.fb-url {
+  color: #5a5956;
+  background: #f5f5f0;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+}
+
+.btn-copy,
+.helper-copy-btn {
+  color: #faf9f6;
+  background: #c23b22;
+  border-radius: 6px;
+}
+
+.is-dark .fallback-card,
+.is-dark .webview-helper {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .fb-text,
+.is-dark .helper-source {
+  color: #faf9f6;
+}
 </style>

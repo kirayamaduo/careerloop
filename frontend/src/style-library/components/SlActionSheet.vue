@@ -147,7 +147,7 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
 .sl-sheet__label {
   font-size: 15px;
   line-height: 1.25;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-primary, #0f172a);
 }
 

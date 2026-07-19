@@ -52,7 +52,7 @@ public class ResumeGenController {
         String prompt = buildTemplatePrompt(req, profileTagService.renderForPrompt(uid));
         String html = callAiForHtml(prompt);
 
-        String fileKey = htmlToPdfAndUpload(html, "resumes/generated");
+        String fileKey = htmlToPdfAndUpload(html, "resumes/" + uid + "/generated");
         String title = (req.getTargetRole() == null ? req.getName() : req.getName() + "_" + req.getTargetRole())
                 .replaceAll("\\s+", "_");
         Resume saved = resumeService.createResume(uid, title, req.getTargetRole(),
@@ -91,7 +91,7 @@ public class ResumeGenController {
         log.info("[tailor] AI rewrite took {} ms ({} html chars)", System.currentTimeMillis() - ts, html.length());
 
         ts = System.currentTimeMillis();
-        String fileKey = htmlToPdfAndUpload(html, "resumes/tailored");
+        String fileKey = htmlToPdfAndUpload(html, "resumes/" + uid + "/tailored");
         log.info("[tailor] PDF render+OSS upload took {} ms", System.currentTimeMillis() - ts);
 
         String title = truncateField((base.getTitle() == null ? "Resume" : base.getTitle()) + "_tailored",
@@ -193,7 +193,7 @@ public class ResumeGenController {
             return fileService.uploadBytes(pdfBytes, filename, folder);
         } catch (Exception e) {
             log.error("PDF render/upload failed", e);
-            throw new BizException("Resume PDF generation failed: " + e.getMessage());
+            throw new BizException("Resume PDF generation failed");
         }
     }
 

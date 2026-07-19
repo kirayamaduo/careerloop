@@ -91,4 +91,21 @@ public class JwtUtilsTest {
         String adminToken = JwtUtils.generateToken(1L, "ADMIN");
         assertNotEquals(userToken, adminToken);
     }
+
+    @Test
+    @DisplayName("Legacy tokens without authVersion remain generation zero")
+    void legacyTokenDefaultsToGenerationZero() {
+        String legacyToken = JwtUtils.generateToken(7L, "USER");
+
+        assertEquals(0L, JwtUtils.getAuthVersionFromToken(legacyToken));
+    }
+
+    @Test
+    @DisplayName("Revocable token carries its auth generation")
+    void authVersionRoundTrips() {
+        String token = JwtUtils.generateToken(7L, "USER", 12L);
+
+        assertTrue(JwtUtils.validateToken(token));
+        assertEquals(12L, JwtUtils.getAuthVersionFromToken(token));
+    }
 }

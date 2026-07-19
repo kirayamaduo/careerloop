@@ -88,6 +88,7 @@ import { useI18n } from '@/locales';
 import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 import {
   getAssessmentScalesApi,
@@ -128,6 +129,7 @@ const estimateMinutes = (questionCount?: number) => {
 };
 
 const startQuiz = (s: AssessmentScale) => {
+  if (!requireAuth({ message: '登录后开始测评，答题进度和结果会保存到你的成长档案。' })) return;
   uni.navigateTo({
     url: `/pages/assessment/quiz?scaleId=${s.scaleId}&title=${encodeURIComponent(s.title)}`,
   });
@@ -150,9 +152,9 @@ const loadAll = async () => {
   try {
     const [scaleList, records] = await Promise.all([
       getAssessmentScalesApi(),
-      // The records call is best-effort -- a guest who somehow lands here
-      // shouldn't see a hard error, just an empty completed-set.
-      getMyAssessmentRecordsApi().catch(() => []),
+      // Public preview can browse the available scales, but never calls the
+      // account-only records endpoint without a real session.
+      isRealUser() ? getMyAssessmentRecordsApi().catch(() => []) : Promise.resolve([]),
     ]);
     scales.value = Array.isArray(scaleList) ? scaleList : [];
     const safeRecords = Array.isArray(records) ? records : [];
@@ -581,4 +583,268 @@ onShow(() => {
 }
 
 /* #endif */
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.assessment-container {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.assessment-content {
+  padding: 22px 20px 64px;
+}
+
+.page-summary {
+  margin-bottom: 18px;
+}
+
+.summary-title,
+.card-title,
+.section-title,
+.a-title {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.summary-title {
+  color: #2c2b29;
+  font-size: 27px;
+  line-height: 1.35;
+}
+
+.summary-text,
+.flow-desc,
+.a-desc {
+  color: #5a5956;
+  line-height: 1.7;
+}
+
+.flow-pill {
+  padding: 12px 14px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+  box-shadow: none;
+}
+
+.flow-step {
+  color: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.status-card {
+  padding: 24px 22px;
+  margin-bottom: 30px;
+  border: 1px solid #e0dfdb;
+  border-top: 3px solid #3f51b5;
+  border-radius: 8px;
+  background: #f5f5f0;
+  color: #2c2b29;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.06);
+}
+
+.card-header {
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 21px;
+  letter-spacing: 0.05em;
+}
+
+.card-subtitle,
+.progress-label {
+  color: #8b8a86;
+  opacity: 1;
+}
+
+.progress-text {
+  color: #3f51b5;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.radar-placeholder {
+  width: 58px;
+  height: 58px;
+  border: 1px solid #d8d6cf;
+  border-radius: 6px;
+  background: #faf9f6;
+}
+
+.radar-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: #efeee9;
+  color: #3f51b5;
+  line-height: 36px;
+}
+
+.section-title {
+  margin: 10px 0 14px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #edece8;
+  color: #2c2b29;
+  font-size: 18px;
+}
+
+.assessment-list,
+.skeleton-list {
+  gap: 12px;
+}
+
+.assessment-card,
+.skel-card,
+.empty-state {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.assessment-card {
+  padding: 18px;
+}
+
+.icon-box {
+  width: 46px;
+  height: 46px;
+  margin-right: 14px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+  color: #3f51b5;
+}
+
+.icon-box.app-icon-tile--cyan {
+  background: #eef1eb;
+  color: #7b8d6e;
+}
+
+.icon-box.app-icon-tile--violet {
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.icon-box.app-icon-tile--candy {
+  background: #f8ece8;
+  color: #c23b22;
+}
+
+.a-title {
+  color: #2c2b29;
+  font-size: 16px;
+}
+
+.tags {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  padding: 3px 8px;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+  background: #faf9f6;
+  color: #5a5956;
+}
+
+.tag-blue {
+  border-color: rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.tag-done {
+  border-color: rgba(123, 141, 110, 0.38);
+  background: #eef1eb;
+  color: #6b7f5f;
+}
+
+.btn-start {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: #c23b22;
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.assessment-card:active .btn-start {
+  background: #a9321d;
+}
+
+.skel-square,
+.skel-line {
+  border-radius: 4px;
+  background: linear-gradient(90deg, #efeee9 0%, #faf9f6 50%, #efeee9 100%);
+  background-size: 200% 100%;
+}
+
+.empty-icon-shell {
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+  color: #b8975a;
+}
+
+.empty-text {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.empty-desc {
+  color: #8b8a86;
+}
+
+.btn-retry {
+  border-radius: 6px;
+  background: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+}
+
+.assessment-container.is-dark .status-card {
+  border-color: #475569;
+  background: #1e293b;
+  box-shadow: none;
+}
+
+.assessment-container.is-dark .empty-icon-shell {
+  border-color: #475569;
+  background: #0f172a;
+  color: #dfc58f;
+}
+
+.assessment-container.is-dark .btn-start {
+  border-color: #c23b22;
+  background: #c23b22;
+  color: #fffdfa;
+}
+
+.assessment-container.is-dark .tag-blue,
+.assessment-container.is-dark .radar-placeholder,
+.assessment-container.is-dark .radar-icon,
+.assessment-container.is-dark .mbti-icon,
+.assessment-container.is-dark .holland-icon {
+  border-color: rgba(170, 179, 234, 0.42);
+  background: rgba(63, 81, 181, 0.24);
+  color: #aab3ea;
+}
+
+.assessment-container.is-dark .icon-box.app-icon-tile--candy {
+  border-color: rgba(226, 123, 102, 0.42);
+  background: rgba(194, 59, 34, 0.22);
+  color: #e27b66;
+}
 </style>

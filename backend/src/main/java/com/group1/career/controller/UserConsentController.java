@@ -16,11 +16,9 @@ import java.time.LocalDateTime;
 /**
  * F2: Records user consent server-side for audit / WeChat review purposes.
  *
- * <p>The frontend calls POST /api/consents immediately after the user ticks
- * both checkboxes and taps "Agree". The endpoint is intentionally lenient:
- * it accepts consent from both authenticated and unauthenticated users (the
- * user may not have logged in yet when they accept the terms on first launch).
- * A follow-up upsert on login can reconcile the record if needed.</p>
+ * <p>The frontend calls POST /api/consents after authentication. Anonymous
+ * acceptance is kept locally until a real account is established, because an
+ * unauthenticated database row cannot be reliably associated with a user.</p>
  */
 @Tag(name = "Consent API", description = "F2: Record and verify user agreement to privacy policy and terms")
 @RestController
@@ -29,7 +27,7 @@ import java.time.LocalDateTime;
 public class UserConsentController {
 
     /** Must match the AGREEMENT_VERSION constant in the frontend consent page. */
-    public static final String CURRENT_VERSION = "1.0";
+    public static final String CURRENT_VERSION = "1.1";
 
     private final UserConsentRepository consentRepository;
 
@@ -42,8 +40,15 @@ public class UserConsentController {
             return Result.error(401, "Not authenticated");
         }
 
-        String version = req.getAgreementVersion() != null
-                ? req.getAgreementVersion() : CURRENT_VERSION;
+        String version = req.getAgreementVersion();
+        if (!CURRENT_VERSION.equals(version)) {
+            return Result.error(400, "Unsupported agreement version");
+        }
+
+        String platform = req.getPlatform();
+        if (!"miniprogram".equals(platform) && !"h5".equals(platform) && !"app".equals(platform)) {
+            return Result.error(400, "Unsupported platform");
+        }
 
         if (consentRepository.existsByUserIdAndAgreementVersion(uid, version)) {
             return Result.success("already_recorded");
@@ -56,8 +61,8 @@ public class UserConsentController {
                 .agreementVersion(version)
                 .agreedAt(LocalDateTime.now())
                 .clientIp(ip)
-                .platform(req.getPlatform())
-                .userAgent(req.getUserAgent())
+                .platform(platform)
+                .userAgent(truncate(req.getUserAgent(), 512))
                 .build());
 
         return Result.success("recorded");
@@ -81,9 +86,14 @@ public class UserConsentController {
     private String extractIp(HttpServletRequest req) {
         String forwarded = req.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            return truncate(forwarded.split(",")[0].trim(), 64);
         }
-        return req.getRemoteAddr();
+        return truncate(req.getRemoteAddr(), 64);
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) return value;
+        return value.substring(0, maxLength);
     }
 
     // ── DTOs ─────────────────────────────────────────────────────────────

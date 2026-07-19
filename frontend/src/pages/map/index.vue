@@ -14,10 +14,10 @@
     <view class="map-content">
       <!-- Tab switcher -->
       <view class="tab-bar">
-        <view class="tab-item" :class="{ 'tab-active': activeTab === 'map' }" @click="activeTab = 'map'">
+        <view class="tab-item" :class="{ 'tab-active': activeTab === 'map' }" @click="switchTab('map')">
           <text class="tab-text">{{ t('map.tabMap') }}</text>
         </view>
-        <view class="tab-item" :class="{ 'tab-active': activeTab === 'plan' }" @click="activeTab = 'plan'">
+        <view class="tab-item" :class="{ 'tab-active': activeTab === 'plan' }" @click="switchTab('plan')">
           <text class="tab-text">{{ t('map.tabPlan') }}</text>
           <view class="tab-badge" v-if="plan"></view>
         </view>
@@ -47,6 +47,13 @@
           <view class="skel-line skel-w70"></view>
           <view class="skel-line skel-w90"></view>
         </view>
+      </view>
+
+      <view class="empty-state app-empty app-surface" v-else-if="routeError">
+        <text class="empty-icon ri-wifi-off-line"></text>
+        <text class="empty-text">{{ t('map.loadFailedTitle') }}</text>
+        <text class="empty-sub">{{ routeError }}</text>
+        <view class="map-retry-btn" @click="retryRoute"><text>{{ t('map.retry') }}</text></view>
       </view>
 
       <!-- Empty state -->
@@ -231,6 +238,7 @@ import {
 import { getProfileSnapshotApi } from '@/api/user';
 import { useTheme } from '@/utils/theme';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
 // ── shared ─────────────────────────────────────────────────────────────────────────────────
@@ -238,11 +246,21 @@ const { t } = useI18n();
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
 const topSafeHeight = ref(44);
 const rightAvoidWidth = ref(20);
-const activeTab    = ref<'map' | 'plan'>('plan');
+const activeTab    = ref<'map' | 'plan'>(isRealUser() ? 'plan' : 'map');
+
+const switchTab = (tab: 'map' | 'plan') => {
+  if (tab === 'plan' && !isRealUser()) {
+    requireAuth({ message: t('map.planLoginRequired') });
+    return;
+  }
+  activeTab.value = tab;
+  if (tab === 'plan' && !plan.value) loadPlan();
+};
 
 // ── route tab ─────────────────────────────────────────────────────────────
 const showDetail = ref(false);
 const loading    = ref(true);
+const routeError = ref('');
 
 type RouteNode = CareerNode & {
   source?: 'PLAN' | 'TEMPLATE';
@@ -398,6 +416,10 @@ const getUid = (): number => {
  */
 const toggleNodeStatus = async (node: RouteNode) => {
   if (isLocked(node)) return;
+  if (!isRealUser()) {
+    requireAuth({ message: t('map.progressLoginRequired') });
+    return;
+  }
   const uid = getUid();
   if (!uid) {
     uni.showToast({ title: t('map.toastSignIn'), icon: 'none' });
@@ -437,6 +459,7 @@ const refreshProgress = async () => {
 const loadPath = async (path: CareerPath) => {
   currentPath.value = path;
   loading.value = true;
+  routeError.value = '';
   try {
     const [nodeList, _] = await Promise.all([
       getPathNodesApi(path.pathId!),
@@ -444,8 +467,7 @@ const loadPath = async (path: CareerPath) => {
     ]);
     nodes.value = nodeList || [];
   } catch (e: any) {
-    uni.showToast({ title: e?.message || t('map.loadRoadmapFailed'), icon: 'none' });
-    nodes.value = [];
+    routeError.value = e?.message || t('map.loadRoadmapFailed');
   } finally {
     loading.value = false;
   }
@@ -553,10 +575,11 @@ const switchRole = async () => {
   });
 };
 
-const loadAll = async (preferredPathId?: number) => {
+const loadAll = async (preferredPathId?: number, preferredRole?: string) => {
   loading.value = true;
+  routeError.value = '';
   try {
-    if (!preferredPathId) {
+    if (isRealUser() && !preferredPathId && !preferredRole) {
       await loadPlan();
       if (await applyPersonalizedRoute()) return;
     }
@@ -574,16 +597,29 @@ const loadAll = async (preferredPathId?: number) => {
       preferred = paths.value.find((p) => p.pathId === preferredPathId);
     }
     if (!preferred) {
-      const hint = uni.getStorageSync('assessment_recommended_role');
+      const hint = preferredRole || uni.getStorageSync('assessment_recommended_role');
+      const normalizedHint = String(hint || '').trim().toLowerCase();
       preferred = paths.value.find((p) =>
-        hint && (p.name?.toLowerCase().includes(String(hint).toLowerCase()) || p.code === hint),
+        normalizedHint && (
+          p.name?.toLowerCase().includes(normalizedHint)
+          || normalizedHint.includes(String(p.name || '').toLowerCase())
+          || p.code?.toLowerCase() === normalizedHint
+        ),
       );
     }
     await loadPath(preferred || paths.value[0]);
   } catch (e: any) {
-    uni.showToast({ title: e?.message || t('map.loadPathsFailed'), icon: 'none' });
+    routeError.value = e?.message || t('map.loadPathsFailed');
     loading.value = false;
   }
+};
+
+const retryRoute = () => {
+  if (currentPath.value && currentPath.value.pathId && currentPath.value.pathId > 0) {
+    loadPath(currentPath.value);
+    return;
+  }
+  loadAll();
 };
 
 onMounted(() => {
@@ -594,9 +630,13 @@ onMounted(() => {
   const pages = getCurrentPages();
   const opts = (pages[pages.length - 1] as any).options || {};
   const queryPathId = opts.pathId ? parseInt(opts.pathId) : undefined;
-  if (queryPathId && !isNaN(queryPathId)) activeTab.value = 'map';
-  loadAll(queryPathId && !isNaN(queryPathId) ? queryPathId : undefined);
-  loadPlan();
+  const fromAssessment = opts.from === 'assessment';
+  const queryRole = typeof opts.role === 'string' ? decodeURIComponent(opts.role) : '';
+  if ((queryPathId && !isNaN(queryPathId)) || fromAssessment) activeTab.value = 'map';
+  loadAll(
+    queryPathId && !isNaN(queryPathId) ? queryPathId : undefined,
+    fromAssessment ? queryRole : undefined,
+  );
 });
 
 // Re-pull progress when the page becomes visible -- if a user marks a
@@ -604,7 +644,7 @@ onMounted(() => {
 onShow(() => {
   refreshTheme();
   refreshProgress();
-  if (activeTab.value === 'plan' && !plan.value) {
+  if (isRealUser() && activeTab.value === 'plan' && !plan.value) {
     loadPlan();
   }
 });
@@ -625,6 +665,7 @@ const weeklyFocus = computed<string[]>(() => {
 });
 
 const loadPlan = async () => {
+  if (!isRealUser()) return;
   try {
     plan.value = await getCurrentCareerPlanApi();
   } catch { /* silent — empty state handles it */ }
@@ -642,6 +683,7 @@ const loadPlan = async () => {
 };
 
 const handleGenerate = async (targetRole?: string) => {
+  if (!requireAuth({ message: t('map.planLoginRequired') })) return;
   if (!targetRole || !targetRole.trim()) {
     uni.showToast({ title: '请先填写目标岗位', icon: 'none' });
     return;
@@ -1160,5 +1202,533 @@ const formatDate = (iso?: string) => {
   background: rgba(37, 99, 235, 0.24);
   border: 1px solid rgba(147, 197, 253, 0.36);
   color: #bfdbfe;
+}
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.map-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.map-content {
+  padding: 14px 20px 0;
+}
+
+.intro-title,
+.nav-title,
+.role-name,
+.tl-title,
+.sheet-title,
+.plan-load-text,
+.plan-empty-title,
+.plan-hero-role,
+.plan-section-title,
+.ms-title {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.intro-title {
+  color: #2c2b29;
+  font-size: 27px;
+  line-height: 1.35;
+}
+
+.intro-text,
+.role-desc,
+.tl-desc,
+.sheet-advice,
+.plan-empty-sub,
+.plan-load-sub,
+.focus-text {
+  color: #5a5956;
+  line-height: 1.7;
+}
+
+.nav-title {
+  color: #2c2b29;
+}
+
+.nav-icon-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(63, 81, 181, 0.32);
+  border-radius: 6px;
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.map-retry-btn {
+  min-width: 120px;
+  min-height: 44px;
+  margin: 18px auto 0;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #fffdfa;
+  background: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tab-bar {
+  padding: 0;
+  gap: 0;
+  border-bottom: 1px solid #e0dfdb;
+  border-radius: 0;
+  background: transparent;
+}
+
+.tab-item {
+  height: 42px;
+  padding: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+}
+
+.tab-active {
+  border-bottom-color: #c23b22;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tab-text {
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.tab-active .tab-text {
+  color: #c23b22;
+}
+
+.tab-badge {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: #b8975a;
+}
+
+.role-card,
+.plan-hero {
+  border: 1px solid #3f51b5;
+  border-radius: 8px;
+  background: #3f51b5;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.07);
+}
+
+.role-card {
+  padding: 22px;
+}
+
+.role-name,
+.plan-hero-role {
+  color: #fffdfa;
+}
+
+.role-desc,
+.plan-hero-label,
+.plan-hero-meta {
+  color: rgba(255, 253, 250, 0.76);
+  opacity: 1;
+}
+
+.progress-ring {
+  border-color: #d9bd82;
+  border-radius: 8px;
+  background: rgba(255, 253, 250, 0.1);
+}
+
+.ring-val {
+  color: #f1d9a6;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.timeline {
+  padding-left: 30px;
+}
+
+.tl-line {
+  left: 13px;
+  width: 1px;
+  background: #d8d6cf;
+}
+
+.tl-node {
+  margin-bottom: 18px;
+}
+
+.tl-dot {
+  left: -30px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d8d6cf;
+  border-radius: 6px;
+  background: #faf9f6;
+  color: #8b8a86;
+}
+
+.dot-done {
+  border-color: rgba(123, 141, 110, 0.45);
+  background: #eef1eb;
+  color: #6b8e5a;
+}
+
+.dot-active {
+  border-color: rgba(194, 59, 34, 0.42);
+  background: #f8ece8;
+  color: #c23b22;
+}
+
+.dot-ready {
+  border-color: rgba(63, 81, 181, 0.35);
+  background: #efeff7;
+  color: #3f51b5;
+}
+
+.dot-locked {
+  border-color: #e0dfdb;
+  background: #efeee9;
+  color: #8b8a86;
+}
+
+.tl-card,
+.skel-card,
+.empty-state,
+.focus-item,
+.milestone-card,
+.plan-empty {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.tl-card {
+  padding: 17px;
+}
+
+.card-done {
+  border-left: 3px solid #7b8d6e;
+}
+
+.card-active {
+  border-left: 3px solid #c23b22;
+}
+
+.card-ready {
+  border-left: 3px solid #3f51b5;
+}
+
+.tl-level,
+.sheet-label,
+.ms-row-label {
+  color: #8b8a86;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.tl-title,
+.sheet-title,
+.plan-load-text,
+.plan-empty-title,
+.plan-section-title,
+.ms-title {
+  color: #2c2b29;
+}
+
+.tl-meta,
+.tl-badge,
+.topic-tag,
+.ms-horizon-badge,
+.ms-tag,
+.plan-regen-btn {
+  border-radius: 4px;
+}
+
+.tl-meta {
+  border: 1px solid #e0dfdb;
+  background: #f5f5f0;
+  color: #5a5956;
+}
+
+.badge-done,
+.ms-tag-action {
+  border: 1px solid rgba(123, 141, 110, 0.36);
+  background: #eef1eb;
+}
+
+.badge-done .badge-text,
+.ms-tag-action .ms-tag-text {
+  color: #66775c;
+}
+
+.badge-active {
+  border: 1px solid rgba(194, 59, 34, 0.34);
+  background: #f8ece8;
+}
+
+.badge-active .badge-text {
+  color: #c23b22;
+}
+
+.badge-ready,
+.ms-horizon-badge,
+.ms-tag-skill {
+  border: 1px solid rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+}
+
+.badge-ready .badge-text,
+.ms-horizon-text,
+.ms-tag-skill .ms-tag-text {
+  color: #3f51b5;
+}
+
+.badge-locked {
+  border: 1px solid #e0dfdb;
+  background: #efeee9;
+}
+
+.badge-locked .badge-text {
+  color: #8b8a86;
+}
+
+.detail-sheet {
+  border-top: 1px solid #e0dfdb;
+  border-radius: 10px 10px 0 0;
+  background: #fffdfa;
+  box-shadow: 0 -12px 36px rgba(44, 43, 41, 0.1);
+}
+
+.sheet-handle {
+  border-radius: 2px;
+  background: #d8d6cf;
+}
+
+.topic-tag {
+  border: 1px solid rgba(63, 81, 181, 0.28);
+  background: #efeff7;
+}
+
+.topic-text {
+  color: #3f51b5;
+}
+
+.sheet-btn,
+.plan-gen-btn {
+  border-radius: 6px;
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.sheet-btn:active,
+.plan-gen-btn:active {
+  background: #a9321d;
+}
+
+.sheet-btn-text,
+.plan-gen-btn-text {
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.sheet-btn-disabled,
+.plan-gen-btn-dim {
+  border-color: #d8d6cf;
+  background: #d8d6cf;
+  opacity: 1;
+}
+
+.sheet-btn-disabled .sheet-btn-text,
+.plan-gen-btn-dim .plan-gen-btn-text {
+  color: #5a5956;
+}
+
+.skel-line {
+  border-radius: 3px;
+  background: linear-gradient(90deg, #efeee9 0%, #faf9f6 50%, #efeee9 100%);
+  background-size: 200% 100%;
+}
+
+.empty-text {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+}
+
+.empty-sub {
+  color: #8b8a86;
+}
+
+.plan-role-input-label {
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.04em;
+}
+
+.plan-role-input {
+  border-color: #d8d6cf;
+  border-radius: 6px;
+  background: #faf9f6;
+  color: #2c2b29;
+}
+
+.plan-role-input:focus {
+  border-color: #3f51b5;
+  background: #fffdfa;
+}
+
+.plan-hero {
+  padding: 22px;
+}
+
+.plan-regen-btn {
+  border: 1px solid rgba(255, 253, 250, 0.45);
+  background: transparent;
+}
+
+.plan-regen-text {
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+}
+
+.plan-section-title {
+  padding-bottom: 9px;
+  border-bottom: 1px solid #edece8;
+}
+
+.focus-item {
+  padding: 14px 16px;
+}
+
+.focus-dot {
+  border-radius: 4px;
+  background: #c23b22;
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+}
+
+.milestone-card {
+  overflow: hidden;
+}
+
+.ms-tag-kpi {
+  border: 1px solid rgba(184, 151, 90, 0.36);
+  background: #f6f1e7;
+}
+
+.ms-tag-kpi .ms-tag-text {
+  color: #9a783f;
+}
+
+/* Dark mode keeps the same brand hierarchy without reverting to candy blue. */
+.map-page.is-dark {
+  background: #24231f;
+}
+
+.map-page.is-dark .tab-bar {
+  border-color: #46443e;
+  background: transparent;
+}
+
+.map-page.is-dark .tab-active {
+  border-bottom-color: #dc6a52;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map-page.is-dark .tab-active .tab-text {
+  color: #f08a73;
+}
+
+.map-page.is-dark .tl-card,
+.map-page.is-dark .detail-sheet,
+.map-page.is-dark .focus-item,
+.map-page.is-dark .milestone-card,
+.map-page.is-dark .plan-empty {
+  border-color: #46443e;
+  background: #302f2a;
+}
+
+.map-page.is-dark .tl-title,
+.map-page.is-dark .sheet-title,
+.map-page.is-dark .plan-section-title,
+.map-page.is-dark .ms-title,
+.map-page.is-dark .plan-empty-title,
+.map-page.is-dark .plan-load-text {
+  color: #f5f2ea;
+}
+
+.map-page.is-dark .tl-desc,
+.map-page.is-dark .sheet-advice,
+.map-page.is-dark .focus-text,
+.map-page.is-dark .plan-empty-sub {
+  color: #bbb7ae;
+}
+
+.map-page.is-dark .focus-dot {
+  border-color: #dc6a52;
+  background: #c23b22;
+  color: #fffdfa;
+}
+
+.map-page.is-dark .badge-done {
+  border-color: rgba(184, 198, 175, 0.46);
+  background: rgba(123, 141, 110, 0.22);
+}
+
+.map-page.is-dark .badge-done .badge-text {
+  color: #b8c6af;
+}
+
+.map-page.is-dark .badge-active {
+  border-color: rgba(226, 123, 102, 0.48);
+  background: rgba(194, 59, 34, 0.22);
+}
+
+.map-page.is-dark .badge-active .badge-text {
+  color: #e27b66;
+}
+
+.map-page.is-dark .badge-ready,
+.map-page.is-dark .topic-tag {
+  border-color: rgba(170, 179, 234, 0.48);
+  background: rgba(63, 81, 181, 0.24);
+}
+
+.map-page.is-dark .badge-ready .badge-text,
+.map-page.is-dark .topic-text {
+  color: #aab3ea;
+}
+
+.map-page.is-dark .badge-locked {
+  border-color: #575650;
+  background: #33332f;
+}
+
+.map-page.is-dark .badge-locked .badge-text {
+  color: #aaa79f;
+}
+
+.map-page.is-dark .sheet-btn-disabled,
+.map-page.is-dark .plan-gen-btn-dim {
+  border-color: #575650;
+  background: #33332f;
+}
+
+.map-page.is-dark .sheet-btn-disabled .sheet-btn-text,
+.map-page.is-dark .plan-gen-btn-dim .plan-gen-btn-text {
+  color: #c4c2bc;
 }
 </style>

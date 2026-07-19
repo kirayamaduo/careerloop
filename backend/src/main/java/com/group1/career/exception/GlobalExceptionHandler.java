@@ -1,10 +1,13 @@
 package com.group1.career.exception;
 
+import com.fasterxml.jackson.core.exc.StreamConstraintsException;
 import com.group1.career.common.ErrorCode;
 import com.group1.career.common.Result;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,6 +16,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Result<?>> handleUnreadableRequest(HttpMessageNotReadableException e) {
+        if (hasCause(e, StreamConstraintsException.class)) {
+            log.warn("Rejected JSON request that exceeded streaming constraints");
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Result.error(413, "Request payload is too large"));
+        }
+        log.warn("Malformed JSON request");
+        return ResponseEntity.badRequest()
+                .body(Result.error(ErrorCode.PARAM_ERROR));
+    }
 
     /**
      * Handle Custom Business Exception
@@ -53,7 +68,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
         log.error("System Error", e);
-        return Result.error(ErrorCode.SYSTEM_ERROR.getCode(), "System Error: " + e.getMessage());
+        // Keep stack traces in server logs, never in the public response. JDBC,
+        // HTTP-client and cloud-SDK exception messages can contain SQL, internal
+        // hosts, bucket names, credentials, or upstream response fragments.
+        return Result.error(ErrorCode.SYSTEM_ERROR);
+    }
+
+    private boolean hasCause(Throwable error, Class<? extends Throwable> type) {
+        Throwable current = error;
+        while (current != null) {
+            if (type.isInstance(current)) return true;
+            current = current.getCause();
+        }
+        return false;
     }
 }
-

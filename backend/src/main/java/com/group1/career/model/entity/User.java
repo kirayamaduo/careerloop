@@ -1,6 +1,7 @@
 package com.group1.career.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,6 +43,14 @@ public class User {
     @Transient
     private String avatarViewUrl;
 
+    /**
+     * Response-only flag set when a verified login automatically restores an
+     * account during its 30-day deletion grace period.
+     */
+    @Transient
+    @Builder.Default
+    private Boolean accountRestored = false;
+
     @Column(name = "school", length = 100)
     private String school;
 
@@ -62,6 +71,17 @@ public class User {
     @Column(name = "status")
     @Builder.Default
     private Integer status = 1;
+
+    /**
+     * Server-side session generation. Every security-sensitive account event
+     * increments this value; JWTs carrying an older generation are rejected.
+     * It is deliberately excluded from API responses because it is internal
+     * authentication state, not profile data.
+     */
+    @JsonIgnore
+    @Column(name = "auth_version", nullable = false)
+    @Builder.Default
+    private Long authVersion = 0L;
 
     /**
      * Soft FK to {@code organizations.org_id} (Sprint D-4). Null for the
@@ -108,4 +128,3 @@ public class User {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 }
-

@@ -1,6 +1,7 @@
 package com.group1.career.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.group1.career.common.ErrorCode;
 import com.group1.career.exception.BizException;
 import com.group1.career.model.NotificationTypes;
 import com.group1.career.model.dto.AgentUserProfileDto;
@@ -367,6 +368,33 @@ class CareerBridgeServiceImplTest {
 
         assertThrows(BizException.class, () -> service.createIntervention(STUDENT_ID, request));
         verify(taskRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void deletedStudentReturnsAccountDeletedSoWebsiteCanUnlink() {
+        User deleted = activeUser();
+        deleted.setDeletedAt(LocalDateTime.now().minusDays(1));
+        when(userRepository.findById(STUDENT_ID)).thenReturn(Optional.of(deleted));
+
+        BizException error = assertThrows(
+                BizException.class, () -> service.getStudentPassport(STUDENT_ID));
+
+        assertEquals(ErrorCode.ACCOUNT_DELETED.getCode(), error.getCode());
+        verify(snapshotService, never()).read(any());
+    }
+
+    @Test
+    void bannedStudentReturnsForbiddenWithoutExposingPassport() {
+        User banned = activeUser();
+        banned.setStatus(2);
+        when(userRepository.findById(STUDENT_ID)).thenReturn(Optional.of(banned));
+
+        BizException error = assertThrows(
+                BizException.class, () -> service.getStudentPassport(STUDENT_ID));
+
+        assertEquals(403, error.getCode());
+        assertEquals(ErrorCode.ACCOUNT_BANNED.getMessage(), error.getMessage());
+        verify(snapshotService, never()).read(any());
     }
 
     private User activeUser() {

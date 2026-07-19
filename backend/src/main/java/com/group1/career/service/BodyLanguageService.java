@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -54,9 +57,19 @@ public class BodyLanguageService {
 
     /** Hard cap so a stuck client can't make us hold thousands of frames. */
     private static final int MAX_FRAMES_PER_INTERVIEW = 600;
+    /** About 1 MiB decoded; low-quality phone JPEGs are normally far smaller. */
+    public static final int MAX_BASE64_CHARS = 1_400_000;
+    /** Frontend samples every 3s; accept at most one frame per user per 2.5s. */
+    static final long MIN_FRAME_INTERVAL_NANOS = Duration.ofMillis(2500).toNanos();
+    static final double MIN_VALID_CONFIDENCE = 0.55;
+    static final int MAX_CONCURRENT_SIDECAR_CALLS = 4;
+    private static final long GATE_IDLE_NANOS = Duration.ofMinutes(10).toNanos();
 
     /** Per-interview score ring. ConcurrentHashMap so multiple sessions can ingest in parallel. */
     private final Map<Long, List<FrameScore>> buffers = new ConcurrentHashMap<>();
+    private final Map<Long, UserGate> userGates = new ConcurrentHashMap<>();
+    private final Semaphore sidecarPermits = new Semaphore(MAX_CONCURRENT_SIDECAR_CALLS, true);
+    private final AtomicLong submissionCount = new AtomicLong();
 
     /** Reused HTTP client; the sidecar is on the same compose network so latency is local. */
     private final AtomicReference<HttpClient> httpClient = new AtomicReference<>();
@@ -66,22 +79,53 @@ public class BodyLanguageService {
      * any error is logged at debug and swallowed; we never want a flaky
      * sidecar to abort the interview itself.
      */
-    public void recordFrame(Long interviewId, String frameBase64) {
-        if (interviewId == null || frameBase64 == null || frameBase64.isBlank()) return;
+    public SubmissionResult recordFrame(Long userId, Long interviewId, String frameBase64) {
+        if (userId == null || userId <= 0 || interviewId == null
+                || frameBase64 == null || frameBase64.isBlank()) {
+            return SubmissionResult.INVALID;
+        }
+        if (frameBase64.length() > MAX_BASE64_CHARS) {
+            return SubmissionResult.TOO_LARGE;
+        }
         if (!enabled || sidecarUrl == null || sidecarUrl.isBlank()) {
             log.debug("[bodylang] disabled or sidecar URL missing, dropping frame for interview {}", interviewId);
-            return;
+            return SubmissionResult.DISABLED;
         }
+
+        long now = System.nanoTime();
+        pruneIdleGates(now);
+        UserGate gate = userGates.computeIfAbsent(userId, ignored -> new UserGate());
+        gate.lastSeenNanos.set(now);
+        if (!gate.inFlight.compareAndSet(false, true)) {
+            return SubmissionResult.BUSY;
+        }
+
+        boolean permitAcquired = false;
         try {
+            long previous = gate.lastAcceptedNanos.get();
+            if (previous != 0L && now - previous < MIN_FRAME_INTERVAL_NANOS) {
+                return SubmissionResult.RATE_LIMITED;
+            }
+            if (!sidecarPermits.tryAcquire()) {
+                return SubmissionResult.BUSY;
+            }
+            permitAcquired = true;
+            gate.lastAcceptedNanos.set(now);
+
             FrameScore score = callSidecar(interviewId, frameBase64);
-            if (score == null) return;
+            if (score == null) return SubmissionResult.NO_VALID_SIGNAL;
             buffers.compute(interviewId, (k, existing) -> {
                 List<FrameScore> list = existing == null ? new ArrayList<>() : existing;
                 if (list.size() < MAX_FRAMES_PER_INTERVIEW) list.add(score);
                 return list;
             });
+            return SubmissionResult.ACCEPTED;
         } catch (Exception e) {
             log.debug("[bodylang] frame call failed for interview {}: {}", interviewId, e.toString());
+            return SubmissionResult.SIDECAR_FAILED;
+        } finally {
+            if (permitAcquired) sidecarPermits.release();
+            gate.inFlight.set(false);
         }
     }
 
@@ -115,7 +159,7 @@ public class BodyLanguageService {
         buffers.remove(interviewId);
     }
 
-    private FrameScore callSidecar(Long interviewId, String frameBase64) throws Exception {
+    FrameScore callSidecar(Long interviewId, String frameBase64) throws Exception {
         HttpClient client = httpClient.updateAndGet(c -> c == null
                 ? HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build() : c);
         ObjectNode body = objectMapper.createObjectNode();
@@ -131,13 +175,88 @@ public class BodyLanguageService {
             log.debug("[bodylang] sidecar returned {} for interview {}", res.statusCode(), interviewId);
             return null;
         }
-        JsonNode node = objectMapper.readTree(res.body());
+        return parseSidecarResponse(res.body());
+    }
+
+    FrameScore parseSidecarResponse(String responseBody) throws Exception {
+        JsonNode node = objectMapper.readTree(responseBody);
+        if (node == null || !node.isObject()) return null;
+        String note = node.path("note").asText("").trim().toLowerCase();
+        JsonNode validNode = node.get("valid");
+        if (validNode == null || !validNode.isBoolean() || !validNode.booleanValue()) {
+            return null;
+        }
+        JsonNode confidenceNode = node.get("confidence");
+        if (confidenceNode == null || !confidenceNode.isNumber()) return null;
+        double confidence = confidenceNode.doubleValue();
+        if (note.contains("no-face")
+                || note.contains("no face")
+                || note.contains("no-pose")
+                || note.contains("no pose")
+                || note.contains("incomplete")
+                || note.contains("mediapipe-disabled")
+                || note.contains("unavailable")
+                || note.contains("invalid")
+                || !Double.isFinite(confidence)
+                || confidence < MIN_VALID_CONFIDENCE
+                || confidence > 1.0) {
+            return null;
+        }
+        if (!node.hasNonNull("eye_contact")
+                || !node.hasNonNull("expression")
+                || !node.hasNonNull("posture")) {
+            return null;
+        }
+        JsonNode eyeNode = node.get("eye_contact");
+        JsonNode expressionNode = node.get("expression");
+        JsonNode postureNode = node.get("posture");
+        if (!eyeNode.isIntegralNumber()
+                || !expressionNode.isIntegralNumber()
+                || !postureNode.isIntegralNumber()) {
+            return null;
+        }
+        int eyeContact = eyeNode.intValue();
+        int expression = expressionNode.intValue();
+        int posture = postureNode.intValue();
+        if (!validScore(eyeContact) || !validScore(expression) || !validScore(posture)) {
+            return null;
+        }
         return FrameScore.builder()
-                .eyeContact(node.path("eye_contact").asInt(60))
-                .expression(node.path("expression").asInt(60))
-                .posture(node.path("posture").asInt(60))
-                .confidence(node.path("confidence").asDouble(0.4))
+                .eyeContact(eyeContact)
+                .expression(expression)
+                .posture(posture)
+                .confidence(confidence)
                 .build();
+    }
+
+    private boolean validScore(int score) {
+        return score >= 0 && score <= 100;
+    }
+
+    private void pruneIdleGates(long now) {
+        long count = submissionCount.incrementAndGet();
+        if ((count & 255L) != 0L || userGates.size() < 1024) return;
+        userGates.entrySet().removeIf(entry -> {
+            UserGate gate = entry.getValue();
+            return !gate.inFlight.get() && now - gate.lastSeenNanos.get() > GATE_IDLE_NANOS;
+        });
+    }
+
+    private static final class UserGate {
+        private final AtomicBoolean inFlight = new AtomicBoolean();
+        private final AtomicLong lastAcceptedNanos = new AtomicLong();
+        private final AtomicLong lastSeenNanos = new AtomicLong();
+    }
+
+    public enum SubmissionResult {
+        ACCEPTED,
+        INVALID,
+        TOO_LARGE,
+        RATE_LIMITED,
+        BUSY,
+        DISABLED,
+        NO_VALID_SIGNAL,
+        SIDECAR_FAILED
     }
 
     @Data

@@ -43,6 +43,9 @@ spring:
       mail:
         smtp:
           auth: true
+          connectiontimeout: ${MAIL_CONNECTION_TIMEOUT_MS:10000}
+          timeout: ${MAIL_READ_TIMEOUT_MS:10000}
+          writetimeout: ${MAIL_WRITE_TIMEOUT_MS:10000}
           starttls:
             enable: true    # 587端口必须开启STARTTLS（QQ/163/Gmail通用）
             required: true
@@ -162,3 +165,7 @@ content-safety:
 career:
   bridge:
     key: ${CAREER_PLATFORM_BRIDGE_KEY:}
+    # Link-code generation stays disabled until this is a publicly reachable,
+    # certificate-trusted HTTPS passport URL. HTTP, IP literals and localhost
+    # are rejected by the controller even when configured.
+    public-url: ${CAREER_PLATFORM_PUBLIC_URL:}

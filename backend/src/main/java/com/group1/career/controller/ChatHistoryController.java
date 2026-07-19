@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -90,13 +92,16 @@ public class ChatHistoryController {
             String firstMsg = request.getUserMessage();
             if (firstMsg != null && !firstMsg.isBlank()) {
                 session.setTitle(firstMsg.length() > 20 ? firstMsg.substring(0, 20) + "..." : firstMsg);
-                sessionRepository.save(session);
             }
         }
+        // Touch updatedAt for every appended turn so history ordering reflects
+        // the most recently active session, not only the first-title update.
+        sessionRepository.save(session);
 
-        String persona = request.getPersona() != null ? request.getPersona() : "MENTOR";
-        summaryService.triggerRollupIfNeeded(uid, persona, sessionId);
-        userFactService.extractAndSaveAsync(uid, sessionId);
+        // The async readers must not run until both message rows are committed.
+        // Triggering them inside this transaction lets a fast executor observe
+        // the previous turn and causes duplicate/missed roll-ups.
+        triggerMemoryWorkAfterCommit(uid, session.getPersona(), sessionId);
 
         return Result.success(session);
     }
@@ -119,6 +124,23 @@ public class ChatHistoryController {
             throw new BizException(ErrorCode.FORBIDDEN);
         }
         return session;
+    }
+
+    private void triggerMemoryWorkAfterCommit(Long userId, String persona, Long sessionId) {
+        Runnable work = () -> {
+            summaryService.triggerRollupIfNeeded(userId, persona, sessionId);
+            userFactService.extractAndSaveAsync(userId, sessionId);
+        };
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            work.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                work.run();
+            }
+        });
     }
 
     @Data

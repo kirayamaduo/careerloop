@@ -1,4 +1,4 @@
-import { clearAuthState, LOGIN_PAGE } from '@/utils/auth';
+import { clearAuthState, isGuest, LOGIN_PAGE } from '@/utils/auth';
 import { translate } from '@/locales';
 
 const DEFAULT_API_BASE_URL = 'https://api.careerloop.top';
@@ -35,6 +35,13 @@ const handleUnauthorized = (silent?: boolean) => {
     _redirectingToLogin = false;
     uni.reLaunch({ url: LOGIN_PAGE });
   }, 1500);
+};
+
+const hasAccountSession = () => {
+  if (isGuest()) return false;
+  const token = String(uni.getStorageSync('token') || '').trim();
+  const userId = Number(uni.getStorageSync('userId'));
+  return !!token || (Number.isInteger(userId) && userId > 0);
 };
 
 type RequestOptions = UniApp.RequestOptions & {
@@ -87,10 +94,15 @@ const showError = (message: string, silent?: boolean, duration = 2500) => {
   }
 };
 
+const canAutoRetry = (method?: string) => {
+  const normalized = String(method || 'GET').toUpperCase();
+  return normalized === 'GET' || normalized === 'HEAD' || normalized === 'OPTIONS';
+};
+
 /**
  * Generic Request Function — with F21 global error handling:
  *   - 401: clear token, redirect to login
- *   - 5xx: one auto-retry after 1.5 s, then show toast
+ *   - 5xx: one auto-retry for read-only requests, then show toast
  *   - Network fail: friendly localized toast + reject
  */
 const request = <T>(options: RequestOptions): Promise<T> => {
@@ -98,7 +110,6 @@ const request = <T>(options: RequestOptions): Promise<T> => {
     const token = uni.getStorageSync('token');
     const header: Record<string, string> = {
       'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': '1',
       ...(options.header as Record<string, string>),
     };
     if (token) header['Authorization'] = `Bearer ${token}`;
@@ -125,10 +136,11 @@ const request = <T>(options: RequestOptions): Promise<T> => {
         if (statusCode >= 200 && statusCode < 300) {
           if (isResultEnvelope<T>(data)) {
             // Some backend handlers return HTTP 200 with business code 401.
-            // silent:true 时完全不触发全局处理（不清 token、不跳转），由调用方 catch 处理。
+            // `silent` only suppresses the toast; an expired real session must
+            // still be cleared so callers never keep using a stale token.
             const code = getEnvelopeCode(data);
             if (code === 401) {
-              if (!options.silent) handleUnauthorized(false);
+              if (hasAccountSession()) handleUnauthorized(options.silent);
               reject(new Error('Unauthorized'));
               return;
             }
@@ -149,16 +161,18 @@ const request = <T>(options: RequestOptions): Promise<T> => {
           return;
         }
 
-        // F21: 401 → session expired, redirect to login
-        // silent:true 时不触发全局重定向，由调用方 catch 处理
+        // F21: 401 → clear expired real sessions even for silent background
+        // requests. Guest preview owns no credential, so a protected endpoint
+        // simply rejects and lets the page display its login gate.
         if (statusCode === 401) {
-          if (!options.silent) handleUnauthorized(false);
+          if (hasAccountSession()) handleUnauthorized(options.silent);
           reject(new Error('Unauthorized'));
           return;
         }
 
-        // F21: 5xx → retry once
-        if (statusCode >= 500 && !options._retried) {
+        // Never replay mutations automatically: a server/proxy can return 5xx
+        // after the write has already committed.
+        if (statusCode >= 500 && !options._retried && canAutoRetry(options.method)) {
           setTimeout(() => {
             request<T>({ ...options, _retried: true }).then(resolve).catch(reject);
           }, 1500);
@@ -191,7 +205,6 @@ export const uploadFileRequest = <T>(options: UploadOptions): Promise<T> => {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token');
     const header: Record<string, string> = {
-      'ngrok-skip-browser-warning': '1',
       ...(options.header || {}),
     };
     if (token) header.Authorization = `Bearer ${token}`;
@@ -212,7 +225,7 @@ export const uploadFileRequest = <T>(options: UploadOptions): Promise<T> => {
         }
 
         if (res.statusCode === 401) {
-          if (!options.silent) handleUnauthorized(false);
+          if (hasAccountSession()) handleUnauthorized(options.silent);
           reject(new Error('Unauthorized'));
           return;
         }
@@ -221,7 +234,7 @@ export const uploadFileRequest = <T>(options: UploadOptions): Promise<T> => {
           if (isResultEnvelope<T>(body)) {
             const code = getEnvelopeCode(body);
             if (code === 401) {
-              if (!options.silent) handleUnauthorized(false);
+              if (hasAccountSession()) handleUnauthorized(options.silent);
               reject(new Error('Unauthorized'));
               return;
             }
@@ -252,4 +265,3 @@ export const uploadFileRequest = <T>(options: UploadOptions): Promise<T> => {
 };
 
 export default request;
-

@@ -13,6 +13,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -43,10 +46,14 @@ public class FileControllerTest {
         String mockUrl = "https://test-bucket.oss-cn-test.aliyuncs.com/resumes/test-file.pdf";
         when(fileService.uploadFile(any(), anyString())).thenReturn(mockUrl);
 
-        mockMvc.perform(multipart("/api/files/upload").file(file).param("folder", "resumes"))
+        mockMvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .param("folder", "resumes")
+                        .requestAttr("userId", 7L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value(mockUrl));
+        verify(fileService).uploadFile(any(), eq("resumes/7"));
     }
 
     @Test
@@ -57,10 +64,13 @@ public class FileControllerTest {
         String mockUrl = "https://test-bucket.oss-cn-test.aliyuncs.com/resumes/doc.pdf";
         when(fileService.uploadFile(any(), anyString())).thenReturn(mockUrl);
 
-        mockMvc.perform(multipart("/api/files/upload").file(file))
+        mockMvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .requestAttr("userId", 7L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").isString());
+        verify(fileService).uploadFile(any(), eq("resumes/7"));
     }
 
     @Test
@@ -71,8 +81,28 @@ public class FileControllerTest {
         String mockUrl = "https://test-bucket.oss-cn-test.aliyuncs.com/avatars/user-avatar.jpg";
         when(fileService.uploadFile(any(), anyString())).thenReturn(mockUrl);
 
-        mockMvc.perform(multipart("/api/files/upload").file(file).param("folder", "avatars"))
+        mockMvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .param("folder", "avatars")
+                        .requestAttr("userId", 7L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value(mockUrl));
+        verify(fileService).uploadFile(any(), eq("avatars/7"));
+    }
+
+    @Test
+    @DisplayName("Upload category cannot escape the user's OSS namespace")
+    void rejectsArbitraryFolder() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "payload.bin", "application/octet-stream", new byte[]{1});
+
+        mockMvc.perform(multipart("/api/files/upload")
+                        .file(file)
+                        .param("folder", "../avatars/99")
+                        .requestAttr("userId", 7L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400));
+
+        verify(fileService, never()).uploadFile(any(), anyString());
     }
 }

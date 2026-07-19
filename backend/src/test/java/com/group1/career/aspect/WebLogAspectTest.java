@@ -69,8 +69,10 @@ class WebLogAspectTest {
         bindRequest("POST", "/auth/login");
         Method loginMethod = AuthController.class.getMethod(
                 "login",
-                AuthController.LoginDto.class);
-        JoinPoint joinPoint = joinPoint(loginMethod, login);
+                AuthController.LoginDto.class,
+                jakarta.servlet.http.HttpServletRequest.class);
+        JoinPoint joinPoint = joinPoint(
+                loginMethod, login, new MockHttpServletRequest("POST", "/auth/login"));
 
         String token = "do-not-log-this-jwt";
         aspect.doBefore(joinPoint);

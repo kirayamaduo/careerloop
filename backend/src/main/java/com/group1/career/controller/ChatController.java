@@ -3,7 +3,6 @@ package com.group1.career.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group1.career.common.Result;
-import com.group1.career.repository.AssistantSessionRepository;
 import com.group1.career.service.AgentProfileService;
 import com.group1.career.service.AiService;
 import com.group1.career.service.ConversationSummaryService;
@@ -40,7 +39,6 @@ public class ChatController {
     private final ConversationSummaryService summaryService;
     private final UserFactService userFactService;
     private final UserProfileTagService profileTagService;
-    private final AssistantSessionRepository sessionRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** F15: persona-aware base prompt is delegated to {@link AiPersonas}. */
@@ -54,13 +52,6 @@ public class ChatController {
         String reply = (uid != null)
                 ? functionCallingService.chat(messages, uid)
                 : aiService.chat(messages);
-
-        // F11/F12: Async rollup + fact extraction after each turn
-        if (uid != null && request.getSessionId() != null) {
-            String persona = request.getPersona() != null ? request.getPersona() : "MENTOR";
-            summaryService.triggerRollupIfNeeded(uid, persona, request.getSessionId());
-            userFactService.extractAndSaveAsync(uid, request.getSessionId());
-        }
 
         ChatResponseDto response = new ChatResponseDto();
         response.setReply(reply);
@@ -77,14 +68,6 @@ public class ChatController {
 
         List<Map<String, String>> history = parseHistory(historyJson);
         List<Map<String, String>> messages = buildMessages(history, message, persona);
-
-        // F11/F12: Async rollup + fact extraction after streaming turn
-        Long uid = SecurityUtil.currentUserId();
-        if (uid != null && sessionId != null) {
-            String p = persona != null ? persona : "MENTOR";
-            summaryService.triggerRollupIfNeeded(uid, p, sessionId);
-            userFactService.extractAndSaveAsync(uid, sessionId);
-        }
 
         return aiService.streamChat(messages);
     }
@@ -169,7 +152,10 @@ public class ChatController {
         private List<Map<String, String>> history;
         /** F15/F11: MENTOR | CHALLENGER. Defaults to MENTOR if absent. */
         private String persona;
-        /** F11: session ID for summary rollup trigger. */
+        /**
+         * Kept for wire compatibility. Durable roll-up now runs only after
+         * /history/.../append commits the complete user/assistant pair.
+         */
         private Long sessionId;
     }
 

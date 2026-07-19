@@ -371,6 +371,7 @@ public class AdminController {
         String reason = body.getOrDefault("reason", "Violated community guidelines");
         u.setStatus(2);
         u.setBannedReason(reason);
+        u.setAuthVersion(nextAuthVersion(u));
         User saved = userRepository.save(u);
         notificationService.push(userId,
                 NotificationTypes.SYSTEM,
@@ -390,6 +391,8 @@ public class AdminController {
                 .orElseThrow(() -> new BizException("User not found"));
         u.setStatus(1);
         u.setBannedReason(null);
+        // Tokens issued before or during a ban must stay unusable after unban.
+        u.setAuthVersion(nextAuthVersion(u));
         User saved = userRepository.save(u);
         notificationService.push(userId,
                 NotificationTypes.SYSTEM,
@@ -560,6 +563,10 @@ public class AdminController {
     private void requireAdmin() {
         Long uid = SecurityUtil.requireCurrentUserId();
         adminAuthService.requireAdmin(uid);
+    }
+
+    private long nextAuthVersion(User user) {
+        return (user.getAuthVersion() == null ? 0L : user.getAuthVersion()) + 1L;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor

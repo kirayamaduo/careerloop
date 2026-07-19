@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onBeforeUnmount, onMounted } from 'vue';
 import { useI18n } from '@/locales';
 import { onShow } from '@dcloudio/uni-app';
 import {
@@ -85,8 +85,11 @@ const interview = ref<Interview | null>(null);
 const messages = ref<InterviewMessage[]>([]);
 const inputText = ref('');
 const aiTyping = ref(false);
+const ending = ref(false);
 const typingElapsed = ref(0);
 let typingTimer: any = null;
+let pageActive = true;
+let turnGeneration = 0;
 const { t } = useI18n();
 const interviewLang = (uni.getStorageSync('interview_language') as string) || 'zh';
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
@@ -109,6 +112,7 @@ const stopTypingTimer = () => {
   typingElapsed.value = 0;
 };
 onMounted(async () => {
+  const loadGeneration = turnGeneration;
   refreshTheme();
   const safeMetrics = getMpSafeAreaMetrics();
   topSafeHeight.value = safeMetrics.topSafeHeight;
@@ -119,8 +123,19 @@ onMounted(async () => {
 
   if (interviewId.value) {
     try {
-      interview.value = await getInterviewByIdApi(interviewId.value);
-      messages.value = await getInterviewMessagesApi(interviewId.value);
+      const loadedInterview = await getInterviewByIdApi(interviewId.value);
+      if (!pageActive || loadGeneration !== turnGeneration) return;
+      interview.value = loadedInterview;
+      if (loadedInterview.status !== 'ONGOING') {
+        const target = loadedInterview.status === 'COMPLETED'
+          ? `/pages/interview/report?interviewId=${interviewId.value}`
+          : '/pages/interview/history';
+        uni.redirectTo({ url: target });
+        return;
+      }
+      const loadedMessages = await getInterviewMessagesApi(interviewId.value);
+      if (!pageActive || loadGeneration !== turnGeneration) return;
+      messages.value = loadedMessages;
       
       // First time entering this session: ask the backend to generate the
       // opening question. The endpoint is idempotent —
@@ -130,19 +145,30 @@ onMounted(async () => {
         startTypingTimer();
         try {
           const greeting = await generateGreetingApi(interviewId.value, interviewLang);
+          if (!pageActive || loadGeneration !== turnGeneration) return;
           if (greeting) messages.value = [greeting];
         } catch {
+          if (!pageActive || loadGeneration !== turnGeneration) return;
           uni.showToast({ title: t('interviewChat.greetingFailed'), icon: 'none', duration: 3000 });
         } finally {
-          aiTyping.value = false;
-          stopTypingTimer();
+          if (pageActive && loadGeneration === turnGeneration) {
+            aiTyping.value = false;
+            stopTypingTimer();
+          }
         }
       }
     } catch (error: any) {
+      if (!pageActive || loadGeneration !== turnGeneration) return;
       console.error('Failed to load interview:', error);
       uni.showToast({ title: error?.message || t('interviewRoom.loadFailed'), icon: 'none' });
     }
   }
+});
+
+onBeforeUnmount(() => {
+  pageActive = false;
+  turnGeneration += 1;
+  stopTypingTimer();
 });
 
 onShow(() => {
@@ -154,6 +180,7 @@ const sendMessage = async () => {
   const text = inputText.value.trim();
   if (!text || aiTyping.value) return;
 
+  const generation = ++turnGeneration;
   messages.value.push({ interviewId: interviewId.value, role: 'USER', content: text });
   inputText.value = '';
   aiTyping.value = true;
@@ -161,17 +188,26 @@ const sendMessage = async () => {
 
   try {
     const response = await sendInterviewMessageApi(interviewId.value, text, interviewLang);
+    if (!pageActive || generation !== turnGeneration) return;
     messages.value.push({ interviewId: interviewId.value, role: 'AI', content: response.aiMessage });
   } catch (error) {
+    if (!pageActive || generation !== turnGeneration) return;
     console.error('Failed to send message:', error);
     uni.showToast({ title: t('interviewChat.sendFailed'), icon: 'none' });
   } finally {
-    aiTyping.value = false;
-    stopTypingTimer();
+    if (pageActive && generation === turnGeneration) {
+      aiTyping.value = false;
+      stopTypingTimer();
+    }
   }
 };
 
 const endInterview = () => {
+  if (ending.value) return;
+  if (aiTyping.value) {
+    uni.showToast({ title: t('interviewRoom.statusThinking'), icon: 'none' });
+    return;
+  }
   const hasUserAnswer = messages.value.some((m) =>
     String(m.role || '').toUpperCase() === 'USER' && String(m.content || '').trim().length > 0
   );
@@ -184,12 +220,14 @@ const endInterview = () => {
       confirmColor: '#ef4444',
       success: async (res) => {
         if (!res.confirm) return;
+        ending.value = true;
         try {
           await endInterviewApi(interviewId.value);
-        } catch {
-          // Best-effort: do not route to a report that cannot exist.
+          uni.redirectTo({ url: '/pages/interview/history' });
+        } catch (error: any) {
+          ending.value = false;
+          uni.showToast({ title: error?.message || t('interviewChat.endFailed'), icon: 'none' });
         }
-        uni.redirectTo({ url: '/pages/interview/history' });
       },
     });
     return;
@@ -201,6 +239,7 @@ const endInterview = () => {
     confirmColor: '#ef4444',
     success: async (res) => {
       if (res.confirm) {
+        ending.value = true;
         try {
           // Score is now produced by the AI report endpoint, not the client.
           await endInterviewApi(interviewId.value);
@@ -211,6 +250,7 @@ const endInterview = () => {
             uni.redirectTo({ url: `/pages/interview/report?interviewId=${interviewId.value}` });
           }, 800);
         } catch (error: any) {
+          ending.value = false;
           console.error('Failed to end interview:', error);
           uni.showToast({ title: error?.message || t('interviewChat.endFailed'), icon: 'none' });
         }
@@ -225,12 +265,6 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.sl-page :deep(.chat-container) {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .interview-info {
   background: var(--gradient-primary);
   padding: 16px 20px;
@@ -402,4 +436,123 @@ const goBack = () => {
   box-shadow: none;
 }
 /* #endif */
+
+/* Competition visual system ------------------------------------------------ */
+.interview-info {
+  background: #f5f5f0;
+  border-bottom: 1px solid #e0dfdb;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.position {
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #2c2b29;
+}
+
+.session-text {
+  color: #5a5956;
+}
+
+.difficulty {
+  color: #3f51b5;
+  background: transparent;
+  border: 1px solid rgba(63, 81, 181, 0.36);
+  border-radius: 4px;
+}
+
+.end-link-text {
+  color: #c23b22;
+}
+
+.chat-area-surface {
+  background: #faf9f6;
+}
+
+.msg-content {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.message.user .msg-content {
+  color: #faf9f6;
+  background: #3f51b5;
+  border-radius: 8px 2px 8px 8px;
+  box-shadow: none;
+}
+
+.message.ai .msg-content {
+  color: #2c2b29;
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 2px 8px 8px 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.05);
+}
+
+.dot {
+  background: #8b8a86;
+}
+
+.input-area {
+  background: #faf9f6;
+  border-top: 1px solid #e0dfdb;
+}
+
+.chat-input {
+  height: 44px;
+  color: #2c2b29;
+  background: #ffffff;
+  border: 1px solid #d8d7d2;
+  border-radius: 6px;
+}
+
+.send-btn {
+  min-width: 64px;
+  height: 44px;
+  color: #8b8a86;
+  background: #efeee9;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+}
+
+.send-active {
+  background: #c23b22;
+  border-color: #c23b22;
+}
+
+.send-active .send-label {
+  color: #faf9f6;
+}
+
+.chat-container.is-dark .interview-info {
+  background: #242320;
+  border-color: #494844;
+}
+
+.chat-container.is-dark .position {
+  color: #faf9f6;
+}
+
+.chat-container.is-dark .session-text {
+  color: #c6c4be;
+}
+
+.chat-container.is-dark .chat-area-surface,
+.chat-container.is-dark .input-area {
+  background: #1c1b19;
+}
+
+.chat-container.is-dark .message.ai .msg-content,
+.chat-container.is-dark .chat-input {
+  color: #faf9f6;
+  background: #242320;
+  border-color: #494844;
+}
+
+.chat-container.is-dark .send-btn:not(.send-active) {
+  background: #34332f;
+  border-color: #494844;
+}
 </style>

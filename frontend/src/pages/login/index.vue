@@ -213,7 +213,12 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from '@/locales';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { sendCodeApi, resetPasswordApi, registerApi, loginApi, wechatLoginApi, checkEmailApi } from '@/api/user';
-import { enterGuestMode } from '@/utils/auth';
+import { enterGuestMode, isRealUser } from '@/utils/auth';
+import {
+  consumeConsentReturnUrl,
+  recordCurrentConsentOnServer,
+  storeCurrentConsent,
+} from '@/utils/consent';
 import { useTheme } from '@/utils/theme';
 import { syncPendingOnboarding } from '@/utils/onboardingSync';
 import { shouldForceOnboarding } from '@/utils/onboardingGate';
@@ -235,13 +240,17 @@ onMounted(() => {
   rightAvoidWidth.value = safeMetrics.rightAvoidWidth;
 
   // 动态计算 scroll-view 可用高度
-  const sysInfo = uni.getSystemInfoSync();
-  const screenH = sysInfo.windowHeight;
+  const getWindowInfo = (uni as unknown as {
+    getWindowInfo?: () => { windowHeight?: number };
+  }).getWindowInfo;
+  const screenH = (typeof getWindowInfo === 'function'
+    ? getWindowInfo().windowHeight
+    : 667) || 667;
   // hero 占据高度：statusBar + kicker + title + subtitle + padding ≈ statusBar + 90
   const heroH = statusTopPx.value + 90;
-  // form-sheet overhead: padding-top(20) + segment-bar(36 + 8padding + 16margin) = 80
-  // 但 form-sheet margin-top(-18) 回收了一部分
-  const formSheetOverhead = 80 - 18;
+  // form-sheet overhead: padding-top(14) + segment-bar(36 + 16margin) ≈ 66
+  // 新版编辑式布局只回收 1px 边线，避免内容区与顶部纸张发生重叠。
+  const formSheetOverhead = 66 - 1;
   formScrollHeight.value = screenH - heroH - formSheetOverhead;
 });
 
@@ -260,11 +269,18 @@ const routeAfterAuth = async () => {
   } catch {
     // Keep the pending setup in storage so a later real-account session can retry.
   }
+  if (!isRealUser()) return;
 
   setTimeout(() => {
     shouldForceOnboarding().then((force) => {
+      if (!isRealUser()) return;
       if (force) {
         uni.reLaunch({ url: '/pages/onboarding/index' });
+        return;
+      }
+      const returnUrl = consumeConsentReturnUrl();
+      if (returnUrl) {
+        uni.reLaunch({ url: returnUrl });
         return;
       }
       uni.switchTab({ url: '/pages/home/index' });
@@ -276,9 +292,15 @@ const storeRealSession = (token: string, user: any) => {
   uni.setStorageSync('token', token);
   uni.setStorageSync('userId', user.userId);
   uni.setStorageSync('userInfo', user);
-  uni.setStorageSync('consent_v1.0', '1');
+  storeCurrentConsent();
   uni.removeStorageSync('isGuest');
+  recordCurrentConsentOnServer().catch(() => {
+    // Best-effort audit write. A later authenticated launch can retry.
+  });
 };
+
+const signedInMessage = (accountRestored?: boolean) =>
+  t(accountRestored ? 'login.accountRestored' : 'login.signedIn');
 
 // ─── 表单字段 ────────────────────────────────────────────────────
 const mode = ref<'login' | 'register'>('login');
@@ -493,7 +515,7 @@ const handleSubmit = async () => {
     } else {
       const res = await loginApi({ identityType: 'EMAIL_PASSWORD', identifier: account.value, credential: password.value });
       storeRealSession(res.token, res.user);
-      showSnack(t('login.signedIn'), 'success');
+      showSnack(signedInMessage(res.accountRestored), 'success');
     }
     await routeAfterAuth();
   } catch (e: any) {
@@ -529,7 +551,7 @@ const wxLogin = () => {
         const res = await wechatLoginApi({ code: loginRes.code });
         storeRealSession(res.token, res.user);
         uni.hideLoading();
-        showSnack(t('login.signedIn'), 'success');
+        showSnack(signedInMessage(res.accountRestored), 'success');
         await routeAfterAuth();
       } catch (e: any) {
         uni.hideLoading();
@@ -545,21 +567,14 @@ const wxLogin = () => {
 const guestLogin = () => {
   if (!ageConfirmed.value) { showSnack(t('login.confirmAgeError'), 'error'); return; }
   if (!agreed.value) { showSnack(t('login.agreeTermsError'), 'error'); return; }
-  uni.setStorageSync('consent_v1.0', '1');
-  // Guest mode now stores a sentinel userId (-1) plus an `isGuest` flag so
-  // the App.vue cold-start gate doesn't treat the guest as "no session" and
-  // kick them back here every relaunch.
+  storeCurrentConsent();
   enterGuestMode();
   showSnack(t('login.guestEnabled'), 'info');
   setTimeout(() => {
-    shouldForceOnboarding().then((force) => {
-      if (force) {
-        uni.reLaunch({ url: '/pages/onboarding/index' });
-        return;
-      }
-      uni.switchTab({ url: '/pages/home/index' });
-    });
-  }, 800);
+    // Guests get an explicit read-only preview. Onboarding data is account
+    // state and cannot be synchronized for a sentinel guest user.
+    uni.switchTab({ url: '/pages/home/index' });
+  }, 500);
 };
 </script>
 
@@ -570,46 +585,52 @@ const guestLogin = () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--surface-1, #ffffff);
-  font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  background: var(--paper, #faf9f6);
+  color: var(--ink, #2c2b29);
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", sans-serif);
   box-sizing: border-box;
 }
 .login-page button { margin: 0; }
 .login-page button::after { border: none !important; }
 
 .hero {
-  padding: 0 20px 24px;
-  background: var(--primary-color, #2563eb);
+  padding: 0 20px 18px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(184, 151, 90, 0.13), transparent 32%),
+    radial-gradient(circle at 8% 30%, rgba(194, 59, 34, 0.08), transparent 34%),
+    var(--paper, #faf9f6);
+  border-bottom: 1px solid var(--border-color, #e0dfdb);
 }
 /* #ifdef H5 */
 .hero { padding-top: 20px; }
 /* #endif */
 .status-bar-spacer { width: 100%; }
-.hero-kicker { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.68); letter-spacing: 2px; display: block; margin-bottom: 8px; margin-top: 8px; }
-.hero-title { font-size: 30px; font-weight: 800; color: #ffffff; display: block; line-height: 1.2; }
+.hero-kicker { font-size: 11px; font-weight: 600; color: var(--vermilion, #c23b22); letter-spacing: 0.12em; display: block; margin-bottom: 8px; margin-top: 8px; font-family: var(--font-serif, "Songti SC", STSong, serif); }
+.hero-title { font-size: 30px; font-weight: 600; color: var(--ink, #2c2b29); display: block; line-height: 1.35; letter-spacing: 0.05em; font-family: var(--font-serif, "Songti SC", STSong, serif); }
 .hero-subtitle {
   display: block;
   margin-top: 8px;
   max-width: 520px;
   font-size: 13px;
-  line-height: 1.45;
-  color: rgba(255,255,255,0.82);
+  line-height: 1.75;
+  color: var(--ink-secondary, #5a5956);
 }
 
 .form-sheet {
-  width: calc(100% - 32px);
+  width: calc(100% - 40px);
   max-width: var(--content-max-width, 640px);
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-top: -18px;
+  margin-top: -1px;
   margin-left: auto;
   margin-right: auto;
-  background: var(--surface-1, #ffffff);
-  border: none;
-  border-radius: var(--radius-xl, 24px) var(--radius-xl, 24px) 0 0;
-  padding: 20px var(--page-gutter-tight, 16px) 0;
-  box-shadow: var(--shadow-sm);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md, 6px) var(--radius-md, 6px);
+  padding: 14px var(--page-gutter-tight, 16px) 0;
+  box-shadow: none;
   box-sizing: border-box;
 }
 .form-scroll {
@@ -624,26 +645,26 @@ const guestLogin = () => {
   padding-bottom: 48px;
 }
 .segment-wrap { margin-bottom: 16px; flex-shrink: 0; }
-.segment-bar { display: flex; background: #edf2fb; border: 1px solid #dbe4f0; border-radius: var(--btn-radius, 14px); padding: 4px; }
-.seg-item { flex: 1; text-align: center; height: 36px; line-height: 36px; border-radius: var(--radius-sm, 12px); font-size: 14px; font-weight: 600; color: #8c99af; }
-.seg-active { background: var(--surface-1, #ffffff); color: var(--text-primary, #0f172a); font-weight: 700; box-shadow: var(--shadow-xs); }
+.segment-bar { display: flex; background: transparent; border: 0 solid var(--border-color, #e0dfdb); border-bottom-width: 1px; border-radius: 0; padding: 0; }
+.seg-item { flex: 1; text-align: center; height: 36px; line-height: 36px; border-radius: 0; font-size: 14px; font-weight: 600; color: var(--ink-tertiary, #8b8a86); font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.08em; }
+.seg-active { background: transparent; color: var(--vermilion, #c23b22); font-weight: 600; border-bottom: 2px solid var(--vermilion, #c23b22); box-shadow: none; }
 .sheet-head { margin-bottom: 16px; }
-.sheet-title { display: block; font-size: 20px; font-weight: 800; color: var(--text-primary, #0f172a); }
+.sheet-title { display: block; font-size: 20px; font-weight: 600; color: var(--ink, #2c2b29); font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.05em; }
 .sheet-subtitle {
   display: block;
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--ink-secondary, #5a5956);
 }
 
 .field { margin-bottom: 12px; }
-.field-label { font-size: 12px; font-weight: 700; color: var(--text-secondary, #64748b); display: block; margin-bottom: 6px; }
-.field-input { width: 100%; height: 46px; border: 1px solid var(--border-color, #e2e8f0); border-radius: var(--btn-radius, 14px); padding: 0 16px; font-size: 14px; color: var(--text-primary, #0f172a); background: var(--surface-1, #ffffff); box-sizing: border-box; box-shadow: none; }
-.ph { color: var(--text-tertiary, #8e8e93); }
+.field-label { font-size: 12px; font-weight: 600; color: var(--ink-secondary, #5a5956); display: block; margin-bottom: 6px; font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.04em; }
+.field-input { width: 100%; height: 46px; border: 1px solid var(--border-color, #e0dfdb); border-radius: var(--radius-sm, 4px); padding: 0 16px; font-size: 14px; color: var(--ink, #2c2b29); background: var(--card-bg, #fffefa); box-sizing: border-box; box-shadow: none; }
+.ph { color: var(--ink-placeholder, #aaa9a5); }
 .input-error { border-color: #ef4444 !important; background: #fff8f8 !important; }
 .field-hint-error { display: block; font-size: 12px; color: #ef4444; margin-top: 5px; font-weight: 500; }
-.field-hint-checking { display: block; font-size: 12px; color: var(--text-tertiary, #8e8e93); margin-top: 5px; }
+.field-hint-checking { display: block; font-size: 12px; color: var(--ink-tertiary, #8b8a86); margin-top: 5px; }
 
 .strength-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .strength-bars { display: flex; gap: 4px; flex: 1; }
@@ -655,56 +676,57 @@ const guestLogin = () => {
 .reset-field-sub,
 .reset-code-row { margin-top: 12px; }
 .code-input { flex: 1; }
-.btn-send-code { flex-shrink: 0; height: 46px; padding: 0 14px; background: #2457d6; border-radius: var(--btn-radius, 14px); display: flex; align-items: center; justify-content: center; white-space: nowrap; box-shadow: var(--shadow-xs, 0 1px 3px rgba(0,0,0,0.08), 0 1px 8px rgba(0,0,0,0.05)); }
-.btn-send-code.is-disabled { background: #94a3b8; pointer-events: none; }
-.btn-send-text { color: #ffffff; font-size: 13px; font-weight: 700; }
+.btn-send-code { flex-shrink: 0; height: 46px; padding: 0 14px; background: transparent; border: 1px solid var(--vermilion, #c23b22); border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; white-space: nowrap; box-shadow: none; }
+.btn-send-code.is-disabled { background: transparent; border-color: var(--border-strong, #ceccc5); pointer-events: none; }
+.btn-send-text { color: var(--vermilion, #c23b22); font-size: 13px; font-weight: 600; }
+.btn-send-code.is-disabled .btn-send-text { color: var(--ink-tertiary, #8b8a86); }
 
 .forgot-row { text-align: right; margin-top: -2px; margin-bottom: 12px; }
-.forgot-link { font-size: 13px; color: #2457d6; font-weight: 600; }
+.forgot-link { font-size: 13px; color: var(--vermilion, #c23b22); font-weight: 600; }
 
 .agreement-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
-.checkbox { width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0; border: 1.5px solid #b8c5d8; display: flex; align-items: center; justify-content: center; background: var(--surface-1, #ffffff); margin-top: 1px; }
-.checked { background: #2457d6; border-color: #2457d6; }
+.checkbox { width: 18px; height: 18px; border-radius: 3px; flex-shrink: 0; border: 1.5px solid var(--border-strong, #ceccc5); display: flex; align-items: center; justify-content: center; background: var(--card-bg, #fffefa); margin-top: 1px; }
+.checked { background: var(--indigo, #3f51b5); border-color: var(--indigo, #3f51b5); }
 .check-mark { font-size: 13px; color: #ffffff; font-weight: 700; }
 .agreement-copy { display: flex; flex-wrap: wrap; align-items: center; row-gap: 2px; column-gap: 2px; flex: 1; }
-.agreement-text { font-size: 12px; color: var(--text-secondary, #64748b); line-height: 1.6; }
-.link { color: #2457d6; font-weight: 600; font-size: 12px; }
+.agreement-text { font-size: 12px; color: var(--ink-secondary, #5a5956); line-height: 1.6; }
+.link { color: var(--vermilion, #c23b22); font-weight: 600; font-size: 12px; }
 
-.btn-primary { width: 100%; height: 48px; background: var(--primary-color, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; }
+.btn-primary { width: 100%; height: 48px; background: var(--vermilion, #c23b22); border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12); transition: all 0.2s ease; }
 .btn-text { color: #ffffff; font-size: 16px; font-weight: 700; }
 .is-loading { opacity: 0.7; pointer-events: none; }
 .is-disabled { opacity: 0.55; }
 .btn-primary:active { opacity: 0.88; transform: scale(0.98); }
 
 .divider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.divider-line { flex: 1; height: 1px; background: #dde5f0; }
-.divider-text { font-size: 12px; color: var(--text-tertiary, #8e8e93); white-space: nowrap; }
+.divider-line { flex: 1; height: 1px; background: var(--border-light, #ecebe7); }
+.divider-text { font-size: 12px; color: var(--ink-tertiary, #8b8a86); white-space: nowrap; }
 
 .social-row { display: flex; gap: 12px; margin-bottom: 0; }
-.btn-wechat { flex: 1; height: 44px; background: #07c160; border-radius: var(--btn-radius, 14px); display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: var(--shadow-sm, 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)); }
+.btn-wechat { flex: 1; height: 44px; background: #07c160; border: 1px solid #079b4e; border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: none; }
 .wx-icon { font-size: 20px; color: #ffffff; }
 .wx-text { color: #ffffff; font-size: 14px; font-weight: 700; }
-.btn-guest { flex: 1; height: 44px; background: var(--surface-3, #f1f5f9); border: 1px solid #dbe4f0; border-radius: var(--btn-radius, 14px); display: flex; align-items: center; justify-content: center; }
-.guest-text { color: #516176; font-size: 14px; font-weight: 700; }
-.btn-guest:active { background: var(--surface-3, #f1f5f9); }
+.btn-guest { flex: 1; height: 44px; background: transparent; border: 1px solid var(--border-color, #e0dfdb); border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; }
+.guest-text { color: var(--ink-secondary, #5a5956); font-size: 14px; font-weight: 600; }
+.btn-guest:active { background: var(--paper-soft, #f5f5f0); }
 .btn-wechat:active { opacity: 0.88; }
 .bottom-safe { height: calc(env(safe-area-inset-bottom, 0px) + 12px); }
 
 /* ── Modals ── */
 .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 0 var(--page-gutter, 20px); box-sizing: border-box; }
-.modal-card { background: var(--surface-1, #ffffff); border-radius: var(--radius-lg, 20px); padding: 24px 20px; width: 100%; max-width: 400px; border: 1px solid #dbe4f0; box-shadow: var(--shadow-lg); box-sizing: border-box; }
-.modal-title { display: block; font-size: 18px; font-weight: 800; color: var(--text-primary, #0f172a); margin-bottom: 4px; }
-.modal-hint { display: block; font-size: 13px; color: var(--text-secondary, #64748b); line-height: 1.5; }
+.modal-card { background: var(--card-bg, #fffefa); border-radius: var(--radius-md, 6px); padding: 24px 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color, #e0dfdb); box-shadow: var(--shadow-md); box-sizing: border-box; }
+.modal-title { display: block; font-size: 18px; font-weight: 600; color: var(--ink, #2c2b29); margin-bottom: 4px; font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.05em; }
+.modal-hint { display: block; font-size: 13px; color: var(--ink-secondary, #5a5956); line-height: 1.5; }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.modal-btn { flex: 1; height: 46px; border-radius: var(--radius-sm, 12px); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
-.modal-btn-cancel { background: var(--surface-3, #f1f5f9); color: var(--text-secondary, #64748b); }
-.modal-btn-confirm { background: linear-gradient(135deg,#3568e8 0%,#2457d6 100%); color: #ffffff; }
+.modal-btn { flex: 1; height: 46px; border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+.modal-btn-cancel { background: var(--paper-soft, #f5f5f0); color: var(--ink-secondary, #5a5956); }
+.modal-btn-confirm { background: var(--vermilion, #c23b22); color: #ffffff; }
 .modal-btn-confirm.is-loading { opacity: 0.7; pointer-events: none; }
 
 .agreement-modal { max-height: 80vh; display: flex; flex-direction: column; }
 .agreement-scroll { flex: 1; max-height: 55vh; margin: 12px 0; }
-.agreement-section-title { display: block; font-size: 13px; font-weight: 700; color: var(--text-primary, #0f172a); margin-top: 14px; margin-bottom: 4px; }
-.agreement-body { display: block; font-size: 12px; color: var(--text-secondary, #64748b); line-height: 1.7; }
+.agreement-section-title { display: block; font-size: 13px; font-weight: 600; color: var(--ink, #2c2b29); margin-top: 14px; margin-bottom: 4px; font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.04em; }
+.agreement-body { display: block; font-size: 12px; color: var(--ink-secondary, #5a5956); line-height: 1.7; }
 
 @media (max-width: 375px) {
   .hero {
@@ -718,7 +740,7 @@ const guestLogin = () => {
   }
 
   .form-sheet {
-    width: calc(100% - 24px);
+    width: calc(100% - 32px);
     padding-left: 16px;
     padding-right: 16px;
   }

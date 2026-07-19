@@ -18,4 +18,9 @@ public interface WxSubscribeQuotaRepository extends JpaRepository<WxSubscribeQuo
     @Query("UPDATE WxSubscribeQuota q SET q.remaining = q.remaining - 1, q.updatedAt = CURRENT_TIMESTAMP " +
            "WHERE q.userId = :userId AND q.templateId = :templateId AND q.remaining > 0")
     int decrementRemaining(Long userId, String templateId);
+
+    @Modifying
+    @Query("UPDATE WxSubscribeQuota q SET q.remaining = q.remaining + 1, q.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE q.userId = :userId AND q.templateId = :templateId")
+    int incrementRemaining(Long userId, String templateId);
 }

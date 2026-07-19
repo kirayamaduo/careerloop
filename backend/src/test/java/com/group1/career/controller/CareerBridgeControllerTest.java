@@ -3,6 +3,7 @@ package com.group1.career.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group1.career.interceptor.AuthInterceptor;
 import com.group1.career.interceptor.CareerBridgeInterceptor;
+import com.group1.career.exception.BizException;
 import com.group1.career.model.dto.CareerBridgeDtos.ConsumeLinkCodeResponse;
 import com.group1.career.model.dto.CareerBridgeDtos.InterventionResponse;
 import com.group1.career.model.dto.CareerBridgeDtos.LinkCodeResponse;
@@ -25,6 +26,10 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,7 +37,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(
         controllers = {IntegrationLinkController.class, CareerPlatformBridgeController.class},
-        properties = "career.bridge.key=test-bridge-key")
+        properties = {
+                "career.bridge.key=test-bridge-key",
+                "career.bridge.public-url=https://career.example.com/passport"
+        })
 @Import(CareerBridgeInterceptor.class)
 class CareerBridgeControllerTest {
 
@@ -67,6 +75,26 @@ class CareerBridgeControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.code").value("12345678"))
                 .andExpect(jsonPath("$.data.expiresInSeconds").value(600));
+    }
+
+    @Test
+    void linkCodeFailsClosedWithoutTrustedHttpsPassportEntry() {
+        IntegrationLinkController controller = new IntegrationLinkController(careerBridgeService, "");
+
+        BizException error = assertThrows(BizException.class, controller::issueLinkCode);
+
+        assertTrue(error.getMessage().contains("安全入口暂未配置"));
+        verifyNoInteractions(careerBridgeService);
+    }
+
+    @Test
+    void passportEntryRejectsHttpAndIpLiteralsButAllowsTrustedDomainPorts() {
+        assertFalse(IntegrationLinkController.isTrustedPassportUrl(
+                "http://43.138.240.228:9178/passport"));
+        assertFalse(IntegrationLinkController.isTrustedPassportUrl(
+                "https://43.138.240.228:9443/passport"));
+        assertTrue(IntegrationLinkController.isTrustedPassportUrl(
+                "https://api.careerloop.top:9443/passport"));
     }
 
     @Test

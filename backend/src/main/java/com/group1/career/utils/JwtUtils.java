@@ -23,6 +23,7 @@ public class JwtUtils {
 
     private static volatile Key KEY;
     private static volatile long EXPIRATION_TIME = 24 * 60 * 60 * 1000L;
+    private static final String AUTH_VERSION_CLAIM = "authVersion";
 
     /**
      * Initialised by JwtConfig at Spring startup.
@@ -45,7 +46,26 @@ public class JwtUtils {
                 secret.getBytes(StandardCharsets.UTF_8).length, EXPIRATION_TIME);
     }
 
+    /**
+     * Legacy token shape retained for rolling-deployment compatibility. Tokens
+     * issued before auth-version support have no version claim and are treated
+     * as generation zero by {@link #getAuthVersionFromToken(String)}.
+     */
     public static String generateToken(Long userId, String role) {
+        return tokenBuilder(userId, role).compact();
+    }
+
+    /** Generate a revocable token bound to the user's current auth generation. */
+    public static String generateToken(Long userId, String role, long authVersion) {
+        if (authVersion < 0) {
+            throw new IllegalArgumentException("authVersion cannot be negative");
+        }
+        return tokenBuilder(userId, role)
+                .claim(AUTH_VERSION_CLAIM, authVersion)
+                .compact();
+    }
+
+    private static JwtBuilder tokenBuilder(Long userId, String role) {
         ensureConfigured();
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
@@ -55,18 +75,29 @@ public class JwtUtils {
                 .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(KEY, SignatureAlgorithm.HS256)
-                .compact();
+                .signWith(KEY, SignatureAlgorithm.HS256);
     }
 
     public static Long getUserIdFromToken(String token) {
         ensureConfigured();
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = parseClaims(token);
         return Long.parseLong(claims.getSubject());
+    }
+
+    /**
+     * Return the token's server-side auth generation. A missing claim is zero
+     * so JWTs issued immediately before this feature was deployed keep working
+     * until the first password/reset/logout/deletion/ban event for that user.
+     */
+    public static long getAuthVersionFromToken(String token) {
+        Object value = parseClaims(token).get(AUTH_VERSION_CLAIM);
+        if (value == null) return 0L;
+        if (value instanceof Number number) return number.longValue();
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException exception) {
+            throw new MalformedJwtException("Invalid authVersion claim");
+        }
     }
 
     public static boolean validateToken(String authToken) {
@@ -93,5 +124,14 @@ public class JwtUtils {
                     "Make sure JWT_SECRET is set in the environment."
             );
         }
+    }
+
+    private static Claims parseClaims(String token) {
+        ensureConfigured();
+        return Jwts.parserBuilder()
+                .setSigningKey(KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

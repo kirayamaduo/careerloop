@@ -3,7 +3,7 @@
  *
  * Language detection order:
  *   1. `app_lang` in localStorage (user explicit choice)
- *   2. WeChat system language (uni.getSystemInfoSync().language)
+ *   2. Runtime application language
  *   3. Falls back to 'zh-CN'
  *
  * Supported locales: zh-CN, en-US
@@ -19,7 +19,12 @@ function detectLang(): LangCode {
   try {
     const stored = uni.getStorageSync(LANG_KEY) as LangCode;
     if (stored === 'zh-CN' || stored === 'en-US') return stored;
-    const sysLang = uni.getSystemInfoSync().language || '';
+    const getAppBaseInfo = (uni as unknown as {
+      getAppBaseInfo?: () => { language?: string };
+    }).getAppBaseInfo;
+    const sysLang = (typeof getAppBaseInfo === 'function'
+      ? getAppBaseInfo().language
+      : '') || '';
     if (sysLang.startsWith('en')) return 'en-US';
   } catch { /* ignore — uni not ready or storage unavailable */ }
   return 'zh-CN';
@@ -35,21 +40,43 @@ export const i18n = createI18n({
   },
 });
 
+type MessageTree = Record<string, unknown>;
+
+function resolveMessage(messages: MessageTree, key: string): string | undefined {
+  let node: unknown = messages;
+  for (const segment of key.split('.')) {
+    if (!node || typeof node !== 'object') return undefined;
+    node = (node as MessageTree)[segment];
+  }
+  return typeof node === 'string' ? node : undefined;
+}
+
+function interpolate(raw: string, params?: Record<string, unknown>): string {
+  if (!params) return raw;
+  return Object.entries(params).reduce(
+    (value, [key, replacement]) =>
+      value.split(`{${key}}`).join(String(replacement ?? '')),
+    raw,
+  );
+}
+
 /**
- * Patched useI18n — wraps t() to manually replace {key} placeholders.
- * vue-i18n named interpolation is unreliable in UniApp mini-program runtime.
+ * Resolve the untouched message string first, then interpolate ourselves.
+ * Calling vue-i18n without params causes its H5 runtime to remove unresolved
+ * placeholders, while passing params is unreliable in the mini-program
+ * compiler. Reading the locale tree gives both targets identical behaviour.
  */
 export function useI18n() {
-  const { t: _t, ...rest } = _useI18n();
+  const { t: fallbackT, locale, ...rest } = _useI18n();
   function t(key: string, params?: Record<string, unknown>): string {
-    const raw = _t(key) as string;
-    if (!params || typeof raw !== 'string') return raw;
-    return Object.entries(params).reduce(
-      (s, [k, v]) => s.split(`{${k}}`).join(String(v ?? '')),
-      raw,
-    );
+    const lang = locale.value === 'en-US' ? 'en-US' : 'zh-CN';
+    const primary = lang === 'en-US' ? enUS : zhCN;
+    const raw = resolveMessage(primary as MessageTree, key)
+      ?? resolveMessage(zhCN as MessageTree, key)
+      ?? (fallbackT(key) as string);
+    return interpolate(raw, params);
   }
-  return { t, ...(rest as ReturnType<typeof _useI18n>) };
+  return { t, locale, ...(rest as ReturnType<typeof _useI18n>) };
 }
 
 export function setLocale(lang: LangCode) {
@@ -63,12 +90,12 @@ export function currentLocale(): LangCode {
 }
 
 export function translate(key: string, params?: Record<string, unknown>): string {
-  const raw = i18n.global.t(key) as string;
-  if (!params || typeof raw !== 'string') return raw;
-  return Object.entries(params).reduce(
-    (s, [k, v]) => s.split(`{${k}}`).join(String(v ?? '')),
-    raw,
-  );
+  const lang = currentLocale();
+  const primary = lang === 'en-US' ? enUS : zhCN;
+  const raw = resolveMessage(primary as MessageTree, key)
+    ?? resolveMessage(zhCN as MessageTree, key)
+    ?? (i18n.global.t(key) as string);
+  return interpolate(raw, params);
 }
 
 /**

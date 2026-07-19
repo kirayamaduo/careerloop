@@ -12,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -53,6 +55,12 @@ public class InterviewServiceTest {
      *  on it here so a no-op mock is enough. */
     @Mock
     private com.group1.career.service.CheckInService checkInService;
+
+    @Mock
+    private BodyLanguageService bodyLanguageService;
+
+    @Mock
+    private WechatSubscribeService wechatSubscribeService;
 
     @InjectMocks
     private InterviewServiceImpl interviewService;
@@ -125,6 +133,7 @@ public class InterviewServiceTest {
                 .startedAt(LocalDateTime.now().minusMinutes(30)).build();
 
         when(interviewRepository.findById(interviewId)).thenReturn(Optional.of(ongoingInterview));
+        when(messageRepository.existsByInterviewIdAndRoleIgnoreCase(interviewId, "USER")).thenReturn(true);
         when(interviewRepository.save(any(Interview.class))).thenAnswer(i -> i.getArgument(0));
 
         Interview result = interviewService.endInterview(interviewId, finalScore);
@@ -135,6 +144,124 @@ public class InterviewServiceTest {
         assertNotNull(result.getEndedAt());
         assertNotNull(result.getDurationSeconds());
         verify(interviewRepository, times(1)).save(any(Interview.class));
+        verify(checkInService).recordAction(1L, "INTERVIEW");
+        verify(notificationService, never()).push(anyLong(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Ending without a candidate answer cancels without completion side effects")
+    void endWithoutAnswerCancels() {
+        Long interviewId = 7L;
+        Interview ongoing = Interview.builder()
+                .interviewId(interviewId)
+                .userId(3L)
+                .status("ONGOING")
+                .startedAt(LocalDateTime.now().minusMinutes(2))
+                .build();
+        when(interviewRepository.findById(interviewId)).thenReturn(Optional.of(ongoing));
+        when(messageRepository.existsByInterviewIdAndRoleIgnoreCase(interviewId, "USER")).thenReturn(false);
+        when(interviewRepository.save(any(Interview.class))).thenAnswer(i -> i.getArgument(0));
+
+        Interview result = interviewService.endInterview(interviewId, null);
+
+        assertEquals("CANCELLED", result.getStatus());
+        assertNull(result.getFinalScore());
+        verify(bodyLanguageService).clear(interviewId);
+        verify(checkInService, never()).recordAction(anyLong(), anyString());
+        verify(snapshotService, never()).mergeInterview(anyLong(), any());
+        verify(notificationService, never()).push(anyLong(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Report-ready notifications are emitted only on the first persisted report")
+    void saveReportNotifiesOnce() {
+        Long interviewId = 9L;
+        Interview completed = Interview.builder()
+                .interviewId(interviewId)
+                .userId(4L)
+                .positionName("Java Engineer")
+                .status("COMPLETED")
+                .build();
+        when(interviewRepository.findById(interviewId)).thenReturn(Optional.of(completed));
+        when(interviewRepository.save(any(Interview.class))).thenAnswer(i -> i.getArgument(0));
+
+        interviewService.saveReport(interviewId, "{}", 78);
+        interviewService.saveReport(interviewId, "{}", 78);
+
+        verify(notificationService, times(1)).push(
+                eq(4L),
+                eq(com.group1.career.model.NotificationTypes.INTERVIEW_REPORT),
+                anyString(),
+                anyString(),
+                contains("interviewId=9")
+        );
+        verify(wechatSubscribeService, times(1))
+                .sendInterviewReport(4L, 78, "Java Engineer");
+    }
+
+    @Test
+    @DisplayName("WeChat failure never breaks a successfully persisted report")
+    void wechatFailureDoesNotBreakReportPersistence() {
+        Long interviewId = 10L;
+        Interview completed = Interview.builder()
+                .interviewId(interviewId)
+                .userId(4L)
+                .positionName("Java Engineer")
+                .status("COMPLETED")
+                .build();
+        when(interviewRepository.findById(interviewId)).thenReturn(Optional.of(completed));
+        when(interviewRepository.save(any(Interview.class))).thenAnswer(i -> i.getArgument(0));
+        when(wechatSubscribeService.sendInterviewReport(4L, 81, "Java Engineer"))
+                .thenThrow(new RuntimeException("upstream unavailable"));
+
+        Interview saved = assertDoesNotThrow(
+                () -> interviewService.saveReport(interviewId, "{\"overallScore\":81}", 81)
+        );
+
+        assertEquals(81, saved.getFinalScore());
+        assertEquals("{\"overallScore\":81}", saved.getReportJson());
+        verify(interviewRepository).save(completed);
+    }
+
+    @Test
+    @DisplayName("Report notifications wait until the cache transaction commits")
+    void reportNotificationsWaitForCommit() {
+        Long interviewId = 11L;
+        Interview completed = Interview.builder()
+                .interviewId(interviewId)
+                .userId(6L)
+                .positionName("Backend Engineer")
+                .status("COMPLETED")
+                .build();
+        when(interviewRepository.findById(interviewId)).thenReturn(Optional.of(completed));
+        when(interviewRepository.save(any(Interview.class))).thenAnswer(i -> i.getArgument(0));
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            interviewService.saveReport(interviewId, "{\"overallScore\":85}", 85);
+
+            verify(notificationService, never())
+                    .push(anyLong(), anyString(), anyString(), anyString(), anyString());
+            verify(wechatSubscribeService, never())
+                    .sendInterviewReport(anyLong(), anyInt(), anyString());
+
+            for (TransactionSynchronization synchronization
+                    : TransactionSynchronizationManager.getSynchronizations()) {
+                synchronization.afterCommit();
+            }
+
+            verify(notificationService).push(
+                    eq(6L),
+                    eq(com.group1.career.model.NotificationTypes.INTERVIEW_REPORT),
+                    anyString(),
+                    anyString(),
+                    contains("interviewId=11")
+            );
+            verify(wechatSubscribeService)
+                    .sendInterviewReport(6L, 85, "Backend Engineer");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test

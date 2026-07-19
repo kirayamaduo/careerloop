@@ -29,7 +29,12 @@ public class AdminAuditLog {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "admin_id", nullable = false)
+    /**
+     * Null after the administrator account itself is permanently erased.
+     * The action/time are retained, while actor PII, IP, UA and snapshots are
+     * stripped by the account-erasure workflow.
+     */
+    @Column(name = "admin_id")
     private Long adminId;
 
     /** Short action verb, e.g. BAN_USER, DELETE_QUESTION, REPLY_FEEDBACK. */

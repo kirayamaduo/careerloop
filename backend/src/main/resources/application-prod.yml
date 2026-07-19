@@ -62,6 +62,9 @@ spring:
       mail:
         smtp:
           auth: true
+          connectiontimeout: ${MAIL_CONNECTION_TIMEOUT_MS:10000}
+          timeout: ${MAIL_READ_TIMEOUT_MS:10000}
+          writetimeout: ${MAIL_WRITE_TIMEOUT_MS:10000}
           starttls:
             enable: true
             required: true
@@ -75,16 +78,14 @@ spring:
 
   # Flyway — baseline-on-migrate lets the first deploy on an existing DB
   # mark V1 as already applied and only run V2+.
-  # repair-on-migrate: automatically re-calculates checksums for resolved
-  # migrations before running new ones. This handles the case where a
-  # migration file was edited after being applied (e.g. V7 was fixed
-  # multiple times), preventing the "checksum mismatch" startup failure.
+  # Historical checksum repair must be a deliberate one-off maintenance
+  # command. Production startup never rewrites migration history.
   flyway:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 1
     locations: classpath:db/migration
-    repair-on-migrate: true
+    repair-on-migrate: false
 
   # Redis (F1)
   data:
@@ -102,7 +103,15 @@ spring:
 
 knife4j:
   # Hide Swagger UI in prod — surface only via /actuator/health.
-  enable: ${KNIFE4J_ENABLED:false}
+  enable: false
+
+# Disabling Knife4j alone does not disable springdoc's JSON endpoints.
+# Keep both the UI and /v3/api-docs unavailable in production.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 aliyun:
   oss:
@@ -124,12 +133,11 @@ wechat:
     appid: ${WECHAT_APPID}
     secret: ${WECHAT_SECRET}
   subscribe:
-    templates:
-      weekly-report:    ${WECHAT_TPL_WEEKLY_REPORT:}
-      interview-report: ${WECHAT_TPL_INTERVIEW_REPORT:}
-      assessment:       ${WECHAT_TPL_ASSESSMENT:}
-      resume-diagnosis: ${WECHAT_TPL_RESUME_DIAGNOSIS:}
-      ai-proactive:     ${WECHAT_TPL_AI_PROACTIVE:}
+    tpl-weekly-report:    ${WECHAT_TPL_WEEKLY_REPORT:}
+    tpl-interview-report: ${WECHAT_TPL_INTERVIEW_REPORT:}
+    tpl-assessment:       ${WECHAT_TPL_ASSESSMENT:}
+    tpl-resume-diagnosis: ${WECHAT_TPL_RESUME_DIAGNOSIS:}
+    tpl-ai-proactive:     ${WECHAT_TPL_AI_PROACTIVE:}
 
 # JWT_SECRET is required in prod; absent or short → JwtConfig fails fast.
 jwt:
@@ -148,7 +156,11 @@ alert:
   server-chan:
     enabled: ${ALERT_SERVERCHAN_ENABLED:true}
     send-key: ${SERVER_CHAN_SEND_KEY:}
-  email: ${ALERT_EMAIL:3218778592@qq.com}
+  email: ${ALERT_EMAIL:}
+
+cors:
+  # Comma-separated exact origins/patterns; wildcard "*" is deliberately ignored.
+  allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://api.careerloop.top:9443}
 
 logging:
   level:

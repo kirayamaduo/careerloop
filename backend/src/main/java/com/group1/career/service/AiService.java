@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface AiService {
+    /** One user-safe message shared by every AI entry point. */
+    String UNAVAILABLE_MESSAGE =
+            "AI 助手暂时繁忙，请稍后再试 🙏（若持续出现请联系客服）";
+
     /**
      * Chat with AI (Multi-turn, synchronous)
      */
@@ -34,7 +38,8 @@ public interface AiService {
      *
      * @param messages   full conversation so far (mutable — caller may append)
      * @param toolSchemas tool schema array built by {@link com.group1.career.service.ai.tools.ToolRegistry}
-     * @return raw JSON response body string; caller parses finish_reason and tool_calls
+     * @return raw success JSON for finish_reason/tool_calls, or a stable generic
+     * error envelope that never contains upstream response/exception details
      */
     String chatWithTools(List<Map<String, Object>> messages, List<Map<String, Object>> toolSchemas);
 }

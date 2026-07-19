@@ -48,13 +48,14 @@ ssh "${SERVER_USER}@${SERVER_HOST}" "
 echo "[3/5] Rebuilding Docker image from source..."
 ssh "${SERVER_USER}@${SERVER_HOST}" "
   cd ${SERVER_DIR}/backend
-  docker compose build app
+  docker compose --env-file .env.prod config --quiet
+  docker compose --env-file .env.prod build app
 "
 
 echo "[4/5] Deploying new container..."
 ssh "${SERVER_USER}@${SERVER_HOST}" "
   cd ${SERVER_DIR}/backend
-  docker compose up -d --no-deps app
+  docker compose --env-file .env.prod up -d --no-deps app
 "
 
 echo "[5/5] Waiting for health check (up to 90s)..."
@@ -80,7 +81,7 @@ else
   ssh "${SERVER_USER}@${SERVER_HOST}" "
     cd ${SERVER_DIR}/backend
     docker tag careerloop-backend:rollback careerloop-backend:latest 2>/dev/null || true
-    docker compose up -d --no-deps --force-recreate app
+    docker compose --env-file .env.prod up -d --no-deps --force-recreate app
     echo 'Rollback applied'
   "
   echo "🔄 Rollback complete. Check logs:"

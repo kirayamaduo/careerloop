@@ -65,13 +65,13 @@ public class InterviewController {
     };
     private static final Random RNG = new Random();
 
-    @Operation(summary = "Start a fresh interview session. Any existing ONGOING sessions are auto-ended " +
+    @Operation(summary = "Start a fresh interview session. Any existing ONGOING sessions are cancelled " +
             "so the candidate always gets a new opening question.")
     @PostMapping("/start")
     public Result<Interview> startInterview(@RequestBody StartInterviewRequest request) {
         Long uid = SecurityUtil.requireCurrentUserId();
 
-        // End every lingering ONGOING session before opening a new one.
+        // Cancel every lingering ONGOING session before opening a new one.
         // Leaving stale sessions open caused every /voice-greeting call to replay
         // the same saved greeting — the candidate thought the questions were "fixed".
         interviewService.getUserInterviews(uid)
@@ -79,7 +79,7 @@ public class InterviewController {
                 .filter(i -> "ONGOING".equals(i.getStatus()))
                 .forEach(i -> {
                     try {
-                        interviewService.endInterview(i.getInterviewId(), null);
+                        interviewService.cancelInterview(i.getInterviewId());
                     } catch (Exception ignored) {
                         // best-effort: don't block the new session if cleanup fails
                     }
@@ -102,7 +102,7 @@ public class InterviewController {
             @PathVariable Long interviewId,
             @RequestParam(required = false, defaultValue = "zh") String language) {
         Long uid = SecurityUtil.requireCurrentUserId();
-        Interview interview = interviewService.assertOwnership(interviewId, uid);
+        Interview interview = requireOngoing(interviewId, uid);
 
         List<InterviewMessage> existing = interviewService.getInterviewMessages(interviewId);
         if (!existing.isEmpty()) {
@@ -139,7 +139,7 @@ public class InterviewController {
             @RequestBody SendMessageRequest request
     ) {
         Long uid = SecurityUtil.requireCurrentUserId();
-        Interview interview = interviewService.assertOwnership(interviewId, uid);
+        Interview interview = requireOngoing(interviewId, uid);
 
         if (request.getContent() == null || request.getContent().isBlank()) {
             throw new BizException("Message content is required");
@@ -184,7 +184,7 @@ public class InterviewController {
             @PathVariable Long interviewId,
             @RequestParam(required = false, defaultValue = "zh") String language) {
         Long uid = SecurityUtil.requireCurrentUserId();
-        Interview interview = interviewService.assertOwnership(interviewId, uid);
+        Interview interview = requireOngoing(interviewId, uid);
 
         // Reuse text if it's already there — TTS itself will re-synthesize so
         // the candidate gets a freshly-signed URL each time, but we never want
@@ -214,7 +214,7 @@ public class InterviewController {
             interviewService.sendMessage(interviewId, "AI", greeting);
         }
 
-        VoiceService.TtsResult tts = voiceService.synthesize(greeting);
+        VoiceService.TtsResult tts = voiceService.synthesize(uid, greeting);
         String audioUrl = fileService.presignedUrl(tts.objectKey(), TTS_URL_TTL_SECONDS);
 
         VoiceTurnResponse r = new VoiceTurnResponse();
@@ -245,7 +245,7 @@ public class InterviewController {
             @RequestParam(value = "language", defaultValue = "zh") String language
     ) {
         Long uid = SecurityUtil.requireCurrentUserId();
-        Interview interview = interviewService.assertOwnership(interviewId, uid);
+        Interview interview = requireOngoing(interviewId, uid);
 
         if (audio == null || audio.isEmpty()) {
             throw new BizException("Audio file is required");
@@ -261,7 +261,8 @@ public class InterviewController {
         try {
             bytes = audio.getBytes();
         } catch (IOException e) {
-            throw new BizException("Failed to read uploaded audio: " + e.getMessage());
+            log.warn("Failed to read an uploaded interview audio clip", e);
+            throw new BizException("Failed to read uploaded audio");
         }
 
         String userText = voiceService.transcribe(bytes, format);
@@ -300,7 +301,7 @@ public class InterviewController {
         interviewService.sendMessage(interviewId, "AI", aiText);
         long t2 = System.currentTimeMillis();
 
-        VoiceService.TtsResult tts = voiceService.synthesize(aiText);
+        VoiceService.TtsResult tts = voiceService.synthesize(uid, aiText);
         String audioUrl = fileService.presignedUrl(tts.objectKey(), TTS_URL_TTL_SECONDS);
         long t3 = System.currentTimeMillis();
 
@@ -329,7 +330,8 @@ public class InterviewController {
     public Result<Interview> endInterview(@PathVariable Long interviewId) {
         Long uid = SecurityUtil.requireCurrentUserId();
         interviewService.assertOwnership(interviewId, uid);
-        // No score is taken from the client. Pass null so endInterview() only flips state.
+        // No score is taken from the client. With no candidate answer the
+        // service returns CANCELLED; otherwise it transitions to COMPLETED.
         return Result.success(interviewService.endInterview(interviewId, null));
     }
 
@@ -373,6 +375,14 @@ public class InterviewController {
         return "en".equalsIgnoreCase(language)
                 ? "如果用户明确选择英文模式，可以使用英文。"
                 : "请全程使用简体中文进行面试，包括提问、追问和反馈，不要夹杂英文标签。";
+    }
+
+    private Interview requireOngoing(Long interviewId, Long userId) {
+        Interview interview = interviewService.assertOwnership(interviewId, userId);
+        if (!"ONGOING".equals(interview.getStatus())) {
+            throw new BizException("Interview is no longer active");
+        }
+        return interview;
     }
 
     /** Remove common markdown artifacts that LLMs sometimes emit despite "plain text" instructions. */

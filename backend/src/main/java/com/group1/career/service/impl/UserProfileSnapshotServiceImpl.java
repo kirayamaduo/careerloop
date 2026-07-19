@@ -344,7 +344,9 @@ public class UserProfileSnapshotServiceImpl implements UserProfileSnapshotServic
             if (block.getHasResume() != null) existing.setHasResume(block.getHasResume());
             if (block.getResumeStatus() != null) existing.setResumeStatus(block.getResumeStatus());
             if (block.getTimeline() != null) existing.setTimeline(block.getTimeline());
-            if (block.getEducation() != null) existing.setEducation(block.getEducation());
+            if (block.getEducation() != null) {
+                existing.setEducation(mergeEducation(existing.getEducation(), block.getEducation()));
+            }
             if (block.getWeeklyAvailability() != null) existing.setWeeklyAvailability(block.getWeeklyAvailability());
             if (block.getPriorityHelp() != null) existing.setPriorityHelp(block.getPriorityHelp());
             if (block.getRecommendedEntry() != null) existing.setRecommendedEntry(block.getRecommendedEntry());
@@ -352,6 +354,23 @@ public class UserProfileSnapshotServiceImpl implements UserProfileSnapshotServic
             current.setOnboarding(existing);
         }
         persist(userId, current);
+    }
+
+    /**
+     * Education is itself a patchable block. A null field means "not part of
+     * this update", while an empty string is retained as an explicit clear.
+     * This prevents profile edits (which do not expose degree) from erasing
+     * degree or any other onboarding-only education signal.
+     */
+    private static UserProfileSnapshot.EducationBlock mergeEducation(
+            UserProfileSnapshot.EducationBlock existing,
+            UserProfileSnapshot.EducationBlock patch) {
+        if (existing == null) return patch;
+        if (patch.getSchool() != null) existing.setSchool(patch.getSchool());
+        if (patch.getMajor() != null) existing.setMajor(patch.getMajor());
+        if (patch.getDegree() != null) existing.setDegree(patch.getDegree());
+        if (patch.getGraduationYear() != null) existing.setGraduationYear(patch.getGraduationYear());
+        return existing;
     }
 
     /**

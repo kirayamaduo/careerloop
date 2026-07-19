@@ -72,6 +72,7 @@ import {
 } from '@/api/assessment';
 import { useTheme } from '@/utils/theme';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
+import { requireAuth } from '@/utils/auth';
 
 const currentIndex = ref(0);
 // 防止自动前进与手动点击"下一题"竞态导致跳出题目范围
@@ -105,6 +106,14 @@ const progressPercentage = computed(() =>
 );
 
 const loadQuestions = async () => {
+  if (!requireAuth({
+    redirect: 'reLaunch',
+    message: '职业测评需要登录后进行，避免完成答题后无法保存结果。',
+  })) {
+    errorMsg.value = '登录后即可开始测评并保存结果';
+    loading.value = false;
+    return;
+  }
   if (!scaleId.value) {
     errorMsg.value = t('quiz.missingScaleId');
     loading.value = false;
@@ -160,6 +169,10 @@ const handlePrev = () => {
 
 const submitQuiz = async () => {
   if (submitting.value) return;
+  if (!requireAuth({
+    redirect: 'reLaunch',
+    message: '登录后才能提交测评并生成你的职业画像。',
+  })) return;
   submitting.value = true;
   uni.showLoading({ title: t('quiz.submitting') });
   try {
@@ -382,4 +395,211 @@ onShow(() => {
 
 .is-dark .option-label,
 .is-dark .progress-track { background-color: #334155; color: #94a3b8; }
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.quiz-container {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.header-bar {
+  background: #faf9f6;
+  border-bottom: 1px solid #e0dfdb;
+}
+
+.back-btn {
+  color: #2c2b29;
+}
+
+.progress-track {
+  height: 5px;
+  border-radius: 2px;
+  background: #e0dfdb;
+}
+
+.progress-fill {
+  border-radius: 2px;
+  background: #c23b22;
+}
+
+.progress-text {
+  color: #8b8a86;
+  font-variant-numeric: tabular-nums;
+}
+
+.question-card {
+  margin-bottom: 32px;
+  padding: 0 2px;
+}
+
+.q-type {
+  color: #b8975a;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.q-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+}
+
+.options-list {
+  gap: 12px;
+}
+
+.option-item {
+  padding: 16px;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.option-selected {
+  border-color: #c23b22;
+  background: #f8ece8;
+  box-shadow: 0 6px 18px rgba(194, 59, 34, 0.08);
+}
+
+.option-label {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d8d6cf;
+  border-radius: 4px;
+  background: #f5f5f0;
+  color: #5a5956;
+}
+
+.option-selected .option-label {
+  border-color: #c23b22;
+  background: #c23b22;
+  color: #fffdfa;
+}
+
+.option-text,
+.option-selected .option-text {
+  color: #2c2b29;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.option-selected .option-text {
+  font-weight: 600;
+}
+
+.bottom-action {
+  gap: 12px;
+  background: rgba(250, 249, 246, 0.97);
+  border-top: 1px solid #e0dfdb;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.btn-prev,
+.btn-next {
+  height: 50px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.btn-prev {
+  border: 1px solid #3f51b5;
+  background: #faf9f6;
+}
+
+.btn-prev-text {
+  color: #3f51b5;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.btn-next {
+  background: #c23b22;
+}
+
+.btn-next-text {
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.btn-next:active {
+  background: #a9321d;
+}
+
+.btn-disabled,
+.btn-next-disabled {
+  border-color: #d8d6cf;
+  background: #e0dfdb;
+}
+
+.btn-disabled .btn-prev-text,
+.btn-next-disabled .btn-next-text {
+  color: #8b8a86;
+}
+
+.loading-state,
+.error-state {
+  border-color: #e0dfdb;
+  border-radius: 8px;
+  background: #fffdfa;
+  box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
+}
+
+.spinner {
+  border-color: #e0dfdb;
+  border-top-color: #c23b22;
+}
+
+.loading-text {
+  color: #5a5956;
+}
+
+.btn-retry {
+  border-radius: 6px;
+  background: #c23b22;
+}
+
+.quiz-container.is-dark .btn-prev {
+  border-color: #aab3ea;
+  background: #0f172a;
+}
+
+.quiz-container.is-dark .btn-prev-text {
+  color: #aab3ea;
+}
+
+.quiz-container.is-dark .btn-disabled,
+.quiz-container.is-dark .btn-next-disabled {
+  border-color: #475569;
+  background: #334155;
+}
+
+.quiz-container.is-dark .btn-disabled .btn-prev-text,
+.quiz-container.is-dark .btn-next-disabled .btn-next-text {
+  color: #94a3b8;
+}
+
+.quiz-container.is-dark .option-item.option-selected {
+  border-color: #e27b66;
+  background: rgba(194, 59, 34, 0.2);
+}
+
+.quiz-container.is-dark .option-item.option-selected .option-label {
+  border-color: #c23b22;
+  background: #c23b22;
+  color: #fffdfa;
+}
+
+.quiz-container.is-dark .option-item.option-selected .option-text {
+  color: #f8fafc;
+}
 </style>

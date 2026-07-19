@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg legacy-bridge" :custom-class="[themeClass, fontClass].join(' ')" :style="{ paddingTop: topSafeHeight + 'px' }">
+  <SlPage class="app-soft-bg" :custom-class="['legacy-bridge', themeClass, fontClass].join(' ')" :style="{ paddingTop: topSafeHeight + 'px' }">
     <text class="bridge-title">{{ t('interview.bridgeTitle') }}</text>
     <text class="bridge-copy">{{ t('interview.bridgeCopy') }}</text>
   </SlPage>
@@ -26,16 +26,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.sl-page :deep(.legacy-bridge) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
 .bridge-title {
   display: block;
   font-size: 22px;
@@ -49,5 +39,25 @@ onMounted(() => {
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-secondary, #64748b);
+}
+
+/* Competition visual system: quiet paper surface while the bridge redirects. */
+.bridge-title {
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #2c2b29;
+}
+
+.bridge-copy {
+  color: #5a5956;
+}
+
+.is-dark .bridge-title {
+  color: #faf9f6;
+}
+
+.is-dark .bridge-copy {
+  color: #c6c4be;
 }
 </style>

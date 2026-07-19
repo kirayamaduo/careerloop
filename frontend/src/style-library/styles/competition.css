@@ -1,9 +1,9 @@
 /*
  * CareerLoop national-competition presentation skin.
  *
- * Pages still own their layout and data states. These rules only align the
- * golden demo path with the web platform's paper / ink / vermilion / indigo
- * language and intentionally keep mobile-friendly radii and touch sizes.
+ * Pages still own their layout and data states. This layer aligns every
+ * competition-facing route with the web platform's paper / ink / vermilion /
+ * indigo language while preserving mobile touch targets.
  */
 .landing-page,
 .login-page,
@@ -17,6 +17,7 @@
 .competition-report-page {
   background: var(--paper, #faf9f6) !important;
   color: var(--ink, #2c2b29);
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", sans-serif);
 }
 
 .landing-page .hero-title,
@@ -37,29 +38,36 @@
 .start-page .title,
 .competition-report-page .r-title,
 .competition-report-page .section-title {
-  font-family: "Iowan Old Style", "Songti SC", STSong, serif !important;
-  letter-spacing: -0.02em;
+  font-family: var(--font-serif, "Songti SC", STSong, serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+  line-height: 1.45;
   color: var(--ink, #2c2b29);
 }
 
-.landing-page .brand-name,
-.landing-page .brand-tag,
 .login-page .hero-kicker,
 .onboarding-page .hero-kicker,
 .onboarding-page .step-label,
 .home-page .brand-kicker {
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--vermilion, #c23b22) !important;
 }
 
 .landing-page .brand-mark {
-  border-radius: 8px !important;
-  background: var(--indigo, #3f51b5) !important;
-  box-shadow: 0 8px 20px rgba(63, 81, 181, 0.16) !important;
+  border-radius: var(--radius-sm, 4px) !important;
+  background: var(--vermilion, #c23b22) !important;
+  box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12) !important;
+}
+
+.landing-page .brand-name {
+  color: var(--ink, #2c2b29) !important;
+}
+
+.landing-page .brand-tag {
+  color: var(--ink-tertiary, #8b8a86) !important;
 }
 
 .landing-page .score-panel,
 .landing-page .task-panel,
-.landing-page .value-strip,
 .login-page .form-sheet,
 .onboarding-page .choice-card,
 .onboarding-page .resume-card,
@@ -78,12 +86,11 @@
 .competition-report-page .app-surface {
   background: var(--card-bg, #fffefa) !important;
   border: 1px solid var(--border-color, #e0dfdb) !important;
-  border-radius: 10px !important;
-  box-shadow: var(--shadow-sm, 0 3px 12px rgba(44,43,41,0.045)) !important;
+  border-radius: var(--radius-md, 6px) !important;
+  box-shadow: var(--shadow-sm, 0 2px 10px rgba(44,43,41,0.035)) !important;
 }
 
 .landing-page .score-value,
-.landing-page .score-fill,
 .home-page .readiness-fill,
 .home-page .readiness-dim-fill,
 .hub-page .hub-pct-fill,
@@ -96,7 +103,7 @@
 .home-page .readiness-dim-fill,
 .hub-page .hub-pct-fill,
 .hub-page .hub-progress-fill {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--vermilion, #c23b22) !important;
 }
 
 .landing-page .primary-btn,
@@ -111,11 +118,11 @@
 .start-page .sticky-cta .btn-primary,
 .competition-report-page .btn-primary {
   min-height: 44px;
-  border-radius: 8px !important;
+  border-radius: var(--btn-radius, 6px) !important;
   border-color: var(--vermilion, #c23b22) !important;
   background: var(--vermilion, #c23b22) !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px rgba(194, 59, 34, 0.16) !important;
+  box-shadow: 0 5px 14px rgba(194, 59, 34, 0.12) !important;
 }
 
 .landing-page .secondary-btn,
@@ -127,7 +134,7 @@
 .competition-report-page .btn-secondary,
 .competition-report-page .btn-back {
   min-height: 44px;
-  border-radius: 8px !important;
+  border-radius: var(--btn-radius, 6px) !important;
   background: var(--paper-soft, #f5f5f0) !important;
   border-color: var(--border-color, #e0dfdb) !important;
   color: var(--ink, #2c2b29) !important;
@@ -135,15 +142,14 @@
 
 .login-page .segment-bar,
 .chat-page .mode-picker,
-.resume-page .section-action,
 .user-page .pill {
   background: var(--paper-soft, #f5f5f0) !important;
   border-color: var(--border-color, #e0dfdb) !important;
 }
 
-.login-page .seg-active,
 .user-page .pill-active {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--vermilion, #c23b22) !important;
+  border-color: var(--vermilion, #c23b22) !important;
   color: #fff !important;
 }
 
@@ -155,7 +161,7 @@
 .competition-report-page .contribute-input {
   background: #fffefa !important;
   border: 1px solid var(--border-color, #e0dfdb) !important;
-  border-radius: 8px !important;
+  border-radius: var(--radius-sm, 4px) !important;
   color: var(--ink, #2c2b29) !important;
 }
 
@@ -164,9 +170,12 @@
   border-color: var(--indigo, #3f51b5) !important;
 }
 
-.onboarding-page .progress-dot.active,
 .onboarding-page .progress-dot.done {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--sage, #7b8d6e) !important;
+}
+
+.onboarding-page .progress-dot.active {
+  background: var(--vermilion, #c23b22) !important;
 }
 
 .onboarding-page .choice-card.selected,
@@ -174,9 +183,9 @@
 .onboarding-page .priority-card.selected,
 .onboarding-page .pill.selected,
 .onboarding-page .role-chip.selected {
-  background: var(--indigo-soft, #eceefa) !important;
-  border-color: var(--indigo, #3f51b5) !important;
-  color: var(--indigo, #3f51b5) !important;
+  background: var(--vermilion-soft, #f8ebe7) !important;
+  border-color: var(--vermilion, #c23b22) !important;
+  color: var(--vermilion, #c23b22) !important;
 }
 
 .home-page .workbench-hero {
@@ -191,7 +200,7 @@
   background: #fffafa !important;
   border: 1px solid #e8c6be !important;
   border-top: 3px solid var(--vermilion, #c23b22) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md, 6px) !important;
   box-shadow: 0 8px 24px rgba(194, 59, 34, 0.08) !important;
 }
 
@@ -213,11 +222,27 @@
   border-color: var(--border-color, #e0dfdb) !important;
 }
 
-.chat-page .nav-bot-avatar,
-.chat-page .bot-avatar,
-.chat-page .welcome-icon,
-.chat-page .bubble-user {
+.chat-page .nav-bot-avatar {
   background: var(--indigo, #3f51b5) !important;
+}
+
+.chat-page .bot-avatar {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+
+.chat-page .welcome-icon {
+  background: transparent !important;
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.chat-page .bubble-user {
+  background: var(--vermilion, #c23b22) !important;
+  border-color: var(--vermilion, #c23b22) !important;
+}
+
+.chat-page .bubble-user .bubble-text {
+  color: #fff !important;
 }
 
 .chat-page .bubble-ai {
@@ -227,10 +252,19 @@
 }
 
 .resume-page .rc-icon,
-.resume-page .rc-icon-ai,
-.resume-page .section-action {
+.resume-page .rc-icon-ai {
   background: var(--indigo-soft, #eceefa) !important;
   color: var(--indigo, #3f51b5) !important;
+}
+
+.resume-page .section-action {
+  background: var(--vermilion, #c23b22) !important;
+  border-color: var(--vermilion, #c23b22) !important;
+  color: #fff !important;
+}
+
+.resume-page .section-action-text {
+  color: #fff !important;
 }
 
 .resume-page .ai-badge {
@@ -253,8 +287,8 @@
 }
 
 .user-page .header-card {
-  background: var(--indigo, #3f51b5) !important;
-  border-top: 3px solid var(--indigo, #3f51b5) !important;
+  background: var(--card-bg, #fffefa) !important;
+  border-top: 3px solid var(--vermilion, #c23b22) !important;
 }
 
 .user-page .header-edit-text,
@@ -273,14 +307,28 @@
   border-color: var(--border-color, #e0dfdb) !important;
 }
 
+.hub-page .hub-action-primary .hub-action-text {
+  color: #fff !important;
+}
+
 .start-page .header {
-  background: var(--indigo, #3f51b5) !important;
-  border-radius: 10px !important;
+  background: var(--card-bg, #fffefa) !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  border-top: 3px solid var(--vermilion, #c23b22) !important;
+  border-radius: var(--radius-md, 6px) !important;
+}
+
+.start-page .header .title {
+  color: var(--ink, #2c2b29) !important;
+}
+
+.start-page .header .subtitle {
+  color: var(--ink-secondary, #5a5956) !important;
 }
 
 .start-page .mode-card,
 .start-page .diff-card {
-  border-radius: 8px !important;
+  border-radius: var(--radius-md, 6px) !important;
   background: var(--paper-soft, #f5f5f0) !important;
   border-color: var(--border-color, #e0dfdb) !important;
 }
@@ -291,8 +339,18 @@
   border-color: var(--indigo, #3f51b5) !important;
 }
 
+.start-page .sticky-cta .btn-primary.btn-disabled {
+  background: var(--paper-deep, #efeee9) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+  box-shadow: none !important;
+}
+
+.start-page .sticky-cta .btn-primary.btn-disabled .btn-primary-label {
+  color: var(--ink-tertiary, #8b8a86) !important;
+}
+
 .competition-report-page .score-card {
-  border-top: 3px solid var(--indigo, #3f51b5) !important;
+  border-top: 3px solid var(--vermilion, #c23b22) !important;
 }
 
 .competition-report-page .score-basis,
@@ -300,7 +358,7 @@
 .competition-report-page .dims-card,
 .competition-report-page .advice-card,
 .competition-report-page .contribute-card {
-  border-radius: 10px !important;
+  border-radius: var(--radius-md, 6px) !important;
 }
 
 .competition-report-page .dim-bar-fill,
@@ -317,6 +375,284 @@
   border-left-color: var(--heritage-gold, #b8975a) !important;
 }
 
+/* ──────────────────────────────────────────────────────────────
+ * Competition skin v2 — real-render corrections
+ * ────────────────────────────────────────────────────────────── */
+.landing-page,
+.login-page,
+.onboarding-page,
+.home-page,
+.chat-page,
+.resume-page,
+.user-page,
+.hub-page,
+.start-page,
+.competition-report-page {
+  font-family: var(--font-sans, "PingFang SC", "Microsoft YaHei", sans-serif) !important;
+}
+
+/* Login: editorial paper header + ruled tabs instead of the legacy blue
+   SaaS hero and pill segmented control. */
+.login-page .hero {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(184, 151, 90, 0.13), transparent 32%),
+    radial-gradient(circle at 8% 30%, rgba(194, 59, 34, 0.08), transparent 34%),
+    var(--paper, #faf9f6) !important;
+  border-bottom: 1px solid var(--border-color, #e0dfdb);
+  padding-bottom: 18px;
+}
+.login-page .hero-kicker {
+  color: var(--vermilion, #c23b22) !important;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  font-weight: 600 !important;
+  letter-spacing: 0.12em !important;
+}
+.login-page .hero-title {
+  color: var(--ink, #2c2b29) !important;
+}
+.login-page .hero-subtitle {
+  color: var(--ink-secondary, #5a5956) !important;
+  line-height: 1.75 !important;
+}
+.login-page .form-sheet {
+  width: calc(100% - 40px) !important;
+  margin-top: -1px !important;
+  padding-top: 14px !important;
+  border-top: none !important;
+  border-radius: 0 0 var(--radius-md, 6px) var(--radius-md, 6px) !important;
+  box-shadow: none !important;
+}
+.login-page .segment-bar {
+  padding: 0 !important;
+  border-width: 0 0 1px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.login-page .seg-item {
+  position: relative;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ink-tertiary, #8b8a86) !important;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+  box-shadow: none !important;
+}
+.login-page .seg-active {
+  color: var(--vermilion, #c23b22) !important;
+  border-bottom: 2px solid var(--vermilion, #c23b22) !important;
+}
+.login-page .sheet-title,
+.login-page .modal-title {
+  color: var(--ink, #2c2b29) !important;
+  font-family: var(--font-serif, "Songti SC", STSong, serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+}
+.login-page .field-label,
+.login-page .agreement-section-title {
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+}
+.login-page .btn-send-code {
+  background: transparent !important;
+  border: 1px solid var(--vermilion, #c23b22) !important;
+  border-radius: var(--btn-radius, 6px) !important;
+  box-shadow: none !important;
+}
+.login-page .btn-send-code.is-disabled {
+  border-color: var(--border-strong, #ceccc5) !important;
+}
+.login-page .btn-send-text,
+.login-page .forgot-link,
+.login-page .link {
+  color: var(--vermilion, #c23b22) !important;
+}
+.login-page .btn-send-code.is-disabled .btn-send-text {
+  color: var(--ink-tertiary, #8b8a86) !important;
+}
+.login-page .checkbox {
+  border-radius: 3px !important;
+}
+.login-page .btn-wechat,
+.login-page .btn-guest,
+.login-page .modal-card,
+.login-page .modal-btn {
+  border-radius: var(--btn-radius, 6px) !important;
+  box-shadow: none !important;
+}
+.login-page .btn-wechat {
+  border: 1px solid #079b4e;
+}
+.login-page .btn-guest {
+  background: transparent !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+.login-page .guest-text {
+  color: var(--ink-secondary, #5a5956) !important;
+}
+.login-page .modal-btn-confirm {
+  background: var(--vermilion, #c23b22) !important;
+}
+
+/* Home: the old card was dark. Its children kept white/blue text after the
+   card became paper, so explicitly restore an accessible editorial palette. */
+.home-page .brand-title {
+  font-weight: 600 !important;
+}
+.home-page .brand-kicker,
+.home-page .readiness-kicker,
+.home-page .gap-label,
+.home-page .today-kicker {
+  color: var(--vermilion, #c23b22) !important;
+}
+.home-page .today-title {
+  color: var(--ink, #2c2b29) !important;
+}
+.home-page .today-desc,
+.home-page .today-result-text {
+  color: var(--ink-secondary, #5a5956) !important;
+}
+.home-page .today-result-label {
+  color: var(--heritage-gold, #b8975a) !important;
+}
+.home-page .today-result {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  border-radius: var(--radius-sm, 4px) !important;
+}
+.home-page .today-icon {
+  color: var(--vermilion, #c23b22) !important;
+}
+.home-page .today-cta-text,
+.home-page .today-cta-arrow {
+  color: #fff !important;
+}
+.home-page .today-plan-link-text,
+.home-page .today-done-text {
+  color: var(--ink, #2c2b29) !important;
+}
+.home-page .readiness-card,
+.home-page .intake-card,
+.home-page .growth-tree-card,
+.home-page .feature-item,
+.home-page .recent-list,
+.home-page .recent-card,
+.home-page .core-entry,
+.home-page .support-card,
+.home-page .resource-search {
+  border-radius: var(--radius-md, 6px) !important;
+}
+.home-page .gap-row,
+.home-page .intake-item {
+  border-radius: var(--radius-sm, 4px) !important;
+}
+.home-page .readiness-fill,
+.home-page .readiness-dim-fill {
+  background: linear-gradient(90deg, var(--sage, #7b8d6e), var(--vermilion, #c23b22)) !important;
+}
+
+/* Profile: the web platform uses a paper identity panel, not a saturated
+   indigo profile banner. */
+.user-page .header-card {
+  color: var(--ink, #2c2b29) !important;
+  box-shadow: var(--shadow-sm, 0 2px 10px rgba(44,43,41,0.035)) !important;
+}
+.user-page .header-name,
+.user-page .guest-title {
+  color: var(--ink, #2c2b29) !important;
+}
+.user-page .header-school,
+.user-page .guest-desc {
+  color: var(--ink-secondary, #5a5956) !important;
+}
+.user-page .header-avatar {
+  background: var(--paper-soft, #f5f5f0) !important;
+}
+.user-page .avatar-img {
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+.user-page .header-edit {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  border-radius: var(--radius-sm, 4px) !important;
+}
+.user-page .header-edit-text,
+.user-page .header-edit-arrow {
+  color: var(--vermilion, #c23b22) !important;
+}
+.user-page .btn-login {
+  background: var(--vermilion, #c23b22) !important;
+  border-color: var(--vermilion, #c23b22) !important;
+  color: #fff !important;
+  border-radius: var(--btn-radius, 6px) !important;
+}
+.user-page .stats-bar,
+.user-page .website-link-card,
+.user-page .tag-cloud-card,
+.user-page .menu-card {
+  border-radius: var(--radius-md, 6px) !important;
+}
+.user-page .website-link-card {
+  border-top-color: var(--vermilion, #c23b22) !important;
+}
+.user-page .website-code-panel {
+  border-radius: var(--radius-sm, 4px) !important;
+  border-color: var(--heritage-gold, #b8975a) !important;
+  background: var(--gold-soft, #f5efe4) !important;
+}
+.user-page .website-code {
+  color: var(--vermilion, #c23b22) !important;
+  font-family: var(--font-serif, "Songti SC", STSong, serif);
+}
+.user-page .website-code-copy,
+.user-page .website-link-action {
+  border-radius: var(--btn-radius, 6px) !important;
+  background: var(--vermilion, #c23b22) !important;
+}
+.user-page .website-link-state {
+  border-radius: var(--radius-sm, 4px) !important;
+}
+.user-page .page-title,
+.user-page .website-link-title,
+.user-page .tag-cloud-title,
+.user-page .group-label {
+  font-family: var(--font-serif, "Songti SC", STSong, serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+}
+
+/* Shared editorial treatment for the remaining generic building blocks. */
+.app-page-title,
+.app-section-title,
+.sl-navbar__title,
+.sl-scroll-topbar__title {
+  font-family: var(--font-serif, "Songti SC", STSong, serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+}
+.app-page-kicker {
+  color: var(--vermilion, #c23b22) !important;
+}
+.app-icon-tile--violet {
+  background: var(--indigo-soft, #eceefa) !important;
+  color: var(--indigo, #3f51b5) !important;
+}
+.app-icon-tile--cyan,
+.app-icon-tile--success {
+  background: var(--sage-soft, #edf1ea) !important;
+  color: var(--sage, #7b8d6e) !important;
+}
+.app-icon-tile--candy {
+  background: var(--vermilion-soft, #f8ebe7) !important;
+  color: var(--vermilion, #c23b22) !important;
+}
+.app-icon-tile--warning {
+  background: var(--gold-soft, #f5efe4) !important;
+  color: var(--heritage-gold, #b8975a) !important;
+}
+
 /* Explicit dark-mode corrections: retain contrast instead of forcing paper. */
 .is-dark.landing-page,
 .is-dark.login-page,
@@ -328,10 +664,182 @@
 .is-dark.hub-page,
 .is-dark.start-page,
 .competition-report-page.is-dark {
+  --paper: #0f172a;
+  --paper-soft: #1e293b;
+  --paper-deep: #334155;
+  --card-bg: #1e293b;
+  --ink: #f8fafc;
+  --ink-secondary: #cbd5e1;
+  --ink-tertiary: #94a3b8;
+  --vermilion: #c23b22;
+  --vermilion-hover: #a8321d;
+  --vermilion-text: #e27b66;
+  --vermilion-soft: rgba(216, 90, 66, 0.15);
+  --indigo: #3f51b5;
+  --indigo-hover: #33449b;
+  --indigo-text: #aab3ea;
+  --indigo-soft: rgba(100, 116, 210, 0.16);
+  --sage: #a8b79e;
+  --sage-text: #b8c6af;
+  --sage-soft: rgba(123, 141, 110, 0.18);
+  --heritage-gold: #d3b578;
+  --gold-text: #dfc58f;
+  --gold-soft: rgba(184, 151, 90, 0.17);
+  --border-color: #475569;
+  --border-strong: #64748b;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-card: none;
+  --shadow-lg: none;
   background: #0f172a !important;
 }
 
-.is-dark .today-card {
+.is-dark.home-page .today-card {
   background: #1e293b !important;
   border-color: #7f3a31 !important;
+}
+.is-dark.login-page .hero {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+.is-dark.login-page .hero-title,
+.is-dark.login-page .sheet-title,
+.is-dark.login-page .modal-title,
+.is-dark.home-page .today-title,
+.is-dark.user-page .header-name,
+.is-dark.user-page .guest-title {
+  color: #f8fafc !important;
+}
+.is-dark.login-page .hero-subtitle,
+.is-dark.home-page .today-desc,
+.is-dark.home-page .today-result-text,
+.is-dark.user-page .header-school,
+.is-dark.user-page .guest-desc {
+  color: #cbd5e1 !important;
+}
+.is-dark.home-page .today-result,
+.is-dark.user-page .header-edit {
+  background: #0f172a !important;
+  border-color: #475569 !important;
+}
+.is-dark.home-page .today-plan-link-text,
+.is-dark.home-page .today-done-text,
+.is-dark.user-page .header-edit-arrow {
+  color: #e2e8f0 !important;
+}
+.is-dark.user-page .header-card {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.is-dark.login-page .field-input,
+.is-dark.onboarding-page .target-input-wrap,
+.is-dark.onboarding-page .field,
+.is-dark.chat-page .chat-input,
+.is-dark.start-page .picker-box,
+.competition-report-page.is-dark .contribute-input {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+.is-dark.chat-page .bubble-ai,
+.is-dark.chat-page .bot-avatar,
+.is-dark.chat-page .welcome-card,
+.is-dark.chat-page .quick-chip {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.is-dark.resume-page .section-action,
+.is-dark.hub-page .hub-primary-cta,
+.is-dark.hub-page .hub-action-primary,
+.is-dark.start-page .sticky-cta .btn-primary {
+  background: var(--vermilion, #d8644d) !important;
+  border-color: var(--vermilion, #d8644d) !important;
+}
+
+.is-dark.start-page .sticky-cta .btn-primary.btn-disabled {
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+
+.is-dark.start-page .sticky-cta .btn-primary.btn-disabled .btn-primary-label {
+  color: #94a3b8 !important;
+}
+
+.is-dark.start-page .header .title,
+.is-dark.start-page .header .subtitle,
+.is-dark.resume-page .section-action-text,
+.is-dark.hub-page .hub-action-primary .hub-action-text {
+  color: #f8fafc !important;
+}
+
+.is-dark.user-page .website-code-panel {
+  background: var(--gold-soft, rgba(184,151,90,0.17)) !important;
+  border-color: var(--heritage-gold, #d3b578) !important;
+}
+
+.is-dark.login-page .hero-kicker,
+.is-dark.login-page .btn-send-text,
+.is-dark.login-page .forgot-link,
+.is-dark.login-page .link,
+.is-dark.onboarding-page .hero-kicker,
+.is-dark.onboarding-page .step-label,
+.is-dark.home-page .brand-kicker,
+.is-dark.home-page .readiness-kicker,
+.is-dark.home-page .gap-label,
+.is-dark.home-page .today-kicker,
+.is-dark.user-page .header-edit-text,
+.is-dark.user-page .header-edit-arrow,
+.is-dark.user-page .website-code {
+  color: var(--vermilion-text, #e27b66) !important;
+}
+
+.is-dark.home-page .section-lite-action,
+.is-dark.home-page .section-more-text,
+.is-dark.home-page .section-more-arrow,
+.is-dark.chat-page .welcome-icon,
+.is-dark.chat-page .bot-emoji,
+.is-dark.user-page .tag-cloud-edit-text {
+  color: var(--indigo-text, #aab3ea) !important;
+}
+
+.is-dark.start-page .mode-card.active .mode-name,
+.is-dark.start-page .mode-card.active .mode-desc,
+.is-dark.start-page .mode-card.active .mode-icon,
+.is-dark.start-page .diff-card.active .diff-name,
+.is-dark.start-page .diff-card.active .diff-desc {
+  color: #fff !important;
+}
+
+.is-dark.onboarding-page .choice-card.selected text,
+.is-dark.onboarding-page .resume-card.selected text,
+.is-dark.onboarding-page .priority-card.selected text,
+.is-dark.onboarding-page .pill.selected text,
+.is-dark.onboarding-page .role-chip.selected text {
+  color: var(--vermilion-text, #e27b66) !important;
+}
+
+.is-dark .app-icon-tile--violet {
+  background: rgba(63, 81, 181, 0.24) !important;
+  color: var(--indigo-text, #aab3ea) !important;
+}
+
+.is-dark .app-icon-tile--cyan,
+.is-dark .app-icon-tile--success {
+  background: rgba(123, 141, 110, 0.24) !important;
+  color: var(--sage-text, #b8c6af) !important;
+}
+
+.is-dark .app-icon-tile--candy {
+  background: rgba(194, 59, 34, 0.22) !important;
+  color: var(--vermilion-text, #e27b66) !important;
+}
+
+.is-dark .app-icon-tile--warning {
+  background: rgba(184, 151, 90, 0.22) !important;
+  color: var(--gold-text, #dfc58f) !important;
 }

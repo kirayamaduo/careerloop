@@ -162,8 +162,7 @@
 			"style": {
 				"navigationBarTitleText": "",
 				"navigationStyle": "custom",
-				"backgroundColor": "#FAF9F6",
-				"disableScroll": true
+				"backgroundColor": "#FAF9F6"
 			}
 		},
 		{
@@ -243,7 +242,7 @@
 	},
 	"tabBar": {
 		"color": "#8B8A86",
-		"selectedColor": "#3F51B5",
+		"selectedColor": "#C23B22",
 		"backgroundColor": "#FAF9F6",
 		"borderStyle": "white",
 		"list": [

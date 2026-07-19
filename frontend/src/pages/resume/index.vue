@@ -174,6 +174,7 @@ import {
   type Resume,
 } from '@/api/resume';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 
 /** JD-tailored copies use a `_tailored` suffix (see ResumeGenController). */
 const isTailoredResumeTitle = (title?: string | null): boolean => {
@@ -358,8 +359,7 @@ const retryResumeKeywords = (item: ResumeItem) => {
 const loadResumes = async () => {
   keywordPollTimers.forEach((timer) => clearTimeout(timer));
   keywordPollTimers.clear();
-  const token = uni.getStorageSync('token');
-  if (!token) {
+  if (!isRealUser()) {
     resumeList.value = [];
     return;
   }
@@ -412,6 +412,7 @@ const RESUME_AUTO_UPLOAD_KEY = 'resume_auto_upload_once';
 const topBarOpacity = computed(() => Math.min(1, Math.max(0, (scrollTopValue.value - 12) / 56)));
 
 const handleUploadClick = () => {
+  if (!requireAuth({ message: '登录后才能创建、上传和保存你的简历。' })) return;
   showSheet.value = true;
 };
 
@@ -429,6 +430,7 @@ const closeSheet = () => {
 
 const selectAction = (type: string) => {
   closeSheet();
+  if (!requireAuth({ message: '登录后才能创建、上传和保存你的简历。' })) return;
   if (type === 'upload') {
     const userId = Number(uni.getStorageSync('userId'));
     if (!userId || isNaN(userId) || userId <= 0) {
@@ -1136,4 +1138,388 @@ onPageScroll(({ scrollTop }) => {
 .resume-page.is-dark .rc-icon-ai { background: rgba(124,58,237,0.2) !important; }
 .resume-page.is-dark .badge-ai { background: rgba(124,58,237,0.2) !important; }
 .resume-page.is-dark .badge-ai .rc-badge-text { color: #a78bfa !important; }
+
+/* ================================================================
+ * CareerLoop editorial skin — shared with the student website.
+ * ================================================================ */
+.resume-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.page-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.page-title,
+.section-title,
+.empty-title,
+.rc-name,
+.add-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.page-title {
+  font-size: 27px;
+}
+
+.page-subtitle,
+.section-sub,
+.rc-time,
+.keyword-empty {
+  color: #8b8a86;
+}
+
+.section-bar {
+  margin: 18px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edece8;
+}
+
+.section-action {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: #c23b22;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.section-action:active {
+  background: #a9321d;
+}
+
+.section-action-text {
+  color: #faf9f6;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.resume-list {
+  gap: 10px;
+}
+
+.skel-card,
+.resume-card {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #faf9f6;
+  box-shadow: 0 5px 16px rgba(44, 43, 41, 0.045);
+}
+
+.skel-square,
+.skel-line {
+  background: linear-gradient(90deg, #efeee9 0%, #f7f6f2 50%, #efeee9 100%);
+  background-size: 200% 100%;
+}
+
+.resume-card {
+  padding: 15px;
+}
+
+.rc-icon {
+  width: 42px;
+  height: 50px;
+  border: 1px solid #d4d2cc;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.rc-icon-0,
+.rc-icon-1 {
+  background: #f5f5f0;
+}
+
+.rc-icon-text {
+  color: #3f51b5;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.rc-name {
+  font-size: 15px;
+}
+
+.keyword-pill {
+  padding: 3rpx 9rpx;
+  border: 1px solid #e0dfdb;
+  border-radius: 4px;
+  background: #f5f5f0;
+  color: #5a5956;
+  font-weight: 500;
+}
+
+.rc-badge {
+  padding: 2px 7px;
+  border: 1px solid #d9d8d3;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.badge-recent {
+  border-color: rgba(194, 59, 34, 0.34);
+  background: rgba(194, 59, 34, 0.06);
+}
+
+.badge-recent .rc-badge-text {
+  color: #c23b22;
+}
+
+.badge-normal {
+  background: #f5f5f0;
+}
+
+.badge-normal .rc-badge-text {
+  color: #5a5956;
+}
+
+.rc-badge-text {
+  font-weight: 500;
+}
+
+.rc-action-btn {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #c23b22;
+  border-radius: 6px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.rc-action-btn:active {
+  background: rgba(194, 59, 34, 0.08);
+}
+
+.rc-action-text {
+  color: #c23b22;
+  font-weight: 500;
+}
+
+.rc-more {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rc-more-dots {
+  color: #8b8a86;
+  font-weight: 500;
+}
+
+.add-card {
+  min-height: 76px;
+  padding: 15px;
+  gap: 14px;
+  border: 1px dashed #b9b7b1;
+  border-radius: 8px;
+  background: #f5f5f0;
+  box-shadow: none;
+}
+
+.add-card:active {
+  border-color: #c23b22;
+  background: rgba(194, 59, 34, 0.05);
+  transform: scale(0.99);
+}
+
+.add-icon {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(194, 59, 34, 0.28);
+  border-radius: 6px;
+  background: #faf9f6;
+}
+
+.add-plus,
+.add-title {
+  color: #c23b22;
+}
+
+.add-desc,
+.empty-desc {
+  color: #5a5956;
+}
+
+.empty-icon {
+  color: #3f51b5;
+}
+
+.sheet-mask {
+  background: rgba(44, 43, 41, 0.34);
+}
+
+.sheet {
+  left: 16px;
+  right: 16px;
+}
+
+.sheet-title-bar,
+.sheet-option,
+.sheet-cancel {
+  background: #faf9f6;
+  border-color: #e0dfdb;
+}
+
+.sheet-title-bar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.sheet-option:last-of-type {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.sheet-title {
+  color: #8b8a86;
+  letter-spacing: 0.04em;
+}
+
+.sheet-option {
+  min-height: 56px;
+  box-sizing: border-box;
+}
+
+.sheet-option-icon {
+  color: #3f51b5;
+}
+
+.sheet-option-text,
+.sheet-cancel-text {
+  color: #c23b22;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.sheet-option-hint {
+  color: #8b8a86;
+}
+
+.sheet-cancel {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+}
+
+.section-bar-ai {
+  margin-top: 26px;
+}
+
+.ai-badge {
+  border: 1px solid #3f51b5;
+  border-radius: 4px;
+  background: #3f51b5;
+}
+
+.ai-badge-text {
+  font-weight: 600;
+}
+
+.rc-icon-ai {
+  border-color: rgba(63, 81, 181, 0.32) !important;
+  background: rgba(63, 81, 181, 0.06) !important;
+}
+
+.rc-icon-ai .rc-icon-text {
+  color: #3f51b5 !important;
+}
+
+.resume-card-ai {
+  border-left: 2px solid #3f51b5;
+}
+
+.badge-ai {
+  border-color: rgba(63, 81, 181, 0.3) !important;
+  background: rgba(63, 81, 181, 0.06) !important;
+}
+
+.badge-ai .rc-badge-text {
+  color: #3f51b5 !important;
+  font-weight: 500 !important;
+}
+
+.resume-page.is-dark {
+  background: #1f1f1d;
+}
+
+.resume-page.is-dark .page-title,
+.resume-page.is-dark .section-title,
+.resume-page.is-dark .empty-title,
+.resume-page.is-dark .rc-name {
+  color: #f5f5f0;
+}
+
+.resume-page.is-dark .skel-card,
+.resume-page.is-dark .resume-card,
+.resume-page.is-dark .add-card,
+.resume-page.is-dark .sheet-title-bar,
+.resume-page.is-dark .sheet-option,
+.resume-page.is-dark .sheet-cancel {
+  background: #292926;
+  border-color: #45443f;
+  box-shadow: none;
+}
+
+.resume-page.is-dark .section-action {
+  border-color: #c23b22;
+  background: #c23b22;
+}
+
+.resume-page.is-dark .section-action-text {
+  color: #faf9f6;
+}
+
+.resume-page.is-dark .rc-icon,
+.resume-page.is-dark .add-icon {
+  background: #33332f;
+  border-color: #575650;
+}
+
+.resume-page.is-dark .keyword-pill,
+.resume-page.is-dark .badge-normal {
+  background: #33332f;
+  border-color: #575650;
+  color: #d4d2cc;
+}
+
+.resume-page.is-dark .rc-action-btn {
+  border-color: #d8644d;
+  background: transparent;
+}
+
+.resume-page.is-dark .rc-action-text,
+.resume-page.is-dark .add-plus,
+.resume-page.is-dark .add-title,
+.resume-page.is-dark .sheet-option-text,
+.resume-page.is-dark .sheet-cancel-text {
+  color: #e27b66;
+}
+
+.resume-page.is-dark .rc-icon-ai,
+.resume-page.is-dark .badge-ai {
+  background: rgba(100, 116, 210, 0.13) !important;
+  border-color: rgba(145, 157, 225, 0.35) !important;
+}
+
+.resume-page.is-dark .resume-card-ai {
+  border-left-color: #8794d9;
+}
+
+.resume-page.is-dark .badge-ai .rc-badge-text,
+.resume-page.is-dark .rc-icon-ai .rc-icon-text {
+  color: #aab3ea !important;
+}
 </style>

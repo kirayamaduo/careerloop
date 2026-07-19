@@ -14,6 +14,7 @@ import com.group1.career.repository.UserRepository;
 import com.group1.career.service.CareerService;
 import com.group1.career.service.HomeContentRefreshJob;
 import com.group1.career.service.HomeFieldTipsService;
+import com.group1.career.utils.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -31,7 +32,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -110,10 +110,11 @@ public class HomepageController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    @Operation(summary = "Manually trigger a fresh Bilibili video pull (rate-limited: 3×/5 min per user)")
+    @Operation(summary = "Manually trigger a fresh Bilibili video pull (authenticated, rate-limited: 3×/5 min per user)")
     @PostMapping("/refresh")
-    public Result<String> triggerRefresh(@RequestParam(required = false) Long userId) {
-        String key = "home:refresh:" + (userId != null ? "u:" + userId : "anon");
+    public Result<String> triggerRefresh() {
+        Long userId = SecurityUtil.requireCurrentUserId();
+        String key = "home:refresh:u:" + userId;
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1L) {
             redisTemplate.expire(key, REFRESH_WINDOW_MINUTES, TimeUnit.MINUTES);
@@ -132,13 +133,24 @@ public class HomepageController {
         return Result.success("内容刷新已触发");
     }
 
-    @Operation(summary = "Get homepage aggregated feed (videos, articles, consultations, paths, stats)")
+    @Operation(summary = "Get public homepage feed (never includes user-personalised content)")
     @GetMapping("/feed")
-    public Result<HomepageFeedDto> getHomepageFeed(@RequestParam(required = false) Long userId) {
+    public Result<HomepageFeedDto> getHomepageFeed() {
+        return buildHomepageFeed(null, false);
+    }
+
+    @Operation(summary = "Get current user's personalised homepage feed")
+    @GetMapping("/feed/personalized")
+    public Result<HomepageFeedDto> getPersonalizedHomepageFeed() {
+        Long userId = SecurityUtil.requireCurrentUserId();
+        return buildHomepageFeed(userId, true);
+    }
+
+    private Result<HomepageFeedDto> buildHomepageFeed(Long authenticatedUserId, boolean personalized) {
 
         // 1. Bilibili videos — rotated by day so the same user sees a stable
         //    batch within a day but fresh content the next morning.
-        long seed = todaysSeed(userId);
+        long seed = todaysSeed(authenticatedUserId);
         List<HomeVideo> videos;
         try {
             videos = homeVideoRepository.sampleByRand(seed, VIDEO_LIMIT);
@@ -165,8 +177,11 @@ public class HomepageController {
                 .findAllByOrderByPublishedAtDescIdDesc(PageRequest.of(0, 24));
         List<HomeArticle> articlePool = homeArticleRepository
                 .findAllByHiddenFalseOrderByPinnedDescPublishedAtDescIdDesc(PageRequest.of(0, 20));
-        List<HomeConsultationFeedDto> consultations = homeFieldTipsService.buildConsultationFeed(
-                userId, seed, CONSULTATION_LIMIT, consultationPool, articlePool);
+        List<HomeConsultationFeedDto> consultations = personalized
+                ? homeFieldTipsService.buildPersonalizedConsultationFeed(
+                        authenticatedUserId, seed, CONSULTATION_LIMIT, consultationPool, articlePool)
+                : homeFieldTipsService.buildPublicConsultationFeed(
+                        seed, CONSULTATION_LIMIT, consultationPool, articlePool);
 
         // 4. Career path spotlight cards (kept for the Skill Map cross-link).
         List<CareerPath> paths = careerService.getAllPaths();

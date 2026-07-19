@@ -1,94 +1,111 @@
-:root {
+/*
+ * Cross-platform design tokens.
+ *
+ * uni-app maps `page` to `uni-page-body` on H5, while WeChat uses `page`
+ * directly. Keeping one supported selector also avoids splitting a selector
+ * list with conditional-compilation comments. Keep compatibility aliases flat: a
+ * number of older page styles use aliases such as `--primary-color`, and
+ * nested var() aliases were falling back to their legacy bright-blue values
+ * in the mini-program renderer.
+ */
+page {
   /* CareerLoop competition identity: warm paper, ink, vermilion and indigo. */
   --paper: #faf9f6;
   --paper-soft: #f5f5f0;
   --paper-deep: #efeee9;
   --ink: #2c2b29;
   --ink-secondary: #5a5956;
-  --ink-tertiary: #8b8a86;
+  --ink-tertiary: #6f6e69;
   --vermilion: #c23b22;
   --vermilion-hover: #a8321d;
   --vermilion-soft: #f8ebe7;
   --indigo: #3f51b5;
   --indigo-hover: #33449b;
   --indigo-soft: #eceefa;
-  --sage: #7b8d6e;
+  --sage: #66775c;
   --sage-soft: #edf1ea;
-  --heritage-gold: #b8975a;
+  --heritage-gold: #8a6d38;
   --gold-soft: #f5efe4;
 
+  --font-serif: "Noto Serif SC", "Songti SC", STSong, "Times New Roman", serif;
+  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+
   /* Compatibility aliases for existing pages. Primary means action. */
-  --primary-color: var(--vermilion);
-  --primary-hover: var(--vermilion-hover);
+  --primary-color: #c23b22;
+  --primary-hover: #a8321d;
   --primary-mid: #d85a42;
-  --primary-soft: var(--vermilion-soft);
-  --brand-color: var(--indigo);
-  --brand-hover: var(--indigo-hover);
-  --brand-soft: var(--indigo-soft);
-  --action-color: var(--vermilion);
-  --action-hover: var(--vermilion-hover);
-  --action-soft: var(--vermilion-soft);
+  --primary-soft: #f8ebe7;
+  --brand-color: #3f51b5;
+  --brand-hover: #33449b;
+  --brand-soft: #eceefa;
+  --action-color: #c23b22;
+  --action-hover: #a8321d;
+  --action-soft: #f8ebe7;
 
-  --violet: #8b5cf6;
-  --violet-mid: #a78bfa;
-  --violet-soft: #f5f3ff;
+  /* Legacy semantic hues are deliberately folded into the competition
+     palette so old icon variants no longer reintroduce candy colours. */
+  --violet: #3f51b5;
+  --violet-mid: #5968bd;
+  --violet-soft: #eceefa;
   
-  --cyan: #06b6d4;
-  --cyan-mid: #22d3ee;
-  --cyan-soft: #ecfeff;
+  --cyan: #7b8d6e;
+  --cyan-mid: #899a7f;
+  --cyan-soft: #edf1ea;
   
-  --candy: #ec4899;
-  --candy-mid: #f472b6;
-  --candy-soft: #fdf2f8;
+  --candy: #c23b22;
+  --candy-mid: #d85a42;
+  --candy-soft: #f8ebe7;
 
-  --accent-color: var(--heritage-gold);
+  --accent-color: #b8975a;
   --accent-hover: #9e7d45;
-  --accent-soft: var(--gold-soft);
+  --accent-soft: #f5efe4;
 
-  --success-color: var(--sage);
-  --success-soft: var(--sage-soft);
-  --warning-color: var(--heritage-gold);
-  --warning-soft: var(--gold-soft);
+  --success-color: #7b8d6e;
+  --success-soft: #edf1ea;
+  --warning-color: #b8975a;
+  --warning-soft: #f5efe4;
   --danger-color: #b52f2f;
   --danger-soft: #f9eaea;
   
   --gradient-primary: linear-gradient(135deg, #3f51b5 0%, #5968bd 100%);
   --gradient-success: linear-gradient(135deg, #718467 0%, #899a7f 100%);
   --gradient-warning: linear-gradient(135deg, #aa884d 0%, #c4a66f 100%);
-  --gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-  --gradient-candy: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+  --gradient-violet: linear-gradient(135deg, #3f51b5 0%, #5968bd 100%);
+  --gradient-candy: linear-gradient(135deg, #c23b22 0%, #d85a42 100%);
 
-  --page-ios-gray: var(--paper);
-  --bg-color: var(--paper);
+  --page-ios-gray: #faf9f6;
+  --bg-color: #faf9f6;
   --card-bg: #fffefa;
-  --text-primary: var(--ink);
-  --text-secondary: var(--ink-secondary);
-  --text-tertiary: var(--ink-tertiary);
+  --text-primary: #2c2b29;
+  --text-secondary: #5a5956;
+  --text-tertiary: #6f6e69;
+  --text-placeholder: #777671;
+  --text-disabled: #b0afab;
   --border-color: #e0dfdb;
   --border-strong: #ceccc5;
-  --interactive-label: var(--brand-color);
+  --interactive-label: #3f51b5;
 
-  --surface-1: var(--paper);
-  --surface-2: var(--paper-soft);
-  --surface-3: var(--paper-deep);
+  --surface-1: #faf9f6;
+  --surface-2: #f5f5f0;
+  --surface-3: #efeee9;
   --topbar-bg: rgba(250, 249, 246, 0.96);
   --topbar-border: rgba(224, 223, 219, 0.9);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 
   --shadow-xs:   0 1px 2px rgba(44,43,41,0.03);
-  --shadow-sm:   0 3px 12px rgba(44,43,41,0.045);
-  --shadow-card: 0 7px 22px rgba(44,43,41,0.065);
-  --shadow-lg:   0 14px 36px rgba(44,43,41,0.08);
+  --shadow-sm:   0 2px 10px rgba(44,43,41,0.035);
+  --shadow-card: 0 6px 20px rgba(44,43,41,0.055);
+  --shadow-lg:   0 12px 32px rgba(44,43,41,0.075);
 
   --nav-back-width: 64px;
 
   --btn-height-md: 48px;
   --btn-height-lg: 52px;
-  --btn-radius: 8px;
+  --btn-radius: 6px;
 
   --font-hero: 28px;
   --font-title: 18px;

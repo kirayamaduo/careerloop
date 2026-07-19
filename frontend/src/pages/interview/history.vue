@@ -46,7 +46,7 @@
               <view class="card-top">
                 <text class="position">{{ item.positionName }}</text>
                 <view :class="['status-pill', (item.status ?? '').toLowerCase()]">
-                  <text class="pill-text">{{ item.status === 'COMPLETED' ? t('interviewHistory.statusCompleted') : t('interviewHistory.statusOngoing') }}</text>
+                  <text class="pill-text">{{ statusLabel(item.status) }}</text>
                 </view>
               </view>
               <view class="card-bottom">
@@ -180,6 +180,12 @@ const difficultyLabel = (difficulty?: string) => {
   if (key === 'hard') return '挑战';
   if (key === 'normal' || key === 'medium') return '标准';
   return difficulty || '标准';
+};
+
+const statusLabel = (status?: string) => {
+  if (status === 'COMPLETED') return t('interviewHistory.statusCompleted');
+  if (status === 'CANCELLED') return t('interviewHistory.statusCancelled');
+  return t('interviewHistory.statusOngoing');
 };
 
 const onItemTouchStart = (e: any, id: number) => {
@@ -396,6 +402,9 @@ const groupedInterviews = computed(() => {
 .ongoing { background: #fef3c7; }
 .ongoing .pill-text { color: #d97706; }
 
+.cancelled { background: var(--surface-3, #f1f5f9); }
+.cancelled .pill-text { color: var(--text-tertiary, #64748b); }
+
 .card-bottom { display: flex; gap: 20px; }
 
 .info-item { display: flex; flex-direction: column; gap: 2px; }
@@ -462,6 +471,14 @@ const groupedInterviews = computed(() => {
   color: #fbbf24;
 }
 
+.is-dark .status-pill.cancelled {
+  background: #34332f;
+}
+
+.is-dark .status-pill.cancelled .pill-text {
+  color: #aaa8a2;
+}
+
 .is-dark .skel-card {
   background: #1e293b;
   border-color: #334155;
@@ -478,5 +495,127 @@ const groupedInterviews = computed(() => {
 
 .is-dark .nav-new-text {
   color: #93c5fd;
+}
+
+/* Competition visual system ------------------------------------------------ */
+.nav-title,
+.hero-title {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.nav-icon-btn {
+  color: #c23b22;
+  background: transparent;
+  border: 1px solid rgba(194, 59, 34, 0.38);
+  border-radius: 4px;
+}
+
+.hero-subtitle,
+.info-val {
+  color: #5a5956;
+}
+
+.group-label {
+  color: #8b8a86;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.swipe-row {
+  border-radius: 8px;
+}
+
+.interview-card,
+.skel-card,
+.empty {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.interview-card {
+  padding: 18px;
+}
+
+.position {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.status-pill {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.completed {
+  border: 1px solid rgba(107, 142, 90, 0.42);
+}
+
+.completed .pill-text {
+  color: #6b8e5a;
+}
+
+.ongoing {
+  border: 1px solid rgba(196, 152, 74, 0.44);
+}
+
+.ongoing .pill-text {
+  color: #9b722d;
+}
+
+.cancelled {
+  background: #efeee9;
+}
+
+.cancelled .pill-text {
+  color: #77756f;
+}
+
+.score-val {
+  color: #3f51b5;
+}
+
+.swipe-delete-btn {
+  background: #c23b22;
+  border-radius: 0 8px 8px 0;
+}
+
+.btn-primary {
+  background: #c23b22;
+  border-radius: 6px;
+}
+
+.btn-primary:active {
+  background: #a8311d;
+}
+
+.skel-line {
+  background: #efeee9;
+}
+
+.is-dark .nav-title,
+.is-dark .hero-title,
+.is-dark .position {
+  color: #faf9f6;
+}
+
+.is-dark .interview-card,
+.is-dark .skel-card,
+.is-dark .empty {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .hero-subtitle,
+.is-dark .info-val,
+.is-dark .empty-desc {
+  color: #c6c4be;
 }
 </style>

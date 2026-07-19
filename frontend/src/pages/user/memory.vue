@@ -107,6 +107,7 @@ import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import request from '@/utils/request';
 import { useTheme } from '@/utils/theme';
 import { getProfileSnapshotApi, getUserInfoApi, type User, type UserProfileSnapshot } from '@/api/user';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
@@ -128,6 +129,19 @@ const profileSnapshot = ref<UserProfileSnapshot | null>(null);
 const { t } = useI18n();
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
 
+const ensurePageAuth = () => {
+  if (isRealUser()) return true;
+  loading.value = false;
+  facts.value = [];
+  userProfile.value = null;
+  profileSnapshot.value = null;
+  return requireAuth({
+    redirect: 'reLaunch',
+    cancelBehavior: 'back',
+    message: '登录后才能查看或管理 AI 为你整理的长期记忆。',
+  });
+};
+
 onMounted(async () => {
   refreshTheme();
   topSafe.value = getMpSafeAreaMetrics().topSafeHeight;
@@ -139,6 +153,7 @@ onShow(() => {
 });
 
 const loadFacts = async () => {
+  if (!ensurePageAuth()) return;
   loading.value = true;
   try {
     const userId = Number(uni.getStorageSync('userId'));
@@ -265,6 +280,7 @@ const confClass = (conf: number) => {
 };
 
 const confirmDelete = (fact: UserFact) => {
+  if (!ensurePageAuth()) return;
   uni.showModal({
     title: t('memory.deleteTitle'),
     content: t('memory.deleteContent', { label: formatKey(fact.factKey), value: fact.factValue }),
@@ -284,6 +300,7 @@ const confirmDelete = (fact: UserFact) => {
 };
 
 const confirmClearAll = () => {
+  if (!ensurePageAuth()) return;
   uni.showModal({
     title: t('memory.clearAllTitle'),
     content: t('memory.clearAllContent'),
@@ -439,4 +456,132 @@ const goBack = () => uni.navigateBack();
 .font-large .page-subtitle,
 .font-large .empty-desc,
 .font-large .fact-value { font-size: 17px; }
+
+/* Competition visual system ------------------------------------------------ */
+.page-title,
+.context-title,
+.empty-title,
+.group-label {
+  color: #2c2b29;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.page-subtitle,
+.context-label,
+.context-empty-text,
+.fact-key,
+.empty-desc {
+  color: #5a5956;
+}
+
+.context-card,
+.facts-card,
+.empty-state {
+  background: #ffffff;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.04);
+}
+
+.context-icon,
+.group-icon {
+  color: #3f51b5;
+}
+
+.context-empty {
+  background: #f5f5f0;
+  border-radius: 4px;
+}
+
+.group-count {
+  color: #8b8a86;
+  background: #efeee9;
+  border-radius: 3px;
+}
+
+.fact-row {
+  border-color: #edece8;
+}
+
+.fact-row:active {
+  background: #f5f5f0;
+}
+
+.fact-value {
+  color: #2c2b29;
+}
+
+.fact-conf-badge {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.conf-high {
+  border: 1px solid rgba(107, 142, 90, 0.42);
+}
+
+.conf-med {
+  border: 1px solid rgba(184, 151, 90, 0.44);
+}
+
+.conf-low {
+  border: 1px solid rgba(194, 59, 34, 0.36);
+}
+
+.conf-high .fact-conf-text {
+  color: #6b8e5a;
+}
+
+.conf-med .fact-conf-text {
+  color: #987632;
+}
+
+.conf-low .fact-conf-text {
+  color: #c23b22;
+}
+
+.fact-delete-btn {
+  background: #efeee9;
+  border-radius: 4px;
+}
+
+.btn-clear-all {
+  border-color: rgba(194, 59, 34, 0.42);
+  border-radius: 4px;
+}
+
+.btn-clear-all-text {
+  color: #c23b22;
+}
+
+.skeleton-card {
+  background: #efeee9;
+  border-radius: 6px;
+}
+
+.is-dark .page-title,
+.is-dark .context-title,
+.is-dark .empty-title,
+.is-dark .fact-value {
+  color: #faf9f6;
+}
+
+.is-dark .context-card,
+.is-dark .facts-card,
+.is-dark .empty-state {
+  background: #242320;
+  border-color: #494844;
+}
+
+.is-dark .context-empty,
+.is-dark .fact-delete-btn,
+.is-dark .group-count {
+  background: #34332f;
+}
+
+.is-dark .fact-row {
+  border-color: #494844;
+}
 </style>

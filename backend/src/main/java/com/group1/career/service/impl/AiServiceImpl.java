@@ -49,8 +49,13 @@ public class AiServiceImpl implements AiService {
             "You are a professional career assistant. Reply concisely and stay on topic.";
 
     /** F21: user-visible message when AI is unavailable. */
-    private static final String FALLBACK_MSG =
-            "AI 助手暂时繁忙，请稍后再试 🙏（若持续出现请联系客服）";
+    private static final String FALLBACK_MSG = AiService.UNAVAILABLE_MESSAGE;
+
+    /** Machine-readable but deliberately detail-free failure for tool orchestration. */
+    static final String TOOLS_ERROR_JSON = "{\"error\":\"AI_SERVICE_UNAVAILABLE\"}";
+
+    private static final List<String> REQUEST_ID_HEADERS = List.of(
+            "x-request-id", "x-dashscope-request-id", "request-id");
 
     @Override
     public String chat(List<Map<String, String>> messages) {
@@ -97,7 +102,10 @@ public class AiServiceImpl implements AiService {
 
             long aiStart = System.currentTimeMillis();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("[AI] {} ms, status={}, prompt={} chars", System.currentTimeMillis() - aiStart, response.statusCode(), requestBody.length());
+            log.info("[AI] chat completed: durationMs={}, status={}, requestId={}",
+                    System.currentTimeMillis() - aiStart,
+                    response.statusCode(),
+                    requestId(response));
 
             if (response.statusCode() == 200) {
                 // 3. Parse Response
@@ -107,14 +115,14 @@ public class AiServiceImpl implements AiService {
                 }
             }
             
-            log.error("AI API Error: {}", response.body());
+            logUpstreamFailure("chat", response);
             return FALLBACK_MSG;
 
         } catch (java.net.http.HttpTimeoutException te) {
-            log.error("[AI] chat timeout after 110s", te);
+            logFailureType("chat", te);
             return FALLBACK_MSG;
         } catch (Exception e) {
-            log.error("AI Chat Failed", e);
+            logFailureType("chat", e);
             return FALLBACK_MSG;
         }
     }
@@ -122,9 +130,13 @@ public class AiServiceImpl implements AiService {
     @Override
     public String chat(List<Map<String, String>> messages, String model) {
         if (fallbackMode) return FALLBACK_MSG;
+        boolean retryAttempt = model != null && model.endsWith("_retry_skip");
+        String effectiveModel = retryAttempt
+                ? model.substring(0, model.length() - "_retry_skip".length())
+                : model;
         try {
             ObjectNode root = objectMapper.createObjectNode();
-            root.put("model", model != null ? model : modelName);
+            root.put("model", effectiveModel != null ? effectiveModel : modelName);
 
             ArrayNode msgArray = root.putArray("messages");
             boolean callerHasSystem = messages != null
@@ -159,23 +171,27 @@ public class AiServiceImpl implements AiService {
                     return resJson.get("choices").get(0).get("message").get("content").asText();
                 }
             }
-            log.error("AI API Error (model={}): {}", model, response.body());
+            logUpstreamFailure("chat-with-model", response);
             // F21: one retry on 5xx
-            if (response.statusCode() >= 500) {
-                log.warn("[AI] 5xx from model={}, retrying once", model);
-                try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-                return chat(messages, model + "_retry_skip"); // prevent infinite loop via marker
+            if (response.statusCode() >= 500 && !retryAttempt) {
+                log.warn("[AI] chat-with-model retrying once: status={}, requestId={}",
+                        response.statusCode(), requestId(response));
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    logFailureType("chat-with-model-retry-wait", interrupted);
+                    return FALLBACK_MSG;
+                }
+                String retryModel = effectiveModel != null ? effectiveModel : modelName;
+                return chat(messages, retryModel + "_retry_skip");
             }
             return FALLBACK_MSG;
         } catch (java.net.http.HttpTimeoutException te) {
-            log.error("[AI] chat timeout (model={})", model, te);
+            logFailureType("chat-with-model", te);
             return FALLBACK_MSG;
         } catch (Exception e) {
-            if (model != null && model.endsWith("_retry_skip")) {
-                log.error("[AI] retry also failed (model={}): {}", model, e.getMessage());
-                return FALLBACK_MSG;
-            }
-            log.error("AI Chat Failed (model={})", model, e);
+            logFailureType(retryAttempt ? "chat-with-model-retry" : "chat-with-model", e);
             return FALLBACK_MSG;
         }
     }
@@ -188,6 +204,7 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public String chatWithTools(List<Map<String, Object>> messages, List<Map<String, Object>> toolSchemas) {
+        if (fallbackMode) return TOOLS_ERROR_JSON;
         try {
             ObjectNode root = objectMapper.createObjectNode();
             root.put("model", modelName);
@@ -226,12 +243,13 @@ public class AiServiceImpl implements AiService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                log.error("[F13] chatWithTools error status={}: {}", response.statusCode(), response.body());
+                logUpstreamFailure("chat-with-tools", response);
+                return TOOLS_ERROR_JSON;
             }
             return response.body();
         } catch (Exception e) {
-            log.error("[F13] chatWithTools failed: {}", e.getMessage(), e);
-            return "{\"error\":\"" + e.getMessage() + "\"}";
+            logFailureType("chat-with-tools", e);
+            return TOOLS_ERROR_JSON;
         }
     }
 
@@ -271,36 +289,80 @@ public class AiServiceImpl implements AiService {
                 HttpResponse<java.util.stream.Stream<String>> response = httpClient.send(
                         request, HttpResponse.BodyHandlers.ofLines());
 
+                if (response.statusCode() != 200) {
+                    logUpstreamFailure("stream-chat", response);
+                    try (java.util.stream.Stream<String> ignored = response.body()) {
+                        completeStreamWithFallback(emitter);
+                    }
+                    return;
+                }
+
                 // 3. Parse SSE lines and forward token-by-token
-                response.body().forEach(line -> {
-                    try {
-                        if (line.startsWith("data: ") && !line.contains("[DONE]")) {
-                            String json = line.substring(6);
-                            ObjectNode chunk = (ObjectNode) objectMapper.readTree(json);
-                            if (chunk.has("choices") && chunk.get("choices").size() > 0) {
-                                var delta = chunk.get("choices").get(0).get("delta");
-                                if (delta != null && delta.has("content")) {
-                                    String token = delta.get("content").asText();
-                                    emitter.send(SseEmitter.event()
-                                            .name("token")
-                                            .data(token));
+                try (java.util.stream.Stream<String> lines = response.body()) {
+                    lines.forEach(line -> {
+                        try {
+                            if (line.startsWith("data: ") && !line.contains("[DONE]")) {
+                                String json = line.substring(6);
+                                ObjectNode chunk = (ObjectNode) objectMapper.readTree(json);
+                                if (chunk.has("choices") && chunk.get("choices").size() > 0) {
+                                    var delta = chunk.get("choices").get(0).get("delta");
+                                    if (delta != null && delta.has("content")) {
+                                        String token = delta.get("content").asText();
+                                        emitter.send(SseEmitter.event()
+                                                .name("token")
+                                                .data(token));
+                                    }
                                 }
                             }
+                        } catch (Exception e) {
+                            logFailureType("stream-chat-parse", e);
                         }
-                    } catch (Exception e) {
-                        log.warn("SSE parse error: {}", e.getMessage());
-                    }
-                });
+                    });
+                }
 
                 emitter.send(SseEmitter.event().name("done").data("[DONE]"));
                 emitter.complete();
 
             } catch (Exception e) {
-                log.error("Stream chat failed", e);
-                emitter.completeWithError(e);
+                logFailureType("stream-chat", e);
+                completeStreamWithFallback(emitter);
             }
         });
 
         return emitter;
+    }
+
+    private void logUpstreamFailure(String operation, HttpResponse<?> response) {
+        log.error("[AI] {} upstream failure: status={}, requestId={}",
+                operation,
+                response == null ? "unavailable" : response.statusCode(),
+                requestId(response));
+    }
+
+    private void logFailureType(String operation, Throwable throwable) {
+        log.error("[AI] {} failed: exception={}",
+                operation,
+                throwable == null ? "Unknown" : throwable.getClass().getSimpleName());
+    }
+
+    private String requestId(HttpResponse<?> response) {
+        if (response == null || response.headers() == null) return "unavailable";
+        for (String header : REQUEST_ID_HEADERS) {
+            String value = response.headers().firstValue(header).orElse("").trim();
+            if (!value.isEmpty()) {
+                return value.matches("[A-Za-z0-9._:-]{1,128}") ? value : "invalid";
+            }
+        }
+        return "unavailable";
+    }
+
+    private void completeStreamWithFallback(SseEmitter emitter) {
+        try {
+            emitter.send(SseEmitter.event().name("error").data(FALLBACK_MSG));
+        } catch (Exception sendFailure) {
+            logFailureType("stream-chat-fallback", sendFailure);
+        } finally {
+            emitter.complete();
+        }
     }
 }

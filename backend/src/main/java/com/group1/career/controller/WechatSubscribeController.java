@@ -27,6 +27,18 @@ public class WechatSubscribeController {
     private final WxSubscribeQuotaRepository quotaRepository;
 
     /**
+     * Returns only template IDs that are configured on the server and have a
+     * complete backend send path. It deliberately exposes no app secret or
+     * placeholder IDs.
+     */
+    @Operation(summary = "Get configured subscribe-message templates")
+    @GetMapping("/templates")
+    public Result<Map<String, String>> getConfiguredTemplates() {
+        SecurityUtil.requireCurrentUserId();
+        return Result.success(subscribeService.getConfiguredTemplates());
+    }
+
+    /**
      * Called by the mini-program immediately after {@code wx.requestSubscribeMessage} resolves.
      * The {@code results} map has templateId → "accept" | "reject" | "ban".
      */

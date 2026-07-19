@@ -4,7 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Thin abstraction over Aliyun OSS. The contract intentionally returns
- * **object keys** (e.g. {@code resumes/uuid.pdf}) rather than absolute URLs
+ * **object keys** (e.g. {@code resumes/42/uuid.pdf}) rather than absolute URLs
  * so downstream code (DB rows, AI pipelines) does not become coupled to a
  * specific bucket / endpoint / CDN. Callers who need a browser-loadable
  * link should call {@link #presignedUrl(String, long)} just-in-time.
@@ -14,7 +14,7 @@ public interface FileService {
      * Upload a multipart file to OSS.
      * @param file   incoming upload
      * @param folder OSS folder prefix (e.g. {@code resumes}, {@code avatars})
-     * @return the bare object key, e.g. {@code resumes/uuid.pdf}
+     * @return the bare object key, e.g. {@code resumes/42/uuid.pdf}
      */
     String uploadFile(MultipartFile file, String folder);
 
@@ -47,11 +47,21 @@ public interface FileService {
     String presignedUrl(String fileUrlOrKey, long ttlSeconds);
 
     /**
-     * Delete an object from OSS. Idempotent: a missing or null key is a no-op,
-     * and OSS itself does not 404 on missing keys. Implementations log and
-     * swallow non-fatal errors so callers can call this in cleanup paths
-     * without rolling back the originating transaction.
+     * Delete an object from OSS. Idempotent: a missing or null key is a
+     * successful no-op, and OSS itself does not 404 on missing keys.
+     *
+     * @return {@code true} when the object is absent after this call;
+     *         {@code false} on a transient/permanent OSS failure. Ordinary
+     *         callers may ignore the result, while account erasure uses it to
+     *         retain the database rows and retry rather than silently orphaning
+     *         personal files.
      */
-    void deleteObject(String fileUrlOrKey);
-}
+    boolean deleteObject(String fileUrlOrKey);
 
+    /**
+     * Delete every object below a server-generated namespace. Used for
+     * short-lived per-user TTS assets that are not represented by individual
+     * database rows.
+     */
+    boolean deletePrefix(String prefix);
+}

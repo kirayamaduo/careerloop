@@ -134,20 +134,50 @@
       </view>
     </view>
 
+    <!-- #ifdef MP-WEIXIN -->
+    <view v-if="privacyDialogVisible" class="privacy-mask">
+      <view class="privacy-dialog">
+        <text class="privacy-title">面试隐私授权</text>
+        <text class="privacy-copy">
+          为完成语音模拟面试和可选的行为表现评估，需要使用麦克风与相机。音频用于转写，画面仅在答题时抽帧分析，不保存原始录音或照片。
+        </text>
+        <view class="privacy-contract" @click="openWechatPrivacyContract">
+          <text>查看《小程序隐私保护指引》</text>
+        </view>
+        <view class="privacy-actions">
+          <view class="privacy-reject" @click="rejectWechatPrivacyAuthorization">
+            <text>暂不使用</text>
+          </view>
+          <button
+            id="careerloop-privacy-agree"
+            class="privacy-agree"
+            open-type="agreePrivacyAuthorization"
+            @agreeprivacyauthorization="agreeWechatPrivacyAuthorization"
+          >
+            同意并继续
+          </button>
+        </view>
+      </view>
+    </view>
+    <!-- #endif -->
+
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBackPress } from '@dcloudio/uni-app';
 import { useI18n } from '@/locales';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { useTheme } from '@/utils/theme';
 import {
   endInterviewApi,
   getInterviewByIdApi,
+  getInterviewMessagesApi,
   voiceGreetingApi,
   voiceTurnApi,
   type Interview,
+  type InterviewMessage,
   type VoiceTurnResponse,
 } from '@/api/interview';
 import { submitBodyLanguageFrameApi } from '@/api/bodyLanguage';
@@ -158,8 +188,6 @@ const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
 // ───────────────────────── State ─────────────────────────
 const statusTopPx = ref(52);
 const rightAvoidWidth = ref(16);
-const cameraTopPx = ref(90);
-const cameraRightPx = ref(16);
 const interviewId = ref<number>(0);
 const interviewLang = (uni.getStorageSync('interview_language') as string) || 'zh';
 const interview = ref<Interview | null>(null);
@@ -167,6 +195,12 @@ const interview = ref<Interview | null>(null);
 const isRecording = ref(false);
 const isThinking = ref(false); // ASR + AI + TTS in flight
 const aiTalking = ref(false); // AI audio currently playing
+const ending = ref(false);
+let pageActive = true;
+let operationGeneration = 0;
+let discardStoppedRecording = false;
+let allowNextBack = false;
+let pressHeld = false;
 
 const lastAiText = ref('');
 const lastUserText = ref('');
@@ -184,7 +218,13 @@ const RECORD_MAX_SECONDS = 60;
 const cameraReady = ref(false);
 const cameraError = ref('');
 let bodyLangTimer: ReturnType<typeof setInterval> | null = null;
+let bodyFrameInFlight = false;
 const BODY_LANG_INTERVAL_MS = 3000;
+
+// #ifdef MP-WEIXIN
+const privacyDialogVisible = ref(false);
+let resolveWechatPrivacy: ((result: { event: 'agree' | 'disagree'; buttonId?: string }) => void) | null = null;
+// #endif
 
 // Holds the recorder manager and audio context. Both are mini-program /
 // uni-app singletons that live as long as the page does — we lazily
@@ -239,11 +279,12 @@ const recordHint = computed(() => {
 // ───────────────────────── Lifecycle ─────────────────────────
 onMounted(async () => {
   refreshTheme();
+  // #ifdef MP-WEIXIN
+  registerWechatPrivacyAuthorization();
+  // #endif
   const safeMetrics = getMpSafeAreaMetrics();
   statusTopPx.value = safeMetrics.topSafeHeight;
   rightAvoidWidth.value = safeMetrics.rightAvoidWidth;
-  cameraTopPx.value = safeMetrics.contentTop + 8;
-  cameraRightPx.value = Math.max(16, safeMetrics.rightAvoidWidth);
 
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1] as any;
@@ -251,12 +292,26 @@ onMounted(async () => {
 
   if (!interviewId.value) {
     showToast(t('interviewRoom.missingInterviewId'), 'error');
-    setTimeout(() => uni.navigateBack(), 1200);
+    setTimeout(() => {
+      allowNextBack = true;
+      uni.navigateBack();
+    }, 1200);
     return;
   }
 
   try {
     interview.value = await getInterviewByIdApi(interviewId.value);
+    if (!pageActive) return;
+    if (interview.value.status !== 'ONGOING') {
+      const target = interview.value.status === 'COMPLETED'
+        ? `/pages/interview/report?interviewId=${interviewId.value}`
+        : '/pages/interview/history';
+      uni.redirectTo({ url: target });
+      return;
+    }
+    const history = await getInterviewMessagesApi(interviewId.value);
+    if (!pageActive) return;
+    restoreConversationState(history);
   } catch (e: any) {
     showToast(e?.message || t('interviewRoom.loadFailed'), 'error');
     return;
@@ -268,15 +323,24 @@ onMounted(async () => {
   // Camera scope check is non-fatal — if denied we still let the
   // candidate proceed with audio-only practice.
   // #ifdef MP-WEIXIN
-  requestCamera();
+  requestCamera(false);
   // #endif
 
-  // Auto-play the AI's opening question. Recording is gated until the AI
-  // has finished its first sentence so the candidate doesn't talk over it.
-  await fetchAndPlayGreeting();
+  // Only a brand-new session needs a greeting. A resumed voice session uses
+  // its latest persisted turns instead of replaying the very first question.
+  if (!lastAiText.value && !lastUserText.value) {
+    await fetchAndPlayGreeting();
+  }
 });
 
 onBeforeUnmount(() => {
+  pageActive = false;
+  pressHeld = false;
+  operationGeneration += 1;
+  discardStoppedRecording = true;
+  if (isRecording.value) {
+    try { recorderManager?.stop(); } catch {}
+  }
   cleanupRecording();
   // #ifdef MP-WEIXIN
   stopBodyLanguageCapture();
@@ -286,43 +350,87 @@ onBeforeUnmount(() => {
     try { innerAudio.destroy(); } catch {}
     innerAudio = null;
   }
+  if (recorderManager) {
+    const manager = recorderManager as any;
+    manager.offStart?.(handleRecorderStart);
+    manager.offStop?.(handleRecorderStop);
+    manager.offError?.(handleRecorderError);
+    recorderManager = null;
+  }
+  // #ifdef MP-WEIXIN
+  unregisterWechatPrivacyAuthorization();
+  if (resolveWechatPrivacy) {
+    resolveWechatPrivacy({ event: 'disagree' });
+    resolveWechatPrivacy = null;
+  }
+  privacyDialogVisible.value = false;
+  // #endif
 });
 
 // ───────────────────────── Setup helpers ─────────────────────────
+const restoreConversationState = (history: InterviewMessage[]) => {
+  const rows = Array.isArray(history) ? history : [];
+  const latestUser = [...rows].reverse().find((message) =>
+    String(message.role || '').toUpperCase() === 'USER'
+  );
+  const latestAi = [...rows].reverse().find((message) =>
+    String(message.role || '').toUpperCase() === 'AI'
+  );
+  if (latestUser?.content) {
+    lastUserText.value = latestUser.content;
+    hasAnswered.value = true;
+  }
+  if (latestAi?.content) {
+    lastAiText.value = latestAi.content;
+  }
+};
+
+const handleRecorderStart = () => {
+  if (!pageActive) return;
+  if (!pressHeld) {
+    discardStoppedRecording = true;
+    try { recorderManager?.stop(); } catch {}
+    return;
+  }
+  discardStoppedRecording = false;
+  isRecording.value = true;
+  recordSeconds.value = 0;
+  if (recordTimerHandle) clearInterval(recordTimerHandle);
+  recordTimerHandle = setInterval(() => {
+    recordSeconds.value += 1;
+    if (recordSeconds.value >= RECORD_MAX_SECONDS) {
+      stopRecordingAndSend();
+    }
+  }, 1000);
+};
+
+const handleRecorderStop = (res: any) => {
+  const recordedSeconds = recordSeconds.value;
+  cleanupRecording();
+  if (!pageActive || discardStoppedRecording) return;
+  if (!res?.tempFilePath) {
+    showToast(t('interviewRoom.recordingEmpty'), 'error');
+    return;
+  }
+  if (recordedSeconds < 1) {
+    showToast(t('interviewRoom.recordingTooShort'), 'info');
+    return;
+  }
+  sendVoiceTurn(res.tempFilePath);
+};
+
+const handleRecorderError = (err: any) => {
+  cleanupRecording();
+  if (!pageActive) return;
+  showToast(err?.errMsg || t('interviewRoom.recorderError'), 'error');
+};
+
 const initRecorder = () => {
+  if (recorderManager) return;
   recorderManager = uni.getRecorderManager();
-
-  recorderManager.onStart(() => {
-    isRecording.value = true;
-    recordSeconds.value = 0;
-    if (recordTimerHandle) clearInterval(recordTimerHandle);
-    recordTimerHandle = setInterval(() => {
-      recordSeconds.value += 1;
-      if (recordSeconds.value >= RECORD_MAX_SECONDS) {
-        // Hard cap matches Paraformer's short-clip sweet spot — anything
-        // longer is split-recognized which adds noticeable latency.
-        stopRecordingAndSend();
-      }
-    }, 1000);
-  });
-
-  recorderManager.onStop((res) => {
-    cleanupRecording();
-    if (!res?.tempFilePath) {
-      showToast(t('interviewRoom.recordingEmpty'), 'error');
-      return;
-    }
-    if (recordSeconds.value < 1) {
-      showToast(t('interviewRoom.recordingTooShort'), 'info');
-      return;
-    }
-    sendVoiceTurn(res.tempFilePath);
-  });
-
-  recorderManager.onError((err) => {
-    cleanupRecording();
-    showToast(err?.errMsg || t('interviewRoom.recorderError'), 'error');
-  });
+  recorderManager.onStart(handleRecorderStart);
+  recorderManager.onStop(handleRecorderStop);
+  recorderManager.onError(handleRecorderError);
 };
 
 const initAudio = () => {
@@ -346,7 +454,60 @@ const initAudio = () => {
 };
 
 // #ifdef MP-WEIXIN
-const requestCamera = () => {
+const handleNeedWechatPrivacyAuthorization = (resolve: typeof resolveWechatPrivacy) => {
+  if (!pageActive || typeof resolve !== 'function') {
+    resolve?.({ event: 'disagree' });
+    return;
+  }
+  // Only one sensitive operation may be pending. Refuse an older pending
+  // request before replacing it so no camera/recorder call remains hung.
+  resolveWechatPrivacy?.({ event: 'disagree' });
+  resolveWechatPrivacy = resolve;
+  privacyDialogVisible.value = true;
+};
+
+const registerWechatPrivacyAuthorization = () => {
+  const wxApi = (globalThis as any).wx;
+  if (typeof wxApi.onNeedPrivacyAuthorization !== 'function') return;
+  wxApi.onNeedPrivacyAuthorization(handleNeedWechatPrivacyAuthorization);
+};
+
+const unregisterWechatPrivacyAuthorization = () => {
+  const wxApi = (globalThis as any).wx;
+  wxApi?.offNeedPrivacyAuthorization?.(handleNeedWechatPrivacyAuthorization);
+};
+
+const agreeWechatPrivacyAuthorization = () => {
+  const resolve = resolveWechatPrivacy;
+  resolveWechatPrivacy = null;
+  privacyDialogVisible.value = false;
+  resolve?.({
+    event: 'agree',
+    buttonId: 'careerloop-privacy-agree',
+  });
+};
+
+const rejectWechatPrivacyAuthorization = () => {
+  const resolve = resolveWechatPrivacy;
+  resolveWechatPrivacy = null;
+  privacyDialogVisible.value = false;
+  resolve?.({ event: 'disagree' });
+  cameraReady.value = false;
+  cameraError.value = t('interviewRoom.cameraNotEnabled');
+};
+
+const openWechatPrivacyContract = () => {
+  const wxApi = (globalThis as any).wx;
+  if (typeof wxApi.openPrivacyContract !== 'function') {
+    showToast('请在微信中查看小程序隐私保护指引', 'info');
+    return;
+  }
+  wxApi.openPrivacyContract({
+    fail: () => showToast('暂时无法打开隐私保护指引', 'error'),
+  });
+};
+
+const authorizeCamera = () => {
   uni.authorize({
     scope: 'scope.camera',
     success: () => {
@@ -357,6 +518,37 @@ const requestCamera = () => {
     fail: () => {
       cameraReady.value = false;
       cameraError.value = t('interviewRoom.cameraNotEnabled');
+    },
+  });
+};
+
+const requestCamera = (interactive: boolean | unknown = true) => {
+  uni.getSetting({
+    success: (settings) => {
+      const cameraSetting = settings.authSetting?.['scope.camera'];
+      if (cameraSetting === true) {
+        cameraReady.value = true;
+        cameraError.value = '';
+        startBodyLanguageCapture();
+        return;
+      }
+      cameraReady.value = false;
+      cameraError.value = t('interviewRoom.cameraNotEnabled');
+      if (interactive === false) return;
+      if (cameraSetting === false) {
+        openPermissionSettings('scope.camera', () => {
+          cameraReady.value = true;
+          cameraError.value = '';
+          startBodyLanguageCapture();
+        });
+        return;
+      }
+      authorizeCamera();
+    },
+    fail: () => {
+      cameraReady.value = false;
+      cameraError.value = t('interviewRoom.cameraNotEnabled');
+      if (interactive !== false) authorizeCamera();
     },
   });
 };
@@ -376,34 +568,51 @@ const onCameraError = (e: any) => {
 const startBodyLanguageCapture = () => {
   if (bodyLangTimer || !interviewId.value) return;
   bodyLangTimer = setInterval(() => {
-    if (!cameraReady.value) return;
+    if (!cameraReady.value || bodyFrameInFlight) return;
     // Only capture while the candidate is actively answering. While the AI is
     // talking the camera shows the candidate listening, which is less useful
     // for body-language scoring and wastes bandwidth.
     if (!isRecording.value) return;
+    bodyFrameInFlight = true;
+    const releaseFrame = () => {
+      bodyFrameInFlight = false;
+    };
     try {
       const ctx = uni.createCameraContext();
       ctx.takePhoto({
         quality: 'low',
         success: (res: any) => {
+          if (!pageActive || !isRecording.value) {
+            releaseFrame();
+            return;
+          }
           const fp = res?.tempImagePath;
-          if (!fp) return;
+          if (!fp) {
+            releaseFrame();
+            return;
+          }
           // @ts-ignore mini-program global
           wx.getFileSystemManager().readFile({
             filePath: fp,
             encoding: 'base64',
             success: (r: any) => {
-              if (!r?.data) return;
-              submitBodyLanguageFrameApi(interviewId.value, r.data).catch(() => {});
+              if (!pageActive || !isRecording.value || !r?.data) {
+                releaseFrame();
+                return;
+              }
+              submitBodyLanguageFrameApi(interviewId.value, r.data)
+                .catch(() => {})
+                .finally(releaseFrame);
             },
-            fail: () => {},
+            fail: releaseFrame,
           });
         },
-        fail: () => {},
+        fail: releaseFrame,
       });
     } catch {
       // Some emulators throw on createCameraContext when the camera component
       // isn't mounted yet — try again on the next tick.
+      releaseFrame();
     }
   }, BODY_LANG_INTERVAL_MS);
 };
@@ -419,8 +628,28 @@ const stopBodyLanguageCapture = () => {
 // ───────────────────────── Recording flow ─────────────────────────
 const onPressStart = () => {
   if (aiTalking.value || isThinking.value || isRecording.value) return;
+  pressHeld = true;
   if (!recorderManager) initRecorder();
 
+  // #ifdef MP-WEIXIN
+  uni.getSetting({
+    success: (settings) => {
+      if (settings.authSetting?.['scope.record'] === false) {
+        openPermissionSettings('scope.record', beginRecording);
+        return;
+      }
+      beginRecording();
+    },
+    fail: beginRecording,
+  });
+  // #endif
+  // #ifndef MP-WEIXIN
+  beginRecording();
+  // #endif
+};
+
+const beginRecording = () => {
+  if (!pageActive || !pressHeld || aiTalking.value || isThinking.value || isRecording.value) return;
   // mp3 + 16 kHz + mono matches what Paraformer-realtime-v2 wants and
   // keeps the upload small (~24 KB / sec) so even a 4G network gets the
   // payload to us inside 1s for a typical 15-second answer.
@@ -434,10 +663,12 @@ const onPressStart = () => {
 };
 
 const onPressEnd = () => {
+  pressHeld = false;
   if (!isRecording.value) return;
   if (recordSeconds.value < 1) {
     // Treat "tap" as cancel rather than send — avoids surprising the user
     // with garbage transcripts after an accidental tap.
+    discardStoppedRecording = true;
     try { recorderManager?.stop(); } catch {}
     cleanupRecording();
     showToast(t('interviewRoom.recordingTooShort'), 'info');
@@ -462,28 +693,39 @@ const cleanupRecording = () => {
 
 // ───────────────────────── Network ─────────────────────────
 const fetchAndPlayGreeting = async () => {
+  const generation = ++operationGeneration;
   isThinking.value = true;
   try {
     const res = await voiceGreetingApi(interviewId.value, interviewLang);
+    if (!pageActive || generation !== operationGeneration) return;
     applyVoiceResponse(res);
   } catch (e: any) {
+    if (!pageActive || generation !== operationGeneration) return;
     lastAiText.value = t('interviewRoom.voiceFallback');
     showToast(e?.message || t('interviewRoom.greetingFailed'), 'error');
   } finally {
-    isThinking.value = false;
+    if (pageActive && generation === operationGeneration) {
+      isThinking.value = false;
+    }
   }
 };
 
 const sendVoiceTurn = async (filePath: string) => {
+  if (isThinking.value || !pageActive) return;
+  const generation = ++operationGeneration;
   isThinking.value = true;
   try {
     const res = await voiceTurnApi(interviewId.value, filePath, 'mp3', interviewLang);
+    if (!pageActive || generation !== operationGeneration) return;
     applyVoiceResponse(res);
   } catch (e: any) {
+    if (!pageActive || generation !== operationGeneration) return;
     lastAiText.value = t('interviewRoom.voiceFallback');
     showToast(e?.message || t('interviewRoom.voiceTurnFailed'), 'error');
   } finally {
-    isThinking.value = false;
+    if (pageActive && generation === operationGeneration) {
+      isThinking.value = false;
+    }
   }
 };
 
@@ -510,14 +752,22 @@ const replayAudio = () => {
 
 // ───────────────────────── Exit / End ─────────────────────────
 const confirmExit = () => {
+  if (isInteractionBusy()) return;
   uni.showModal({
     title: t('interviewRoom.leaveTitle'),
     content: t('interviewRoom.leaveContent'),
-    success: (m) => { if (m.confirm) uni.navigateBack(); },
+    success: (m) => {
+      if (!m.confirm) return;
+      stopAiAudio();
+      allowNextBack = true;
+      uni.navigateBack();
+    },
   });
 };
 
 const endInterview = () => {
+  if (ending.value || isInteractionBusy()) return;
+  stopAiAudio();
   // No transcribed answer yet — the report endpoint can't evaluate, so route
   // the candidate back to history with an explanation instead of letting the
   // backend reject the report request with a raw error.
@@ -530,13 +780,14 @@ const endInterview = () => {
       confirmColor: '#ef4444',
       success: async (m) => {
         if (!m.confirm) return;
+        ending.value = true;
         try {
           await endInterviewApi(interviewId.value);
-        } catch {
-          // Best-effort — even if the state flip fails, we still want to leave
-          // the room so the candidate isn't stuck on a dead session.
+          uni.redirectTo({ url: '/pages/interview/history' });
+        } catch (e: any) {
+          ending.value = false;
+          showToast(e?.message || t('interviewRoom.endFailed'), 'error');
         }
-        uni.redirectTo({ url: '/pages/interview/history' });
       },
     });
     return;
@@ -548,6 +799,7 @@ const endInterview = () => {
     confirmColor: '#ef4444',
     success: async (m) => {
       if (!m.confirm) return;
+      ending.value = true;
       try {
         await endInterviewApi(interviewId.value);
         // Mirror the text-mode flow: toast + brief delay before the redirect.
@@ -559,6 +811,7 @@ const endInterview = () => {
           uni.redirectTo({ url: `/pages/interview/report?interviewId=${interviewId.value}` });
         }, 800);
       } catch (e: any) {
+        ending.value = false;
         showToast(e?.message || t('interviewRoom.endFailed'), 'error');
       }
     },
@@ -566,8 +819,59 @@ const endInterview = () => {
 };
 
 const switchToTextMode = () => {
+  if (ending.value || isInteractionBusy()) return;
+  stopAiAudio();
   uni.redirectTo({ url: `/pages/interview/chat?interviewId=${interviewId.value}` });
 };
+
+const isInteractionBusy = () => {
+  if (!isRecording.value && !isThinking.value && !ending.value) return false;
+  showToast(isRecording.value
+    ? t('interviewRoom.statusListening')
+    : t('interviewRoom.statusThinking'), 'info');
+  return true;
+};
+
+const stopAiAudio = () => {
+  if (!innerAudio) return;
+  try { innerAudio.stop(); } catch {}
+  aiTalking.value = false;
+};
+
+const openPermissionSettings = (
+  scope: 'scope.camera' | 'scope.record',
+  onGranted: () => void,
+) => {
+  const isCamera = scope === 'scope.camera';
+  uni.showModal({
+    title: isCamera
+      ? t('interviewRoom.cameraNotEnabled')
+      : t('interviewRoom.recorderError'),
+    content: isCamera
+      ? t('interviewRoom.cameraFailed')
+      : t('interviewRoom.recorderError'),
+    confirmText: interviewLang === 'en' ? 'Settings' : '去设置',
+    success: (modal) => {
+      if (!modal.confirm) return;
+      uni.openSetting({
+        success: (settings) => {
+          if (settings.authSetting?.[scope]) {
+            onGranted();
+          }
+        },
+      });
+    },
+  });
+};
+
+onBackPress(() => {
+  if (allowNextBack) {
+    allowNextBack = false;
+    return false;
+  }
+  confirmExit();
+  return true;
+});
 
 // ───────────────────────── Toast ─────────────────────────
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -879,5 +1183,207 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 }
 .end-btn-bottom:active { background: rgba(239, 68, 68, 1); }
 .end-btn-bottom-text { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+
+/* Competition visual system: an ink-toned focus room with restrained accents. */
+.room-page {
+  background: #242320;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.top-bar {
+  border-bottom: 1px solid rgba(250, 249, 246, 0.12);
+}
+
+.back-btn {
+  border-radius: 6px;
+  background: rgba(250, 249, 246, 0.08);
+  border: 1px solid rgba(250, 249, 246, 0.16);
+}
+
+.top-title,
+.camera-caption-main,
+.status-role {
+  color: #faf9f6;
+  font-family: "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.top-sub,
+.camera-caption-sub,
+.status-text {
+  color: rgba(250, 249, 246, 0.62);
+}
+
+.camera-stage {
+  background: #1c1b19;
+  border: 1px solid rgba(224, 223, 219, 0.24);
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+.camera-pip-fallback {
+  background: #1c1b19;
+}
+
+.camera-enable-btn {
+  background: #c23b22;
+  border-radius: 4px;
+}
+
+.avatar-halo {
+  background: radial-gradient(circle, rgba(63, 81, 181, 0.34) 0%, transparent 70%);
+}
+
+.avatar-face {
+  background: #3f51b5;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.avatar-status,
+.caption-card {
+  background: rgba(250, 249, 246, 0.06);
+  border: 1px solid rgba(224, 223, 219, 0.16);
+  border-radius: 6px;
+}
+
+.caption-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.caption-tag,
+.caption-replay,
+.hint,
+.text-mode-btn,
+.end-btn-bottom {
+  border-radius: 4px;
+}
+
+.tag-ai {
+  color: #bfc5ee;
+  background: rgba(63, 81, 181, 0.26);
+}
+
+.tag-user {
+  color: #efb3a7;
+  background: rgba(194, 59, 34, 0.22);
+}
+
+.record-btn,
+.record-btn.is-recording {
+  background: #c23b22;
+  box-shadow: 0 8px 24px rgba(194, 59, 34, 0.24);
+}
+
+.record-btn.is-disabled {
+  background: #5a5956;
+}
+
+.pulse-ring {
+  border-color: rgba(194, 59, 34, 0.56);
+}
+
+.text-mode-btn {
+  background: rgba(250, 249, 246, 0.06);
+  border-color: rgba(224, 223, 219, 0.18);
+}
+
+.end-btn-bottom {
+  background: #c23b22;
+  border-color: #c23b22;
+}
+
+.end-btn-bottom:active {
+  background: #a8311d;
+}
+
+.privacy-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  background: rgba(15, 15, 14, 0.7);
+}
+
+.privacy-dialog {
+  width: 100%;
+  max-width: 360px;
+  padding: 24px 20px 18px;
+  background: #faf9f6;
+  border: 1px solid #dedbd3;
+  border-radius: 8px;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.32);
+}
+
+.privacy-title {
+  display: block;
+  color: #22211f;
+  font-family: "Songti SC", STSong, serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.privacy-copy {
+  display: block;
+  margin-top: 14px;
+  color: #5f5d58;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.privacy-contract {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 5px;
+  color: #3f51b5;
+  font-size: 13px;
+}
+
+.privacy-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.privacy-reject,
+.privacy-agree {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 44px;
+}
+
+.privacy-reject {
+  color: #55534f;
+  background: #f0efeb;
+  border: 1px solid #dedbd3;
+}
+
+.privacy-agree {
+  color: #fff;
+  background: #c23b22;
+  border: 1px solid #c23b22;
+}
+
+.privacy-agree::after {
+  border: 0;
+}
 
 </style>

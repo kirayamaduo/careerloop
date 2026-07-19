@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="profile-page app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="profile-page app-soft-bg" :custom-class="['profile-page', themeClass, fontClass].join(' ')">
     <SlNavBar
       :title="t('agent.profile.title')"
       show-back
@@ -8,6 +8,18 @@
       :right-avoid-width="rightAvoidWidth"
     />
 
+    <view v-if="pageLoading" class="profile-state app-card-soft">
+      <view class="profile-state-spinner"></view>
+      <text class="profile-state-title">{{ t('agent.profile.loading') }}</text>
+    </view>
+    <view v-else-if="pageError" class="profile-state app-card-soft">
+      <text class="profile-state-title">{{ t('agent.profile.loadFailed') }}</text>
+      <text class="profile-state-desc">{{ pageError }}</text>
+      <view class="profile-state-retry" @click="loadProfilePage">
+        <text>{{ t('agent.profile.retry') }}</text>
+      </view>
+    </view>
+    <template v-else>
     <!-- completeness banner -->
     <view v-if="agentProfile" class="profile-banner">
       <view class="profile-banner-bar-wrap">
@@ -256,6 +268,7 @@
         <text class="profile-submit-text">{{ saving ? t('agent.profile.saving') : t('agent.profile.save') }}</text>
       </view>
     </view>
+    </template>
   </SlPage>
 </template>
 
@@ -276,6 +289,7 @@ import {
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import { isEditableProfileTagLabel } from '@/utils/profileTagFilters';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 
 const { t } = useI18n();
 const { themeClass, fontClass, refresh: refreshTheme } = useTheme();
@@ -286,6 +300,22 @@ const agentProfile = ref<AgentUserProfile | null>(null);
 const profileTagSummary = ref<UserProfileTagSummary | null>(null);
 const saving = ref(false);
 const savingTags = ref(false);
+const pageLoading = ref(true);
+const pageError = ref('');
+const profileReady = ref(false);
+let profileLoadInFlight = false;
+
+const ensurePageAuth = () => {
+  if (isRealUser()) return true;
+  profileReady.value = false;
+  pageLoading.value = false;
+  pageError.value = '';
+  return requireAuth({
+    redirect: 'reLaunch',
+    cancelBehavior: 'back',
+    message: '登录后才能查看和编辑你的求职画像。',
+  });
+};
 
 const form = ref<ProfileInputsRequest>({
   targetCity: '',
@@ -374,7 +404,7 @@ const targetConfidencePercent = computed(() => {
 });
 
 const targetRingStyle = computed(() => ({
-  background: `conic-gradient(#2563eb ${targetConfidencePercent.value * 3.6}deg, #e5e7eb 0deg)`,
+  background: `conic-gradient(#3f51b5 ${targetConfidencePercent.value * 3.6}deg, #e0dfdb 0deg)`,
 }));
 
 const targetRoleLabel = computed(() =>
@@ -423,6 +453,11 @@ const normalizeSkillLevel = (level: number | undefined) => {
 };
 
 const loadProfilePage = async () => {
+  if (!ensurePageAuth()) return;
+  if (profileLoadInFlight) return;
+  profileLoadInFlight = true;
+  pageLoading.value = true;
+  pageError.value = '';
   try {
     const [profile, tags, inputs] = await Promise.all([
       getAgentProfileApi(),
@@ -442,7 +477,14 @@ const loadProfilePage = async () => {
       considerStudyAbroad: inputs.considerStudyAbroad,
       careerGoalNote: inputs.careerGoalNote ?? '',
     };
-  } catch { /* ignore */ }
+    profileReady.value = true;
+  } catch (e: any) {
+    profileReady.value = false;
+    pageError.value = e?.message || t('agent.profile.loadFailed');
+  } finally {
+    profileLoadInFlight = false;
+    pageLoading.value = false;
+  }
 };
 
 onMounted(async () => {
@@ -456,7 +498,7 @@ onMounted(async () => {
 onShow(() => {
   refreshTheme();
   // 底部保存后 navigateBack 会触发 onShow；保存过程中不要重新拉标签覆盖草稿
-  if (!saving.value && !savingTags.value) {
+  if (!saving.value && !savingTags.value && profileReady.value) {
     loadProfilePage();
   }
 });
@@ -498,7 +540,8 @@ const buildManualTagsFromDrafts = () =>
   );
 
 const saveProfileTags = async () => {
-  if (savingTags.value) return;
+  if (!ensurePageAuth()) return;
+  if (savingTags.value || !profileReady.value) return;
   savingTags.value = true;
   try {
     const saved = await saveManualProfileTagsApi(buildManualTagsFromDrafts());
@@ -517,6 +560,8 @@ const saveProfileTags = async () => {
 };
 
 const refreshProfileTags = async () => {
+  if (!ensurePageAuth()) return;
+  if (!profileReady.value) return;
   try {
     const refreshed = await refreshProfileTagsApi();
     profileTagSummary.value = refreshed;
@@ -528,7 +573,8 @@ const refreshProfileTags = async () => {
 };
 
 const saveInputs = async () => {
-  if (saving.value) return;
+  if (!ensurePageAuth()) return;
+  if (saving.value || !profileReady.value) return;
   saving.value = true;
   try {
     const payload: ProfileInputsRequest = {};
@@ -906,4 +952,386 @@ const goBack = () => uni.navigateBack();
 }
 .profile-submit-loading { opacity: .65; }
 .profile-submit-text { font-size: 15px; font-weight: 700; color: #fff; }
+
+/* ── CareerLoop editorial skin ─────────────────────────────────────────── */
+.profile-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.profile-banner {
+  border: 1rpx solid #e0dfdb;
+  border-left: 5rpx solid #3f51b5;
+  border-radius: 12rpx;
+  background: #f5f5f0;
+  box-shadow: 0 12rpx 32rpx rgba(44, 43, 41, 0.05);
+}
+
+.profile-banner-bar-wrap {
+  background: #e0dfdb;
+}
+
+.profile-banner-label {
+  color: #5a5956;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.04em;
+}
+
+.pct-low { background: #8b8a86; }
+.pct-medium { background: #b8975a; }
+.pct-high { background: #7b8d6e; }
+
+.profile-section {
+  border: 1rpx solid #e0dfdb;
+  border-radius: 16rpx;
+  background: #fffdfa;
+  box-shadow: 0 12rpx 32rpx rgba(44, 43, 41, 0.05);
+}
+
+.profile-section-title,
+.profile-target-role,
+.profile-behavior-value {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.profile-section-title {
+  border-left-color: #c23b22;
+  font-size: 14px;
+}
+
+.profile-section-meta,
+.profile-target-source,
+.profile-behavior-label,
+.profile-label,
+.profile-skill-score {
+  color: #8b8a86;
+}
+
+.profile-target-panel,
+.profile-behavior-item {
+  border-color: #e0dfdb;
+  border-radius: 10rpx;
+  background: #f5f5f0;
+}
+
+.profile-target-label {
+  color: #3f51b5;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  letter-spacing: 0.05em;
+}
+
+.profile-target-role {
+  font-weight: 600;
+}
+
+.profile-score-ring-inner {
+  background: #fffdfa;
+}
+
+.profile-score-ring-value {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+}
+
+.profile-score-ring-unit,
+.profile-metric-label,
+.profile-signal-title {
+  color: #5a5956;
+}
+
+.profile-metric-value {
+  color: #2c2b29;
+}
+
+.profile-metric-bar,
+.profile-skill-bar {
+  border-radius: 2rpx;
+  background: #efeee9;
+}
+
+.profile-metric-fill,
+.profile-skill-fill {
+  border-radius: 2rpx;
+}
+
+.metric-strong { background: #7b8d6e; }
+.metric-steady { background: #3f51b5; }
+.metric-risk { background: #b8975a; }
+
+.profile-small-action,
+.profile-tag-add {
+  border: 1rpx solid rgba(63, 81, 181, 0.34);
+  border-radius: 6rpx;
+  background: #efeff7;
+}
+
+.profile-small-action-text,
+.profile-tag-add-text {
+  color: #3f51b5;
+  font-weight: 700;
+}
+
+.profile-signal-chip,
+.profile-edit-chip {
+  border: 1rpx solid #e0dfdb;
+  border-radius: 6rpx;
+  background: #f5f5f0;
+}
+
+.signal-high {
+  border-color: rgba(194, 59, 34, 0.34);
+  background: #f8ece8;
+}
+
+.signal-medium {
+  border-color: rgba(184, 151, 90, 0.38);
+  background: #f6f1e7;
+}
+
+.signal-low {
+  border-color: rgba(123, 141, 110, 0.38);
+  background: #eef1eb;
+}
+
+.profile-signal-chip-text,
+.profile-skill-name {
+  color: #2c2b29;
+}
+
+.profile-edit-chip-x {
+  color: #c23b22;
+}
+
+.profile-tags-save,
+.profile-submit-btn {
+  border-radius: 10rpx;
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.profile-tags-save-text,
+.profile-submit-text {
+  color: #fffdfa;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.profile-skill-fill {
+  background: #7b8d6e;
+}
+
+.profile-input,
+.profile-textarea {
+  border-color: #d8d6cf;
+  border-radius: 6rpx;
+  background: #faf9f6;
+  color: #2c2b29;
+}
+
+.profile-chip,
+.profile-toggle-btn {
+  border-color: #d8d6cf;
+  border-radius: 6rpx;
+  background: #faf9f6;
+}
+
+.profile-chip-active,
+.profile-toggle-active {
+  border-color: #c23b22;
+  background: #f8ece8;
+}
+
+.profile-chip-text,
+.profile-toggle-text {
+  color: #5a5956;
+}
+
+.profile-chip-active .profile-chip-text,
+.profile-toggle-active .profile-toggle-text {
+  color: #c23b22;
+}
+
+.profile-submit-wrap {
+  border-top-color: #e0dfdb;
+  background: rgba(250, 249, 246, 0.98);
+}
+
+.profile-page.is-dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.profile-page.is-dark .profile-banner,
+.profile-page.is-dark .profile-section {
+  border-color: #475569;
+  background: #1e293b;
+  box-shadow: none;
+}
+
+.profile-page.is-dark .profile-target-panel,
+.profile-page.is-dark .profile-behavior-item,
+.profile-page.is-dark .profile-score-ring-inner,
+.profile-page.is-dark .profile-signal-chip,
+.profile-page.is-dark .profile-edit-chip,
+.profile-page.is-dark .profile-input,
+.profile-page.is-dark .profile-textarea,
+.profile-page.is-dark .profile-chip,
+.profile-page.is-dark .profile-toggle-btn {
+  border-color: #475569;
+  background: #0f172a;
+}
+
+.profile-page.is-dark .profile-banner-bar-wrap,
+.profile-page.is-dark .profile-metric-bar,
+.profile-page.is-dark .profile-skill-bar {
+  background: #334155;
+}
+
+.profile-page.is-dark .profile-section-title,
+.profile-page.is-dark .profile-target-role,
+.profile-page.is-dark .profile-score-ring-value,
+.profile-page.is-dark .profile-metric-value,
+.profile-page.is-dark .profile-behavior-value,
+.profile-page.is-dark .profile-signal-chip-text,
+.profile-page.is-dark .profile-skill-name,
+.profile-page.is-dark .profile-input,
+.profile-page.is-dark .profile-textarea {
+  color: #f8fafc;
+}
+
+.profile-page.is-dark .profile-banner-label,
+.profile-page.is-dark .profile-section-meta,
+.profile-page.is-dark .profile-target-source,
+.profile-page.is-dark .profile-score-ring-unit,
+.profile-page.is-dark .profile-metric-label,
+.profile-page.is-dark .profile-behavior-label,
+.profile-page.is-dark .profile-signal-title,
+.profile-page.is-dark .profile-skill-score,
+.profile-page.is-dark .profile-label,
+.profile-page.is-dark .profile-chip-text,
+.profile-page.is-dark .profile-toggle-text {
+  color: #cbd5e1;
+}
+
+.profile-page.is-dark .profile-target-label,
+.profile-page.is-dark .profile-small-action-text,
+.profile-page.is-dark .profile-tag-add-text {
+  color: #aab3ea;
+}
+
+.profile-page.is-dark .profile-small-action,
+.profile-page.is-dark .profile-tag-add {
+  border-color: rgba(170, 179, 234, 0.46);
+  background: rgba(63, 81, 181, 0.22);
+}
+
+.profile-page.is-dark .signal-high {
+  border-color: rgba(226, 123, 102, 0.48);
+  background: rgba(194, 59, 34, 0.2);
+}
+
+.profile-page.is-dark .signal-medium {
+  border-color: rgba(223, 197, 143, 0.48);
+  background: rgba(184, 151, 90, 0.2);
+}
+
+.profile-page.is-dark .signal-low {
+  border-color: rgba(184, 198, 175, 0.48);
+  background: rgba(123, 141, 110, 0.2);
+}
+
+.profile-page.is-dark .profile-chip-active,
+.profile-page.is-dark .profile-toggle-active {
+  border-color: #e27b66;
+  background: rgba(194, 59, 34, 0.2);
+}
+
+.profile-page.is-dark .profile-chip-active .profile-chip-text,
+.profile-page.is-dark .profile-toggle-active .profile-toggle-text {
+  color: #e27b66;
+}
+
+.profile-page.is-dark .profile-submit-wrap {
+  border-top-color: #334155;
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.profile-target-label,
+.profile-score-ring-value,
+.profile-score-ring-unit,
+.profile-metric-label,
+.profile-metric-value,
+.profile-behavior-value,
+.profile-signal-title,
+.profile-signal-chip-text,
+.profile-small-action-text,
+.profile-tag-add-text,
+.profile-tags-save-text,
+.profile-skill-score,
+.profile-chip-active .profile-chip-text,
+.profile-toggle-active .profile-toggle-text {
+  font-weight: 600;
+}
+
+.profile-state {
+  margin: 32rpx 28rpx;
+  min-height: 280rpx;
+  padding: 40rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.profile-state-spinner {
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 20rpx;
+  border: 4rpx solid #e0dfdb;
+  border-top-color: #c23b22;
+  border-radius: 50%;
+  animation: profile-spin .8s linear infinite;
+}
+.profile-state-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.profile-state-desc {
+  margin-top: 12rpx;
+  color: #5a5956;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+.profile-state-retry {
+  min-width: 200rpx;
+  min-height: 88rpx;
+  margin-top: 28rpx;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10rpx;
+  color: #fff;
+  background: #c23b22;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.profile-tag-add {
+  min-width: 88rpx;
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-page.is-dark .profile-state-title { color: #f8fafc; }
+.profile-page.is-dark .profile-state-desc { color: #cbd5e1; }
+@keyframes profile-spin { to { transform: rotate(360deg); } }
 </style>

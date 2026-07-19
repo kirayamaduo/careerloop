@@ -1,5 +1,5 @@
 .theme-green {
-  background-color: #f0fdf4 !important;
+  background-color: #f4f5f0 !important;
 }
 .theme-green .ui-card,
 .theme-green .card,
@@ -13,28 +13,28 @@
 .theme-green .sl-modal__panel,
 .theme-green .sl-sheet__item,
 .theme-green .sl-sheet__cancel {
-  background: #ffffff !important;
-  border-color: #bbf7d0 !important;
+  background: #fffdfa !important;
+  border-color: #cad1c4 !important;
   box-shadow: var(--shadow-xs) !important;
 }
 .theme-green .ui-list-item,
 .theme-green .list-item,
 .theme-green .item {
-  border-color: #bbf7d0;
+  border-color: #cad1c4;
 }
 .theme-green .ui-btn-primary,
 .theme-green .btn-primary,
 .theme-green .btn-send,
 .theme-green .sl-button--primary {
-  background: #059669 !important;
+  background: #596c50 !important;
   box-shadow: var(--shadow-sm) !important;
 }
 .theme-green .ui-input,
 .theme-green .input,
 .theme-green textarea.ui-input,
 .theme-green .sl-input {
-  border-color: #bbf7d0 !important;
-  background: #f0fdf4 !important;
+  border-color: #cad1c4 !important;
+  background: #eef1eb !important;
 }
 
 .font-compact {
@@ -54,11 +54,10 @@
   --font-micro:   15px;
 }
 
-.font-compact text,
 .font-compact input,
 .font-compact textarea,
 .font-compact button {
-  font-size: 12px !important;
+  font-size: var(--font-body) !important;
 }
 .font-compact .page-title,
 .font-compact .greeting-title,
@@ -72,11 +71,10 @@
 .font-compact .nav-title {
   font-size: 16px !important;
 }
-.font-large text,
 .font-large input,
 .font-large textarea,
 .font-large button {
-  font-size: 17px !important;
+  font-size: var(--font-body) !important;
 }
 .font-large .page-title,
 .font-large .greeting-title,
@@ -89,6 +87,23 @@
 .font-large .card-title,
 .font-large .nav-title {
   font-size: 22px !important;
+}
+
+.font-compact .page-subtitle,
+.font-compact .section-meta,
+.font-compact .caption,
+.font-compact .desc,
+.font-compact .menu-text,
+.font-compact .field-label,
+.font-compact .body-text,
+.font-large .page-subtitle,
+.font-large .section-meta,
+.font-large .caption,
+.font-large .desc,
+.font-large .menu-text,
+.font-large .field-label,
+.font-large .body-text {
+  font-size: var(--font-body) !important;
 }
 
 .is-dark,
@@ -119,7 +134,7 @@
   color: #e2e8f0;
 }
 .is-dark text {
-  color: #e2e8f0 !important;
+  color: inherit;
 }
 .is-dark .app-surface,
 .is-dark .ui-card,
@@ -342,3 +357,8 @@
 .is-dark .app-icon-tile--candy  { background: rgba(236,72,153,0.15) !important; }
 .is-dark .app-icon-tile--success { background: rgba(16,185,129,0.15) !important; }
 .is-dark .app-icon-tile--warning { background: rgba(245,158,11,0.15) !important; }
+
+.is-dark .sl-sheet__item.sl-sheet__item--active {
+  background: rgba(63, 81, 181, 0.28) !important;
+  border-color: rgba(170, 179, 234, 0.58) !important;
+}

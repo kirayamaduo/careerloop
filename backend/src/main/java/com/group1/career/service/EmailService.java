@@ -7,6 +7,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -20,10 +21,9 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromAddress;
 
-    @Value("${alert.email:3218778592@qq.com}")
+    @Value("${alert.email:}")
     private String alertEmail;
 
-    @Async
     public void sendVerificationCode(String toEmail, String code, String purpose) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -46,9 +46,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             mailSender.send(message);
-            log.info("Verification email sent to: {}", toEmail);
+            log.info("Verification email sent to: {}", maskEmail(toEmail));
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+            log.error("Failed to send email to {}: {}", maskEmail(toEmail), e.getMessage());
             throw new RuntimeException("Failed to send verification email");
         }
     }
@@ -56,6 +56,10 @@ public class EmailService {
     /** F26: Notify admin email when a new user feedback is submitted. Best-effort. */
     @Async
     public void sendFeedbackAlert(Long feedbackId, String category, String userIdStr, String content, String contact) {
+        if (alertEmail == null || alertEmail.isBlank()) {
+            log.debug("[feedback] alert email is not configured; skipping feedback#{}", feedbackId);
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -72,11 +76,11 @@ public class EmailService {
                       %s
                     </div>
                     """.formatted(
-                    feedbackId, category,
-                    userIdStr != null ? "user#" + userIdStr : "匿名",
-                    content,
+                    feedbackId, escape(category),
+                    userIdStr != null ? "user#" + escape(userIdStr) : "匿名",
+                    escape(content),
                     contact != null && !contact.isBlank()
-                            ? "<p style='color:#475569;font-size:13px;'>联系方式：" + contact + "</p>"
+                            ? "<p style='color:#475569;font-size:13px;'>联系方式：" + escape(contact) + "</p>"
                             : "");
             helper.setText(html, true);
             mailSender.send(message);
@@ -84,6 +88,17 @@ public class EmailService {
         } catch (Exception e) {
             log.warn("[feedback] failed to send alert email: {}", e.getMessage());
         }
+    }
+
+    private String escape(String value) {
+        return HtmlUtils.htmlEscape(value == null ? "" : value);
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || email.isBlank()) return "***";
+        int at = email.indexOf('@');
+        if (at <= 1) return "***" + (at >= 0 ? email.substring(at) : "");
+        return email.charAt(0) + "***" + email.substring(at);
     }
 
     private String buildVerificationEmail(String code, String action, int expireMinutes) {

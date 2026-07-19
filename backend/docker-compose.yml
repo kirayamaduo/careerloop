@@ -17,7 +17,8 @@ services:
     expose:
       - "3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      # Keep the password out of the mysqladmin process arguments.
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_ROOT_PASSWORD}\" mysqladmin ping -h 127.0.0.1 -u root"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,17 +36,29 @@ services:
     image: redis:7-alpine
     container_name: careerloop-redis
     restart: unless-stopped
-    command: >
-      redis-server
-      --maxmemory 128mb
-      --maxmemory-policy allkeys-lru
-      --save 900 1 --save 300 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    command:
+      - /bin/sh
+      - -c
+      - >
+        exec redis-server
+        --maxmemory 128mb
+        --maxmemory-policy allkeys-lru
+        --save 900 1 --save 300 10
+        $${REDIS_PASSWORD:+--requirepass "$${REDIS_PASSWORD}"}
     volumes:
       - redis_data:/data
     expose:
       - "6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        - CMD-SHELL
+        - >
+          if [ -n "$$REDIS_PASSWORD" ];
+          then REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli --no-auth-warning ping;
+          else redis-cli ping;
+          fi
       interval: 10s
       timeout: 3s
       retries: 5
@@ -67,7 +80,9 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     env_file:
-      - .env.prod
+      # Defaults to the real production file. APP_ENV_FILE lets CI validate
+      # the template without creating a misleading local `.env.prod`.
+      - ${APP_ENV_FILE:-.env.prod}
     environment:
       SPRING_PROFILES_ACTIVE: prod
       # The Spring app talks to the sidecar over the docker-compose network
@@ -76,7 +91,7 @@ services:
       BODY_LANG_SIDECAR_URL: ${BODY_LANG_SIDECAR_URL:-http://body-lang:8001}
       MYSQL_HOST: mysql
       REDIS_HOST: redis
-      SPRING_FLYWAY_OUT_OF_ORDER: "true"
+      SPRING_FLYWAY_OUT_OF_ORDER: ${SPRING_FLYWAY_OUT_OF_ORDER:-false}
     depends_on:
       mysql:
         condition: service_healthy

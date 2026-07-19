@@ -18,61 +18,152 @@ export const GUEST_USER_ID = -1;
 
 export const isGuest = (): boolean => {
   const userId = Number(uni.getStorageSync('userId'));
-  return uni.getStorageSync('isGuest') === true && userId === GUEST_USER_ID;
+  const guestFlag = uni.getStorageSync('isGuest');
+  return (guestFlag === true || guestFlag === '1') && userId === GUEST_USER_ID;
 };
 
 export const isLoggedIn = (): boolean => {
-  const userId = uni.getStorageSync('userId');
-  if (!userId) return false;
-  // Guests count as "logged in" for navigation purposes only — see requireAuth.
-  if (Number(userId) === GUEST_USER_ID) return true;
-  return Number(userId) > 0;
+  return isRealUser() || isGuest();
 };
 
 /** Real account check — false for guest sessions. */
 export const isRealUser = (): boolean => {
-  const userId = uni.getStorageSync('userId');
-  if (!userId) return false;
-  return Number(userId) > 0 && !isGuest();
+  const userId = Number(uni.getStorageSync('userId'));
+  const token = String(uni.getStorageSync('token') || '').trim();
+  return Number.isInteger(userId) && userId > 0 && !!token && !isGuest();
+};
+
+const ACCOUNT_SCOPED_ONBOARDING_KEYS = [
+  'onboarding_v1_seen',
+  'career_onboarding_setup',
+  'career_onboarding_pending',
+] as const;
+
+const getStoredOwnerId = (key: typeof ACCOUNT_SCOPED_ONBOARDING_KEYS[number]) => {
+  const value = uni.getStorageSync(key);
+  if (!value || typeof value !== 'object') return NaN;
+  return Number((value as { userId?: number }).userId);
+};
+
+const removeCurrentAccountOnboardingState = () => {
+  const currentUserId = Number(uni.getStorageSync('userId'));
+  ACCOUNT_SCOPED_ONBOARDING_KEYS.forEach((key) => {
+    const ownerId = getStoredOwnerId(key);
+    if (!Number.isInteger(ownerId)
+        || ownerId <= 0
+        || !Number.isInteger(currentUserId)
+        || currentUserId <= 0
+        || ownerId === currentUserId) {
+      uni.removeStorageSync(key);
+    }
+  });
+};
+
+/**
+ * Preserve only records explicitly bound to an account.
+ * Readers also verify `userId`, so another account can never consume them.
+ * Legacy/unbound records are removed instead of being carried across sessions.
+ */
+const retainOwnedOnboardingState = () => {
+  ACCOUNT_SCOPED_ONBOARDING_KEYS.forEach((key) => {
+    const ownerId = getStoredOwnerId(key);
+    if (!Number.isInteger(ownerId) || ownerId <= 0) {
+      uni.removeStorageSync(key);
+    }
+  });
 };
 
 export const enterGuestMode = () => {
+  retainOwnedOnboardingState();
   uni.removeStorageSync('token');
   uni.setStorageSync('userId', GUEST_USER_ID);
   uni.setStorageSync('isGuest', true);
-  uni.setStorageSync('userInfo', { nickname: 'Guest', avatarUrl: '' });
+  uni.setStorageSync('userInfo', { nickname: '游客预览', avatarUrl: '', isGuest: true });
 };
 
-export const clearAuthState = () => {
+export type ClearAuthStateOptions = {
+  /**
+   * Account deletion is the only normal flow that should destroy local setup
+   * drafts. Logout and an expired token preserve safely account-bound drafts.
+   */
+  purgeAccountDrafts?: boolean;
+};
+
+export const clearAuthState = (options: ClearAuthStateOptions = {}) => {
+  if (options.purgeAccountDrafts) {
+    removeCurrentAccountOnboardingState();
+  } else {
+    retainOwnedOnboardingState();
+  }
   uni.removeStorageSync('token');
   uni.removeStorageSync('userId');
   uni.removeStorageSync('userInfo');
   uni.removeStorageSync('isGuest');
-  uni.removeStorageSync('onboarding_v1_seen');
-  uni.removeStorageSync('career_onboarding_setup');
-  uni.removeStorageSync('career_onboarding_pending');
 };
+
+export type RequireAuthOptions = {
+  /** How to open the login page after confirmation. */
+  redirect?: 'reLaunch' | 'navigateTo';
+  /** Optional feature-specific explanation shown in the login prompt. */
+  message?: string;
+  /** Protected standalone pages return to the previous/public page on cancel. */
+  cancelBehavior?: 'stay' | 'back';
+};
+
+let authPromptOpen = false;
 
 /**
  * Gate a feature that needs a real account (interview start, resume upload,
- * notification mark-as-read, etc.). Guests are nudged to upgrade rather
- * than silently failing on a 401.
+ * assessment submission, etc.). The prompt happens before the user invests
+ * effort, and navigation only occurs after an explicit confirmation.
+ *
+ * The string form remains supported for older call sites.
  */
-export const requireAuth = (redirectType: 'reLaunch' | 'navigateTo' = 'reLaunch'): boolean => {
+export const requireAuth = (
+  options: RequireAuthOptions | 'reLaunch' | 'navigateTo' = {},
+): boolean => {
   if (isRealUser()) return true;
 
-  uni.showToast({
-    title: isGuest() ? 'Please sign in to use this feature' : 'Please sign in to continue',
-    icon: 'none',
-  });
+  if (authPromptOpen) return false;
+  authPromptOpen = true;
 
-  setTimeout(() => {
-    if (redirectType === 'navigateTo') {
-      uni.navigateTo({ url: LOGIN_PAGE });
-    } else {
-      uni.reLaunch({ url: LOGIN_PAGE });
-    }
-  }, 250);
+  const normalized: RequireAuthOptions = typeof options === 'string'
+    ? { redirect: options }
+    : options;
+  const redirect = normalized.redirect || 'navigateTo';
+  const cancelBehavior = normalized.cancelBehavior || 'stay';
+  const content = normalized.message
+    || (isGuest()
+      ? '当前为游客预览。登录后即可保存进度并使用完整功能。'
+      : '登录后即可使用此功能并保存你的进度。');
+
+  uni.showModal({
+    title: '登录后使用',
+    content,
+    confirmText: '去登录',
+    cancelText: cancelBehavior === 'back' ? '返回' : '继续预览',
+    success: (result) => {
+      if (!result.confirm) {
+        if (cancelBehavior === 'back') {
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            uni.navigateBack();
+          } else {
+            uni.switchTab({ url: '/pages/home/index' });
+          }
+        }
+        return;
+      }
+      if (redirect === 'reLaunch') {
+        uni.reLaunch({ url: LOGIN_PAGE });
+      } else {
+        uni.navigateTo({ url: LOGIN_PAGE });
+      }
+    },
+    complete: () => {
+      authPromptOpen = false;
+    },
+  });
 
   return false;
 };

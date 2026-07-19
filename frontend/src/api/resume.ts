@@ -13,7 +13,7 @@ export interface ResumeDetail {
 /**
  * Resume Interface (Main Entity in MySQL)
  *
- * `fileUrl` is now an OSS object key (e.g. `resumes/uuid.pdf`); never feed it
+ * `fileUrl` is now a per-account OSS object key (e.g. `resumes/42/uuid.pdf`); never feed it
  * directly to <image>/<a>. Use `fileViewUrl` (a short-lived presigned URL the
  * backend hydrates on every read) for previews and downloads.
  */
@@ -22,7 +22,7 @@ export interface Resume {
   userId: number;
   title: string;
   targetJob: string;
-  /** OSS object key (e.g. `resumes/uuid.pdf`). Not directly loadable. */
+  /** Per-account OSS object key (e.g. `resumes/42/uuid.pdf`). Not directly loadable. */
   fileUrl: string;
   /** Short-lived signed URL — present on responses, never sent on requests. */
   fileViewUrl?: string;
@@ -172,7 +172,7 @@ export const tailorResumeApi = (data: { userId: number; resumeId: number; jobDes
 
 /**
  * Upload a PDF resume file directly to backend (which forwards to Aliyun OSS).
- * Resolves with the OSS object key (e.g. `resumes/uuid.pdf`) — store this in
+ * Resolves with a per-account OSS object key (e.g. `resumes/42/uuid.pdf`) — store this in
  * `Resume.fileUrl`. Use the entity's `fileViewUrl` for browser display.
  */
 export const uploadResumeFile = (filePath: string, folder: string = 'resumes'): Promise<string> => {
@@ -183,4 +183,3 @@ export const uploadResumeFile = (filePath: string, folder: string = 'resumes'): 
     formData: { folder },
   });
 };
-

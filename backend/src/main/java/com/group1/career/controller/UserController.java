@@ -10,6 +10,7 @@ import com.group1.career.service.UserProfileSnapshotService;
 import com.group1.career.service.UserProfileTagService;
 import com.group1.career.service.UserService;
 import com.group1.career.utils.SecurityUtil;
+import com.group1.career.utils.UserObjectKeyPolicy;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,6 +38,10 @@ public class UserController {
     @Operation(summary = "Get user profile (presigned avatar URL hydrated)")
     @GetMapping("/{id}")
     public Result<User> getUser(@PathVariable Long id) {
+        Long uid = SecurityUtil.requireCurrentUserId();
+        if (!uid.equals(id)) {
+            throw new BizException(com.group1.career.common.ErrorCode.FORBIDDEN);
+        }
         return Result.success(userService.hydrateUrl(userService.getUserById(id)));
     }
 
@@ -57,16 +62,28 @@ public class UserController {
         if (!uid.equals(id)) {
             throw new BizException(com.group1.career.common.ErrorCode.FORBIDDEN);
         }
+        String schoolPatch = trimIfPresent(dto.getSchool());
+        String majorPatch = trimIfPresent(dto.getMajor());
+        String avatarPatch = dto.getAvatarUrl() == null
+                ? null
+                : UserObjectKeyPolicy.requireOwnedKey(uid, "avatars", dto.getAvatarUrl());
+        boolean clearGraduationYear = Boolean.TRUE.equals(dto.getClearGraduationYear());
         User updated = userService.updateUser(
-                id, dto.getNickname(), dto.getAvatarUrl(),
-                dto.getSchool(), dto.getMajor(), dto.getGraduationYear());
-        if (dto.getSchool() != null || dto.getMajor() != null || dto.getGraduationYear() != null) {
+                id, dto.getNickname(), avatarPatch,
+                schoolPatch, majorPatch, dto.getGraduationYear(),
+                clearGraduationYear);
+        if (dto.getSchool() != null || dto.getMajor() != null
+                || dto.getGraduationYear() != null
+                || clearGraduationYear) {
             snapshotService.mergeOnboarding(uid, UserProfileSnapshot.OnboardingBlock.builder()
                     .education(UserProfileSnapshot.EducationBlock.builder()
-                            .school(blankToNull(dto.getSchool()))
-                            .major(blankToNull(dto.getMajor()))
-                            .graduationYear(dto.getGraduationYear() != null
-                                    ? String.valueOf(dto.getGraduationYear()) : null)
+                            .school(schoolPatch)
+                            .major(majorPatch)
+                            .graduationYear(clearGraduationYear
+                                    ? ""
+                                    : dto.getGraduationYear() != null
+                                            ? String.valueOf(dto.getGraduationYear())
+                                            : null)
                             .build())
                     .build());
             tagService.refreshFromSignals(uid);
@@ -113,6 +130,7 @@ public class UserController {
     @PutMapping("/me/profile-snapshot/onboarding")
     public Result<UserProfileSnapshot> updateOnboarding(@RequestBody UpdateOnboardingDto dto) {
         Long uid = SecurityUtil.requireCurrentUserId();
+        UserProfileSnapshot.EducationBlock educationPatch = normalizeEducation(dto.getEducation());
         snapshotService.mergeOnboarding(uid, UserProfileSnapshot.OnboardingBlock.builder()
                 .identityType(dto.getIdentityType())
                 .stage(dto.getStage())
@@ -120,7 +138,7 @@ public class UserController {
                 .hasResume(dto.getHasResume())
                 .resumeStatus(dto.getResumeStatus())
                 .timeline(dto.getTimeline())
-                .education(dto.getEducation())
+                .education(educationPatch)
                 .weeklyAvailability(dto.getWeeklyAvailability())
                 .priorityHelp(dto.getPriorityHelp())
                 .recommendedEntry(dto.getRecommendedEntry())
@@ -135,10 +153,11 @@ public class UserController {
                 careerPlanService.regenerateWithRoleAsync(uid, dto.getTargetRole());
             }
         }
-        if (dto.getEducation() != null) {
-            UserProfileSnapshot.EducationBlock edu = dto.getEducation();
-            userService.updateUser(uid, null, null, blankToNull(edu.getSchool()), blankToNull(edu.getMajor()),
-                    parseYear(edu.getGraduationYear()));
+        if (educationPatch != null) {
+            String graduationYear = educationPatch.getGraduationYear();
+            boolean clearGraduationYear = graduationYear != null && graduationYear.isEmpty();
+            userService.updateUser(uid, null, null, educationPatch.getSchool(), educationPatch.getMajor(),
+                    parseYear(graduationYear), clearGraduationYear);
         }
         agentProfileService.refresh(uid);
         tagService.refreshFromSignals(uid);
@@ -155,7 +174,10 @@ public class UserController {
     public Result<String> requestDeletion(HttpServletRequest request) {
         Long uid = SecurityUtil.requireCurrentUserId();
         userService.requestDeletion(uid, hashIp(request.getRemoteAddr()));
-        return Result.success("Account deletion scheduled. You have 30 days to cancel.");
+        return Result.success(
+                "Account deletion scheduled. You can cancel within 30 days. " +
+                "After that, personal data and linked files are permanently erased; " +
+                "only a minimal anonymized audit record is retained.");
     }
 
     /**
@@ -179,8 +201,19 @@ public class UserController {
         }
     }
 
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+    private static String trimIfPresent(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private static UserProfileSnapshot.EducationBlock normalizeEducation(
+            UserProfileSnapshot.EducationBlock education) {
+        if (education == null) return null;
+        return UserProfileSnapshot.EducationBlock.builder()
+                .school(trimIfPresent(education.getSchool()))
+                .major(trimIfPresent(education.getMajor()))
+                .degree(trimIfPresent(education.getDegree()))
+                .graduationYear(trimIfPresent(education.getGraduationYear()))
+                .build();
     }
 
     private static Integer parseYear(String value) {
@@ -201,6 +234,8 @@ public class UserController {
         private String school;
         private String major;
         private Integer graduationYear;
+        /** Distinguishes an explicit clear from an omitted nullable field. */
+        private Boolean clearGraduationYear;
     }
 
     @Data

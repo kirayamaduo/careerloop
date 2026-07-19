@@ -4,7 +4,7 @@ export interface User {
   userId?: number;
   nickname: string;
   /**
-   * OSS object key (e.g. `avatars/uuid.jpg`). Not loadable directly — use
+   * Per-account OSS object key (e.g. `avatars/42/uuid.jpg`). Not loadable directly — use
    * `avatarViewUrl` for display.
    */
   avatarUrl?: string;
@@ -38,6 +38,8 @@ export interface LoginDTO {
 export interface LoginResponse {
   token: string;
   user: User;
+  /** Present and true when login cancelled a pending account deletion. */
+  accountRestored?: boolean;
 }
 
 export const registerApi = (data: RegisterDTO) => {
@@ -103,6 +105,24 @@ export const resetPasswordApi = (data: { email: string; code: string; newPasswor
   });
 };
 
+/** Change the signed-in user's password and revoke all existing sessions. */
+export const changePasswordApi = (data: { currentPassword: string; newPassword: string }) => {
+  return request<string>({
+    url: '/auth/change-password',
+    method: 'POST',
+    data,
+  });
+};
+
+/** Server-side sign-out. Success invalidates every token for this account. */
+export const logoutApi = () => {
+  return request<string>({
+    url: '/auth/logout',
+    method: 'POST',
+    silent: true,
+  });
+};
+
 /**
  * Get User Info
  */
@@ -120,6 +140,8 @@ export interface UpdateUserDTO {
   school?: string;
   major?: string;
   graduationYear?: number;
+  /** Explicitly clear the nullable year; omission continues to mean no change. */
+  clearGraduationYear?: boolean;
 }
 
 /**

@@ -107,19 +107,19 @@ public class VoiceServiceImpl implements VoiceService {
 
             long t0 = System.currentTimeMillis();
             String raw = recognizer.call(param, temp);
-            log.info("[asr] {} ms, {} bytes, raw={}", System.currentTimeMillis() - t0,
-                    audioBytes.length, raw == null ? "null" : raw.substring(0, Math.min(120, raw.length())));
+            log.info("[asr] {} ms, {} bytes", System.currentTimeMillis() - t0,
+                    audioBytes.length);
             return extractTranscriptText(raw);
         } catch (Exception e) {
             log.error("ASR failed", e);
-            throw new BizException("语音识别失败，请稍后重试：" + e.getMessage());
+            throw new BizException("语音识别失败，请稍后重试");
         } finally {
             // Closing the duplex API releases the underlying WebSocket; the
             // SDK keeps it open by default so it can be reused, but we want
             // the connection torn down so a stale socket can't carry over.
             try { recognizer.getDuplexApi().close(1000, "bye"); } catch (Exception ignored) {}
             if (temp != null && !temp.delete()) {
-                log.debug("tmp ASR file not deleted: {}", temp.getAbsolutePath());
+                log.debug("A temporary ASR file could not be deleted immediately");
             }
         }
     }
@@ -184,7 +184,10 @@ public class VoiceServiceImpl implements VoiceService {
     }
 
     @Override
-    public TtsResult synthesize(String text) {
+    public TtsResult synthesize(Long userId, String text) {
+        if (userId == null || userId <= 0) {
+            throw new BizException("语音合成缺少用户身份");
+        }
         if (text == null || text.isBlank()) {
             throw new BizException("语音合成文本为空");
         }
@@ -220,19 +223,19 @@ public class VoiceServiceImpl implements VoiceService {
             audio.get(bytes);
 
             String filename = "tts-" + System.currentTimeMillis() + ".mp3";
-            String key = fileService.uploadBytes(bytes, filename, "tts");
+            String key = fileService.uploadBytes(bytes, filename, "tts/" + userId);
 
             // CosyVoice mp3 default is mono ~24 kbps. The estimate is only
             // used by the digital-human mouth animation as a fallback timer
             // before <audio> reports loadedmetadata duration; even a 30%
             // error is invisible to the user.
             long durationMs = Math.max(1000L, (long) bytes.length * 8L / 24L);
-            log.info("[tts] {} ms, {} chars -> {} bytes (~{} ms audio), key={}",
-                    elapsed, clipped.length(), bytes.length, durationMs, key);
+            log.info("[tts] {} ms, {} chars -> {} bytes (~{} ms audio)",
+                    elapsed, clipped.length(), bytes.length, durationMs);
             return new TtsResult(key, durationMs);
         } catch (Exception e) {
             log.error("TTS failed", e);
-            throw new BizException("语音合成失败，请稍后重试：" + e.getMessage());
+            throw new BizException("语音合成失败，请稍后重试");
         } finally {
             try { synthesizer.getDuplexApi().close(1000, "bye"); } catch (Exception ignored) {}
         }

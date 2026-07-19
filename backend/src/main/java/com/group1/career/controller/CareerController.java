@@ -5,6 +5,7 @@ import com.group1.career.model.entity.CareerNode;
 import com.group1.career.model.entity.CareerPath;
 import com.group1.career.model.entity.UserCareerPlan;
 import com.group1.career.model.entity.UserCareerProgress;
+import com.group1.career.service.AdminAuthService;
 import com.group1.career.service.CareerPlanService;
 import com.group1.career.service.CareerService;
 import com.group1.career.utils.SecurityUtil;
@@ -27,6 +28,7 @@ public class CareerController {
 
     private final CareerService careerService;
     private final CareerPlanService careerPlanService;
+    private final AdminAuthService adminAuthService;
 
     // ─────────────────────────────────────────────
     // F28c: AI personalised career plan
@@ -69,34 +71,37 @@ public class CareerController {
         return Result.success(nodes);
     }
 
-    @Operation(summary = "Get user's career progress")
-    @GetMapping("/progress/{userId}")
-    public Result<List<UserCareerProgress>> getUserProgress(@PathVariable Long userId) {
+    @Operation(summary = "Get current user's career progress")
+    @GetMapping({"/progress", "/progress/{ignoredUserId}"})
+    public Result<List<UserCareerProgress>> getUserProgress(
+            @PathVariable(required = false) Long ignoredUserId) {
+        Long userId = SecurityUtil.requireCurrentUserId();
         List<UserCareerProgress> progress = careerService.getUserProgress(userId);
         return Result.success(progress);
     }
 
-    @Operation(summary = "Unlock a node for user")
+    @Operation(summary = "Unlock a node for current user")
     @PostMapping("/progress/unlock")
     public Result<String> unlockNode(@RequestBody UnlockNodeRequest request) {
-        careerService.unlockNode(request.getUserId(), request.getNodeId());
+        Long userId = SecurityUtil.requireCurrentUserId();
+        careerService.unlockNode(userId, request.getNodeId());
         return Result.success("Node unlocked successfully");
     }
 
-    @Operation(summary = "Complete a node for user")
+    @Operation(summary = "Complete a node for current user")
     @PostMapping("/progress/complete")
     public Result<String> completeNode(@RequestBody CompleteNodeRequest request) {
-        careerService.completeNode(request.getUserId(), request.getNodeId());
+        Long userId = SecurityUtil.requireCurrentUserId();
+        careerService.completeNode(userId, request.getNodeId());
         return Result.success("Node completed successfully");
     }
 
-    @Operation(summary = "Get L1-L4 structured timeline state for a user")
+    @Operation(summary = "Get L1-L4 structured timeline state for current user")
     @GetMapping("/timeline")
     public Result<TimelineStateResponseDto> getTimelineState(
-            @RequestParam Long userId,
             @RequestParam Integer pathId) {
 
-        // Note: For mock purposes, just retrieve nodes and progress and structure them
+        Long userId = SecurityUtil.requireCurrentUserId();
         List<CareerNode> allNodes = careerService.getPathNodes(pathId);
         List<UserCareerProgress> userProgress = careerService.getUserProgress(userId);
 
@@ -120,9 +125,11 @@ public class CareerController {
         return Result.success(response);
     }
 
-    @Operation(summary = "Initialize default career paths (for testing)")
+    @Operation(summary = "Initialize default career paths (admin only)")
     @PostMapping("/initialize")
     public Result<String> initializePaths() {
+        Long userId = SecurityUtil.requireCurrentUserId();
+        adminAuthService.requireAdmin(userId);
         careerService.initializeDefaultPaths();
         return Result.success("Career paths initialized successfully");
     }
@@ -136,12 +143,22 @@ public class CareerController {
 
     @Data
     public static class UnlockNodeRequest {
+        /**
+         * Kept only for backwards-compatible JSON deserialization. Ownership
+         * always comes from the validated JWT and this value is never trusted.
+         */
+        @Deprecated
         private Long userId;
         private Long nodeId;
     }
 
     @Data
     public static class CompleteNodeRequest {
+        /**
+         * Kept only for backwards-compatible JSON deserialization. Ownership
+         * always comes from the validated JWT and this value is never trusted.
+         */
+        @Deprecated
         private Long userId;
         private Long nodeId;
     }
@@ -169,4 +186,3 @@ public class CareerController {
         private List<TimelineNodeDto> l4Nodes;
     }
 }
-

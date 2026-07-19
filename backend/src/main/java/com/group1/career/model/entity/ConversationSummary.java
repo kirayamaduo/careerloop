@@ -53,6 +53,24 @@ public class ConversationSummary {
     @Builder.Default
     private Integer tokensConsumed = 0;
 
+    /**
+     * Global assistant-message cursor for this user/persona pair. Message IDs
+     * are monotonically increasing across sessions, so the roll-up can include
+     * every unsummarized message without replaying the first 20 rows of each
+     * session.
+     */
+    @Column(name = "last_message_id", nullable = false)
+    @Builder.Default
+    private Long lastMessageId = 0L;
+
+    /**
+     * Prevents two application instances from silently overwriting a newer
+     * summary when async roll-ups overlap.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

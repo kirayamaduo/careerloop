@@ -131,6 +131,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
+import { requireAuth } from '@/utils/auth';
 import request from '@/utils/request';
 import { useTheme } from '@/utils/theme';
 import { useI18n } from '@/locales';
@@ -225,15 +226,20 @@ const scrollTop = ref(0);
 const topSafeHeight = ref(88);
 const rightAvoidWidth = ref(20);
 const isSending = ref(false);
+const isLoadingSession = ref(false);
 const chatTimeLabel = ref('');
 const sessionId = ref<number | null>(null);
-const canSend = computed(() => inputText.value.trim().length > 0 && !isSending.value);
+let requestGeneration = 0;
+const canSend = computed(() =>
+  inputText.value.trim().length > 0 && !isSending.value && !isLoadingSession.value
+);
 
 const onListScroll = (event: any) => {
   // scrolling logic if needed
 };
 
 const openHistory = () => {
+  if (!requireAuth({ message: '登录后才能查看和保存 AI 导师对话记录。' })) return;
   uni.navigateTo({ url: '/pages/assistant/history' });
 };
 
@@ -248,6 +254,9 @@ const normalizeChatRole = (role: AssistantMessage['role']): ChatMessage['role'] 
 };
 
 const loadSessionMessages = async (sid: number, selectedPersona?: string) => {
+  const generation = ++requestGeneration;
+  isSending.value = false;
+  isLoadingSession.value = true;
   const nextPersona = selectedPersona && isPersonaKey(selectedPersona) ? selectedPersona : persona.value;
   persona.value = nextPersona;
   sessionId.value = sid;
@@ -256,6 +265,7 @@ const loadSessionMessages = async (sid: number, selectedPersona?: string) => {
       url: `/api/chat/history/session/${sid}`,
       method: 'GET',
     });
+    if (generation !== requestGeneration || sessionId.value !== sid) return;
     const rows = Array.isArray(res) ? res.filter((m) => normalizeChatRole(m.role) !== 'system') : [];
     messages.value = rows.length > 0
       ? rows.map((m) => ({ role: normalizeChatRole(m.role) === 'user' ? 'user' : 'assistant', content: m.content }))
@@ -266,7 +276,12 @@ const loadSessionMessages = async (sid: number, selectedPersona?: string) => {
     }));
     scrollToBottom();
   } catch (e: any) {
+    if (generation !== requestGeneration) return;
     uni.showToast({ title: e?.message || t('assistantPage.openHistoryFailed'), icon: 'none' });
+  } finally {
+    if (generation === requestGeneration) {
+      isLoadingSession.value = false;
+    }
   }
 };
 
@@ -279,6 +294,9 @@ const openPendingSessionIfAny = () => {
 
 const switchPersona = (key: PersonaKey) => {
   if (persona.value === key) return;
+  requestGeneration += 1;
+  isSending.value = false;
+  isLoadingSession.value = false;
   persona.value = key;
   sessionId.value = null;
   // Clear history for fresh start with new persona
@@ -305,8 +323,13 @@ const sendQuick = (text: string) => {
 
 const sendMessage = async () => {
   const text = inputText.value.trim();
-  if (!text || isSending.value) return;
+  if (!text || isSending.value || isLoadingSession.value) return;
+  if (!requireAuth({ message: '登录后才能与 AI 导师对话并保存成长记录。' })) return;
 
+  const generation = ++requestGeneration;
+  const requestPersona = persona.value;
+  const historySnapshot = apiHistory.value.map((message) => ({ ...message }));
+  const targetMessages = messages.value;
   messages.value.push({ role: 'user', content: text });
   inputText.value = '';
   isSending.value = true;
@@ -317,58 +340,69 @@ const sendMessage = async () => {
   scrollToBottom();
 
   try {
-    const sid = await ensureSession();
+    const sid = await ensureSession(requestPersona, generation);
     const res = await request<{ reply: string }>({
       url: '/api/chat/send',
       method: 'POST',
       data: {
         message: text,
-        history: apiHistory.value,
-        persona: persona.value,
+        history: historySnapshot,
+        persona: requestPersona,
         sessionId: sid,
       },
     });
     const reply = (res as any)?.reply ?? res ?? '';
+    if (sid) {
+      await appendMessage(sid, text, String(reply || ''), requestPersona);
+    }
+    if (generation !== requestGeneration || messages.value !== targetMessages) return;
     messages.value[typingIdx] = { role: 'assistant', content: reply || t('assistantPage.noResponse') };
     apiHistory.value.push(
       { role: 'user', content: text },
       { role: 'assistant', content: String(reply) },
     );
-    if (sid) {
-      await appendMessage(sid, text, String(reply || ''));
-    }
   } catch {
+    if (generation !== requestGeneration || messages.value !== targetMessages) return;
     messages.value[typingIdx] = {
       role: 'assistant',
       content: t('assistantPage.requestFailed'),
     };
   } finally {
-    isSending.value = false;
-    scrollToBottom();
+    if (generation === requestGeneration) {
+      isSending.value = false;
+      scrollToBottom();
+    }
   }
 };
 
-const ensureSession = async () => {
+const ensureSession = async (requestPersona: PersonaKey, generation: number) => {
   if (sessionId.value) return sessionId.value;
   try {
     const session = await request<{ sessionId: number }>({
       url: '/api/chat/history/create',
       method: 'POST',
-      data: { title: t('assistantHistory.newConversation'), persona: persona.value },
+      data: { title: t('assistantHistory.newConversation'), persona: requestPersona },
     });
-    sessionId.value = session.sessionId;
-    return sessionId.value;
+    if (generation === requestGeneration && persona.value === requestPersona) {
+      sessionId.value = session.sessionId;
+    }
+    return session.sessionId;
   } catch {
     return null;
   }
 };
 
-const appendMessage = async (sid: number, userMessage: string, assistantReply: string) => {
+const appendMessage = async (
+  sid: number,
+  userMessage: string,
+  assistantReply: string,
+  requestPersona: PersonaKey,
+) => {
   try {
     await request({
       url: `/api/chat/history/session/${sid}/append`,
       method: 'POST',
-      data: { userMessage, assistantReply, persona: persona.value },
+      data: { userMessage, assistantReply, persona: requestPersona },
     });
   } catch { }
 };
@@ -505,7 +539,7 @@ onShow(() => {
   padding: 6px 14px;
   background: rgba(255, 255, 255, 0.6);
   border: 1.5px solid rgba(60, 60, 67, 0.12);
-  border-radius: 20px;
+  border-radius: 6px;
   transition: all 0.2s;
 }
 .persona-chip:active { opacity: 0.75; }
@@ -1081,4 +1115,352 @@ onShow(() => {
 }
 
 /* #endif */
+
+/* ================================================================
+ * CareerLoop editorial skin
+ * Mirrors the website's warm-paper, neo-Chinese visual language.
+ * This block intentionally sits after the MP overrides so WeChat and
+ * H5 resolve to the same final palette.
+ * ================================================================ */
+.chat-page {
+  background: #faf9f6;
+  color: #2c2b29;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.chat-nav {
+  background: rgba(250, 249, 246, 0.96);
+  border-bottom: 1px solid #e0dfdb;
+  box-shadow: none;
+}
+
+.nav-row {
+  padding-top: 9px;
+  padding-bottom: 10px;
+}
+
+.nav-bot-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: #3f51b5 !important;
+  margin-right: 12px;
+}
+
+.nav-name,
+.welcome-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.nav-status {
+  color: #5a5956;
+}
+
+.online-dot {
+  border-radius: 1px;
+  background: #7b8d6e;
+}
+
+.nav-action {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.nav-action:active {
+  background: #efeee9;
+}
+
+.nav-action-icon {
+  color: #3f51b5;
+}
+
+.chat-list,
+.chat-list-surface {
+  background: #faf9f6;
+}
+
+.chat-list-surface {
+  padding: 16px 16px 0;
+}
+
+.welcome-card {
+  align-items: flex-start;
+  text-align: left;
+  padding: 20px 18px;
+  margin-bottom: 18px;
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #faf9f6;
+  box-shadow: 0 6px 18px rgba(44, 43, 41, 0.05);
+}
+
+.welcome-brand {
+  margin-bottom: 14px;
+  color: #c23b22;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.welcome-icon {
+  margin-bottom: 10px;
+  color: #3f51b5;
+}
+
+.welcome-title {
+  font-size: 18px;
+}
+
+.welcome-desc {
+  color: #5a5956;
+  line-height: 1.75;
+}
+
+.agent-scope {
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+}
+
+.agent-scope-label {
+  color: #3f51b5;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.agent-scope-text {
+  color: #5a5956;
+  line-height: 1.65;
+}
+
+.agent-note {
+  border-left: 2px solid #3f51b5;
+  border-radius: 0 4px 4px 0;
+  background: #f5f5f0;
+}
+
+.agent-note-text {
+  color: #5a5956;
+}
+
+.quick-actions {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.quick-chip {
+  min-height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 8px 13px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: transparent;
+}
+
+.quick-chip:active {
+  border-color: #c23b22;
+  background: rgba(194, 59, 34, 0.08);
+  transform: scale(0.98);
+}
+
+.chip-text,
+.quick-chip:active .chip-text {
+  color: #2c2b29;
+  font-weight: 400;
+}
+
+.time-divider {
+  margin: 14px 0;
+}
+
+.time-text {
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: #efeee9;
+  color: #8b8a86;
+}
+
+.msg-row {
+  margin-bottom: 16px;
+}
+
+.bot-avatar {
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #f5f5f0;
+  box-shadow: none;
+}
+
+.bot-emoji {
+  color: #3f51b5;
+}
+
+.bubble {
+  padding: 11px 14px;
+  line-height: 1.65;
+}
+
+.bubble-ai {
+  border: 1px solid #e0dfdb;
+  border-radius: 4px 8px 8px 8px;
+  background: #faf9f6;
+  color: #2c2b29;
+  box-shadow: none;
+}
+
+.bubble-user {
+  border: 1px solid #c23b22;
+  border-radius: 8px 4px 8px 8px;
+  background: #c23b22;
+  box-shadow: none;
+}
+
+.input-bar {
+  padding: 8px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #e0dfdb;
+  background: rgba(250, 249, 246, 0.97);
+}
+
+.mode-caption {
+  color: #8b8a86;
+  letter-spacing: 0.04em;
+}
+
+.input-row {
+  padding: 4px;
+  border: 1px solid #d4d2cc;
+  border-radius: 8px;
+  background: #faf9f6;
+  box-shadow: 0 4px 14px rgba(44, 43, 41, 0.04);
+}
+
+.mode-picker {
+  height: 40px;
+  border-right: 1px solid #e0dfdb;
+  border-radius: 4px 0 0 4px;
+  background: #f5f5f0;
+  color: #3f51b5;
+}
+
+.mode-picker-text {
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.chat-input {
+  height: 44px;
+  color: #2c2b29;
+}
+
+.input-ph {
+  color: #b0afab;
+}
+
+.send-btn {
+  width: 62px;
+  min-width: 62px;
+  height: 40px;
+  border: 1px solid #e0dfdb;
+  border-radius: 6px;
+  background: #efeee9;
+}
+
+.send-active {
+  border-color: #c23b22;
+  background: #c23b22;
+}
+
+.send-label {
+  color: #8b8a86;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.chat-page.is-dark {
+  background: #1f1f1d;
+  color: #f5f5f0;
+}
+
+.chat-page.is-dark .chat-nav,
+.chat-page.is-dark .input-bar {
+  background: #1f1f1d;
+  border-color: #45443f;
+}
+
+.chat-page.is-dark .chat-list,
+.chat-page.is-dark .chat-list-surface {
+  background: #1f1f1d;
+}
+
+.chat-page.is-dark .welcome-card,
+.chat-page.is-dark .bubble-ai,
+.chat-page.is-dark .bot-avatar,
+.chat-page.is-dark .input-row {
+  background: #292926;
+  border-color: #45443f;
+  box-shadow: none;
+}
+
+.chat-page.is-dark .nav-name,
+.chat-page.is-dark .welcome-title,
+.chat-page.is-dark .bubble-ai,
+.chat-page.is-dark .chat-input {
+  color: #f5f5f0;
+}
+
+.chat-page.is-dark .nav-status,
+.chat-page.is-dark .welcome-desc,
+.chat-page.is-dark .agent-scope-text {
+  color: #c4c2bc;
+}
+
+.chat-page.is-dark .agent-scope,
+.chat-page.is-dark .agent-note,
+.chat-page.is-dark .mode-picker,
+.chat-page.is-dark .nav-action {
+  background: #33332f;
+  border-color: #45443f;
+}
+
+.chat-page.is-dark .agent-note-text {
+  color: #c4c2bc;
+}
+
+.chat-page.is-dark .quick-chip {
+  background: transparent;
+  border-color: #575650;
+}
+
+.chat-page.is-dark .chip-text,
+.chat-page.is-dark .quick-chip:active .chip-text {
+  color: #f5f5f0;
+}
+
+.chat-page.is-dark .send-btn {
+  border-color: #45443f;
+  background: #33332f;
+}
+
+.chat-page.is-dark .send-active {
+  border-color: #c23b22;
+  background: #c23b22 !important;
+}
+
+.chat-page.is-dark .persona-chip.persona-active {
+  border-color: #aab3ea !important;
+  background: rgba(63, 81, 181, 0.34) !important;
+}
+
+.chat-page.is-dark .persona-chip.persona-active .persona-label,
+.chat-page.is-dark .persona-chip.persona-active .persona-emoji {
+  color: #f8fafc !important;
+}
 </style>

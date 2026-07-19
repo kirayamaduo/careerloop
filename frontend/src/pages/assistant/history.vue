@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="app-soft-bg" :custom-class="['history-page', themeClass, fontClass].join(' ')">
     <SlNavBar :title="t('assistantHistory.navTitle')" show-back @back="goBack" :safe-top="topSafe" />
 
     <scroll-view class="content" scroll-y>
@@ -68,6 +68,7 @@ import { useI18n } from '@/locales';
 import { getMpSafeAreaMetrics } from '@/utils/safeArea';
 import request from '@/utils/request';
 import { useTheme } from '@/utils/theme';
+import { isRealUser, requireAuth } from '@/utils/auth';
 import SlPage from '@/style-library/components/SlPage.vue';
 import SlNavBar from '@/style-library/components/SlNavBar.vue';
 
@@ -94,6 +95,17 @@ let dirLocked = false;
 let isHorizontal = false;
 const DELETE_BTN_W = 80;
 
+const ensurePageAuth = () => {
+  if (isRealUser()) return true;
+  loading.value = false;
+  sessions.value = [];
+  return requireAuth({
+    redirect: 'reLaunch',
+    cancelBehavior: 'back',
+    message: '登录后才能查看、继续或删除你的 AI 对话记录。',
+  });
+};
+
 const personaMeta = (persona?: string) => {
   const map: Record<string, { emoji: string; label: string }> = {
     MENTOR: { emoji: 'ri-compass-3-line', label: '求职教练' },
@@ -104,13 +116,10 @@ const personaMeta = (persona?: string) => {
 };
 
 const loadSessions = async () => {
+  if (!ensurePageAuth()) return;
   loading.value = true;
   try {
     const userId = Number(uni.getStorageSync('userId'));
-    if (!userId) {
-      sessions.value = [];
-      return;
-    }
     const res = await request<AssistantSession[]>({ url: `/api/chat/history/${userId}`, method: 'GET' });
     sessions.value = Array.isArray(res) ? res : [];
   } catch (e: any) {
@@ -132,6 +141,7 @@ const formatTime = (value?: string) => {
 };
 
 const openSession = (session: AssistantSession) => {
+  if (!ensurePageAuth()) return;
   uni.setStorageSync('assistantOpenSession', {
     sessionId: session.sessionId,
     persona: session.persona || 'MENTOR',
@@ -175,6 +185,7 @@ const onItemTouchEnd = (_e: any, id: number) => {
 };
 
 const confirmDelete = (session: AssistantSession) => {
+  if (!ensurePageAuth()) return;
   uni.showModal({
     title: t('assistantHistory.deleteBtn'),
     content: t('assistantHistory.deleteConfirm', { title: session.title || t('assistantHistory.newConversation') }),
@@ -205,9 +216,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.sl-page :deep(.history-page) {
-  min-height: 100vh;
-}
 .content { height: calc(100vh - 96px); padding: 16px; box-sizing: border-box; }
 .retention-card, .loading-card, .session-card { border-radius: var(--radius-lg, 18px); }
 .retention-card { padding: 16px; margin-bottom: 14px; }
@@ -261,4 +269,148 @@ onMounted(() => {
 .is-dark .retention-desc, .is-dark .loading-text, .is-dark .empty-desc, .is-dark .session-hint, .is-dark .session-time { color: var(--text-tertiary, #8e8e93); }
 .is-dark .persona-pill { background: rgba(37,99,235,0.16); }
 .is-dark .session-card:active { background: #334155; }
+
+/* Website-aligned editorial skin */
+.content {
+  height: calc(100vh - 96px);
+  padding: 16px;
+  background: #faf9f6;
+  box-sizing: border-box;
+}
+
+.retention-card,
+.loading-card,
+.session-card {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #faf9f6;
+  box-shadow: 0 5px 16px rgba(44, 43, 41, 0.045);
+}
+
+.retention-card {
+  padding: 16px 15px;
+  border-left: 2px solid #3f51b5;
+}
+
+.retention-title,
+.empty-title,
+.session-title {
+  color: #2c2b29;
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.retention-desc,
+.loading-text,
+.empty-desc,
+.session-hint {
+  color: #5a5956;
+}
+
+.retention-desc,
+.empty-desc {
+  line-height: 1.7;
+}
+
+.empty-state {
+  border: 1px solid #e0dfdb;
+  border-radius: 8px;
+  background: #faf9f6;
+}
+
+.empty-icon {
+  color: #3f51b5;
+}
+
+.session-list {
+  gap: 10px;
+}
+
+.swipe-row {
+  border-radius: 8px;
+}
+
+.session-card {
+  padding: 15px;
+}
+
+.session-card:active {
+  background: #f5f5f0;
+}
+
+.persona-pill {
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid #d9d8d3;
+  border-radius: 4px;
+  background: #f5f5f0;
+  box-sizing: border-box;
+}
+
+.persona-emoji {
+  color: #3f51b5;
+}
+
+.persona-name {
+  color: #3f51b5;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.session-time,
+.session-delete-hint {
+  color: #8b8a86;
+}
+
+.session-title {
+  margin: 13px 0;
+  font-size: 16px;
+}
+
+.swipe-delete-btn {
+  border-radius: 0 8px 8px 0;
+  background: #c23b22;
+}
+
+.swipe-delete-text {
+  font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.is-dark .content {
+  background: #1f1f1d;
+}
+
+.is-dark .retention-card,
+.is-dark .loading-card,
+.is-dark .session-card,
+.is-dark .empty-state {
+  background: #292926;
+  border-color: #45443f;
+  box-shadow: none;
+}
+
+.is-dark .retention-title,
+.is-dark .session-title,
+.is-dark .empty-title {
+  color: #f5f5f0;
+}
+
+.is-dark .retention-desc,
+.is-dark .loading-text,
+.is-dark .empty-desc,
+.is-dark .session-hint {
+  color: #c4c2bc;
+}
+
+.is-dark .persona-pill {
+  background: #33332f;
+  border-color: #575650;
+}
+
+.is-dark .session-card:active {
+  background: #33332f;
+}
 </style>

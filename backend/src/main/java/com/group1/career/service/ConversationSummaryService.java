@@ -24,7 +24,8 @@ public interface ConversationSummaryService {
      *
      * @param userId    owner of the session
      * @param persona   MENTOR | CHALLENGER
-     * @param sessionId session to inspect for message count
+     * @param sessionId session whose committed append triggered this check;
+     *                  the durable cursor spans every session for the persona
      */
     void triggerRollupIfNeeded(Long userId, String persona, Long sessionId);
 }

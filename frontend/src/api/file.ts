@@ -3,7 +3,7 @@ import { uploadFileRequest } from '@/utils/request';
 /**
  * Upload a file to OSS via the backend.
  *
- * The backend returns a bare object key (e.g. `resumes/uuid.pdf`), NOT a
+ * The backend returns a per-account object key (e.g. `resumes/42/uuid.pdf`), NOT a
  * publicly loadable URL. Persist the key with the entity (resume row,
  * user.avatarUrl, etc.) and call `getFileViewUrlApi` if you ever need a
  * short-lived signed URL outside of the normal entity-fetch flow — most
@@ -21,4 +21,3 @@ export const uploadFileApi = (filePath: string, folder: string = 'resumes'): Pro
     formData: { folder },
   });
 };
-

@@ -23,23 +23,23 @@ public interface CareerService {
     List<CareerNode> getPathNodes(Integer pathId);
 
     /**
-     * Get user's career progress
+     * Get career progress for a trusted server-side user id. HTTP callers
+     * must derive this id from the authenticated request, never request data.
      */
-    List<UserCareerProgress> getUserProgress(Long userId);
+    List<UserCareerProgress> getUserProgress(Long authenticatedUserId);
 
     /**
-     * Unlock a node for user
+     * Unlock a node for a trusted server-side user id.
      */
-    void unlockNode(Long userId, Long nodeId);
+    void unlockNode(Long authenticatedUserId, Long nodeId);
 
     /**
-     * Complete a node for user
+     * Complete a node for a trusted server-side user id.
      */
-    void completeNode(Long userId, Long nodeId);
+    void completeNode(Long authenticatedUserId, Long nodeId);
 
     /**
      * Initialize default career paths (for testing)
      */
     void initializeDefaultPaths();
 }
-

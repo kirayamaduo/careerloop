@@ -1,6 +1,7 @@
 package com.group1.career.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.group1.career.common.ErrorCode;
 import com.group1.career.exception.BizException;
 import com.group1.career.model.NotificationTypes;
 import com.group1.career.model.dto.AgentUserProfileDto;
@@ -308,8 +309,11 @@ public class CareerBridgeServiceImpl implements CareerBridgeService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException("Student not found"));
-        if (user.getDeletedAt() != null || (user.getStatus() != null && user.getStatus() == 0)) {
-            throw new BizException("Student is not active");
+        if (user.getDeletedAt() != null) {
+            throw new BizException(ErrorCode.ACCOUNT_DELETED);
+        }
+        if (user.getStatus() != null && user.getStatus() != 1) {
+            throw new BizException(ErrorCode.ACCOUNT_BANNED);
         }
         return user;
     }
