@@ -46,3 +46,4 @@ frontend/.playwright-cli/
 report_screenshots/
 tmp/
 frontend/output/playwright/
+.playwright-cli/
