@@ -1853,7 +1853,7 @@ const handleAvatarClick = () => {
   margin: 14px 20px 0;
   padding: 18px;
   border: 1px solid #e8c6be;
-  border-top: 3px solid var(--vermilion, #c23b22);
+  border-top: 1px solid var(--border-color, #e0dfdb);
   border-radius: var(--radius-md, 6px);
   background: #fffafa;
   color: var(--ink, #2c2b29);

@@ -599,7 +599,7 @@ onShow(() => {
 .result-header {
   padding: 34px 20px;
   border: 1px solid #e0dfdb;
-  border-top: 3px solid #3f51b5;
+  border-top: 1px solid var(--border-color, #e0dfdb);
   border-radius: 8px;
   background: #f5f5f0;
   color: #2c2b29;

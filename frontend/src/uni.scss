@@ -48,10 +48,10 @@ $uni-img-size-sm: 20px;
 $uni-img-size-base: 26px;
 $uni-img-size-lg: 40px;
 
-/* Border Radius */
-$uni-border-radius-sm: 4px;
-$uni-border-radius-base: 8px;
-$uni-border-radius-lg: 12px;
+/* Border Radius —— 与 Web 端新中式极简设计系统一致：一律无圆角 */
+$uni-border-radius-sm: 0;
+$uni-border-radius-base: 0;
+$uni-border-radius-lg: 0;
 $uni-border-radius-circle: 50%;
 
 /* 水平间距 */

@@ -675,7 +675,7 @@ onShow(() => {
 }
 
 .score-card {
-  border-top: 3px solid #c23b22;
+  border-top: 1px solid var(--border-color, #e0dfdb);
 }
 
 .score-ring {

@@ -849,7 +849,7 @@ onPullDownRefresh(async () => {
 .hero {
   background: #f5f5f0;
   border: 1px solid #e0dfdb;
-  border-top: 3px solid #c23b22;
+  border-top: 1px solid var(--border-color, #e0dfdb);
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(44, 43, 41, 0.05);
 }

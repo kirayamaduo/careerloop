@@ -882,7 +882,7 @@ onUnmounted(() => {
 .header-card {
   background: var(--card-bg, #fffefa);
   border: 1px solid var(--border-color, #e0dfdb);
-  border-top: 3px solid var(--vermilion, #c23b22);
+  border-top: 1px solid var(--border-color, #e0dfdb);
   border-radius: var(--radius-md, 6px); padding: 24px 20px; margin: 12px 0 16px;
   display: flex; align-items: center; gap: 16px;
   box-shadow: var(--shadow-card);
@@ -944,7 +944,7 @@ onUnmounted(() => {
 .website-link-card {
   margin: 0 0 20px;
   padding: 16px;
-  border-top: 3px solid var(--vermilion, #c23b22);
+  border-top: 1px solid var(--border-color, #e0dfdb);
 }
 .website-link-head {
   display: flex;
@@ -1411,7 +1411,7 @@ onUnmounted(() => {
 .header-card {
   overflow: visible;
   border: 1px solid #e0dfdb;
-  border-top: 3px solid #c23b22;
+  border-top: 1px solid var(--border-color, #e0dfdb);
   background: #fffefa;
   box-shadow: 0 2px 10px rgba(44,43,41,.035);
 }

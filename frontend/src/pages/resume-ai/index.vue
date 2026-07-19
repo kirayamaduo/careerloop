@@ -827,7 +827,7 @@ onShow(() => {
   width: 50px;
   height: 50px;
   border: 4px solid var(--primary-soft, #eff6ff);
-  border-top: 4px solid var(--primary-color, #2563eb);
+  border-top: 1px solid var(--border-color, #e0dfdb);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;

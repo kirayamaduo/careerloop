@@ -684,7 +684,7 @@ onShow(() => {
 
 .hero {
   background: #f5f5f0;
-  border-top: 3px solid #c23b22;
+  border-top: 1px solid var(--border-color, #e0dfdb);
 }
 
 .hero-kicker {

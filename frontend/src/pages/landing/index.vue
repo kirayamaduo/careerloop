@@ -210,7 +210,7 @@ const preview = () => {
   box-sizing: border-box;
   box-shadow: 0 2px 10px rgba(44, 43, 41, 0.035);
 }
-.task-panel { border-top: 3px solid var(--heritage-gold, #b8975a); }
+.task-panel { border-top: 1px solid var(--border-color, #e0dfdb); }
 
 .score-label,
 .task-kicker {

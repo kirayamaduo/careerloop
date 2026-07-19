@@ -295,6 +295,43 @@ Completed in this round.
 - `用户记忆/个性化信息` surface was renamed to `求职偏好资料`, with copy explaining that these details help produce more relevant career-prep suggestions.
 - Removed user-visible "AI 已知 / AI 提取 / 个性化信息" wording from the Chinese Profile and preference-info surfaces.
 
+### Phase 7: Web-Parity Visual Flatten (national final)
+
+Completed on 2026-07-19, driven by reviewer feedback: unify style with the web
+platform, remove rounded corners and card top accent lines, use a serif
+(Source Han Serif / Noto Serif SC family) for headings.
+
+- `style-library/styles/tokens.css`: all radius tokens (`--radius-*`,
+  `--btn-radius`) are now `0`; legacy `--gradient-*` aliases resolve to flat
+  competition-palette colours; `--font-serif` now prefers
+  `Noto Serif SC / Source Han Serif SC` before `Songti SC`.
+- `uni.scss`: `$uni-border-radius-sm/base/lg` set to `0`.
+- `style-library/styles/competition.css`:
+  - global flatten layer using element selectors (WXSS has no `*` selector)
+    that zeroes `border-radius` on `view/text/button/image/input/...`, plus an
+    H5-only universal flatten;
+  - explicit circle exceptions: spinners, `pulse-ring`, `record-pulse`,
+    `record-btn`, interview-room `avatar-face`/`avatar-halo`/`eye`,
+    `profile-score-ring(-inner)`;
+  - every `border-top: 3px solid <accent>` card accent replaced with a
+    1px `--border-color` hairline (web cards have no coloured top line);
+  - vermilion glow shadows removed; login hero radial washes flattened to
+    plain paper; readiness/agent progress fills are flat vermilion;
+  - home resource cover placeholders (`cover-tone-*`, `cover-topic-*`)
+    remapped from candy gradients to paper-palette soft tones;
+  - serif coverage extended to all page/section/card/modal title classes and
+    primary buttons/form labels collected across every page.
+- Hard-coded `border-top: 3px/4px` accents inside page scoped styles were
+  rewritten to the same 1px hairline.
+- Checks: `npm run type-check` passed; `npm run build:mp-weixin` passed;
+  H5 visual pass over landing/login/home/assistant/resume/user confirmed the
+  flat print look with circles preserved only where intended.
+- Note: true webfont loading (`wx.loadFontFace`) is not wired; the serif stack
+  relies on device fonts (iOS `Songti SC`, desktop DevTools Noto/Source Han if
+  installed). If the team wants pixel-identical serif on Android, serve a
+  subsetted `NotoSerifSC` from `api.careerloop.top` and call
+  `wx.loadFontFace` at launch in a later round.
+
 ## 4. Unfinished Issues
 
 - Home copy is currently hardcoded in Chinese in `frontend/src/pages/home/index.vue`; if English mode remains a product requirement, these strings should be moved into locale files.
