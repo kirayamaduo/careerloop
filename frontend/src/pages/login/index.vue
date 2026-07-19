@@ -50,9 +50,9 @@
             <view class="strength-row" v-if="mode === 'register' && password.length > 0">
               <view class="strength-bars">
                 <view v-for="i in 3" :key="i" class="strength-bar"
-                  :style="{ background: passwordStrength && passwordStrength.level >= i ? passwordStrength.color : '#e2e8f0' }" />
+                  :style="{ background: passwordStrength && passwordStrength.level >= i ? passwordStrength.color : '#e7e5e4' }" />
               </view>
-              <text class="strength-label" :style="{ color: passwordStrength ? passwordStrength.color : '#94a3b8' }">
+              <text class="strength-label" :style="{ color: passwordStrength ? passwordStrength.color : '#a8a29e' }">
                 {{ passwordStrength ? passwordStrength.label : '' }}
               </text>
             </view>
@@ -366,7 +366,7 @@ const passwordStrength = computed(() => {
   if (!p) return null;
   if (p.length < 6) return { level: 0, label: t('login.strengthTooShort'), color: '#ef4444' };
   const types = [/[A-Z]/.test(p), /[a-z]/.test(p), /[0-9]/.test(p), /[^A-Za-z0-9]/.test(p)].filter(Boolean).length;
-  if (p.length >= 10 && types >= 3) return { level: 3, label: t('login.strengthStrong'), color: '#22c55e' };
+  if (p.length >= 10 && types >= 3) return { level: 3, label: t('login.strengthStrong'), color: '#ab863c' };
   if (p.length >= 8 && types >= 2) return { level: 2, label: t('login.strengthMedium'), color: '#f59e0b' };
   return { level: 1, label: t('login.strengthWeak'), color: '#ef4444' };
 });
@@ -686,7 +686,7 @@ const guestLogin = () => {
 
 .agreement-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
 .checkbox { width: 18px; height: 18px; border-radius: 3px; flex-shrink: 0; border: 1.5px solid var(--border-strong, #ceccc5); display: flex; align-items: center; justify-content: center; background: var(--card-bg, #fffefa); margin-top: 1px; }
-.checked { background: var(--indigo, #3f51b5); border-color: var(--indigo, #3f51b5); }
+.checked { background: var(--indigo, #ac6448); border-color: var(--indigo, #ac6448); }
 .check-mark { font-size: 13px; color: #ffffff; font-weight: 700; }
 .agreement-copy { display: flex; flex-wrap: wrap; align-items: center; row-gap: 2px; column-gap: 2px; flex: 1; }
 .agreement-text { font-size: 12px; color: var(--ink-secondary, #5a5956); line-height: 1.6; }
@@ -703,7 +703,7 @@ const guestLogin = () => {
 .divider-text { font-size: 12px; color: var(--ink-tertiary, #8b8a86); white-space: nowrap; }
 
 .social-row { display: flex; gap: 12px; margin-bottom: 0; }
-.btn-wechat { flex: 1; height: 44px; background: #07c160; border: 1px solid #079b4e; border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: none; }
+.btn-wechat { flex: 1; height: 44px; background: var(--primary-mid, #d85a42); border: 1px solid var(--primary-color, #c23b22); border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: none; }
 .wx-icon { font-size: 20px; color: #ffffff; }
 .wx-text { color: #ffffff; font-size: 14px; font-weight: 700; }
 .btn-guest { flex: 1; height: 44px; background: transparent; border: 1px solid var(--border-color, #e0dfdb); border-radius: var(--btn-radius, 6px); display: flex; align-items: center; justify-content: center; }
@@ -713,7 +713,7 @@ const guestLogin = () => {
 .bottom-safe { height: calc(env(safe-area-inset-bottom, 0px) + 12px); }
 
 /* ── Modals ── */
-.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 0 var(--page-gutter, 20px); box-sizing: border-box; }
+.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(28, 25, 23,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 0 var(--page-gutter, 20px); box-sizing: border-box; }
 .modal-card { background: var(--card-bg, #fffefa); border-radius: var(--radius-md, 6px); padding: 24px 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color, #e0dfdb); box-shadow: var(--shadow-md); box-sizing: border-box; }
 .modal-title { display: block; font-size: 18px; font-weight: 600; color: var(--ink, #2c2b29); margin-bottom: 4px; font-family: var(--font-serif, "Songti SC", STSong, serif); letter-spacing: 0.05em; }
 .modal-hint { display: block; font-size: 13px; color: var(--ink-secondary, #5a5956); line-height: 1.5; }
@@ -758,38 +758,38 @@ const guestLogin = () => {
 
 /* ---- Dark mode ---- */
 .is-dark {
-  background: #0f172a;
+  background: #1c1917;
 }
 .is-dark .login-page {
-  background: var(--text-primary, #0f172a);
+  background: var(--text-primary, #1c1917);
 }
 .is-dark .form-sheet {
-  background: rgba(15, 23, 42, 0.96);
-  border-color: #334155;
+  background: rgba(28, 25, 23, 0.96);
+  border-color: #44403c;
 }
-.is-dark .sheet-title { color: #f8fafc; }
+.is-dark .sheet-title { color: #fafaf9; }
 .is-dark .sheet-subtitle { color: var(--text-tertiary, #8e8e93); }
-.is-dark .segment-bar { background: #1e293b; border-color: #334155; }
-.is-dark .seg-active { background: #334155; color: #f8fafc; }
+.is-dark .segment-bar { background: #292524; border-color: #44403c; }
+.is-dark .seg-active { background: #44403c; color: #fafaf9; }
 .is-dark .field-label { color: var(--text-tertiary, #8e8e93); }
 .is-dark .field-input {
-  background: #1e293b;
-  border-color: #334155;
-  color: #f8fafc;
+  background: #292524;
+  border-color: #44403c;
+  color: #fafaf9;
 }
-.is-dark .ph { color: var(--text-secondary, #64748b); }
+.is-dark .ph { color: var(--text-secondary, #78716c); }
 .is-dark .input-error { background: rgba(239, 68, 68, 0.08) !important; border-color: #ef4444 !important; }
-.is-dark .checkbox { background: #1e293b; border-color: #334155; }
+.is-dark .checkbox { background: #292524; border-color: #44403c; }
 .is-dark .agreement-text { color: var(--text-tertiary, #8e8e93); }
-.is-dark .link { color: #60a5fa; }
-.is-dark .forgot-link { color: #60a5fa; }
-.is-dark .divider-line { background: #334155; }
-.is-dark .btn-guest { background: #1e293b; border-color: #334155; }
+.is-dark .link { color: #dd987d; }
+.is-dark .forgot-link { color: #dd987d; }
+.is-dark .divider-line { background: #44403c; }
+.is-dark .btn-guest { background: #292524; border-color: #44403c; }
 .is-dark .guest-text { color: var(--text-tertiary, #8e8e93); }
-.is-dark .strength-bar { background: #334155; }
-.is-dark .modal-card { background: #1e293b; border-color: #334155; }
-.is-dark .modal-title { color: #f8fafc; }
+.is-dark .strength-bar { background: #44403c; }
+.is-dark .modal-card { background: #292524; border-color: #44403c; }
+.is-dark .modal-title { color: #fafaf9; }
 .is-dark .modal-hint { color: var(--text-tertiary, #8e8e93); }
-.is-dark .agreement-section-title { color: #f8fafc; }
+.is-dark .agreement-section-title { color: #fafaf9; }
 .is-dark .agreement-body { color: var(--text-tertiary, #8e8e93); }
 </style>

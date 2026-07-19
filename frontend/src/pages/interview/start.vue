@@ -370,7 +370,7 @@ const startInterview = async () => {
 .form-item-last { margin-bottom: 14px; }
 
 .label {
-  font-size: 15px; font-weight: 700; color: var(--text-primary, #0f172a);
+  font-size: 15px; font-weight: 700; color: var(--text-primary, #1c1917);
   margin-bottom: 12px; display: block;
 }
 
@@ -384,8 +384,8 @@ const startInterview = async () => {
 .label-row .label { margin-bottom: 0; }
 .label-hint {
   font-size: 11px; font-weight: 600;
-  color: #4f46e5;
-  background: #eef2ff;
+  color: #d37b58;
+  background: #fbf4f2;
   padding: 3px 8px;
   border-radius: 999px;
   letter-spacing: 0.02em;
@@ -399,7 +399,7 @@ const startInterview = async () => {
   flex: 1;
   display: flex; flex-direction: column; gap: 8px;
   padding: 14px;
-  border: 2px solid #e2e8f0; border-radius: 14px;
+  border: 2px solid #e7e5e4; border-radius: 14px;
   background: #ffffff;
   transition: all 0.15s;
   min-height: 96px;
@@ -409,8 +409,8 @@ const startInterview = async () => {
   width: 30px;
   height: 30px;
   border-radius: 12px;
-  background: var(--primary-soft, #eff6ff);
-  color: var(--primary-color, #2563eb);
+  background: var(--primary-soft, #fcf5f2);
+  color: var(--primary-color, #cd6a43);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,20 +418,20 @@ const startInterview = async () => {
   line-height: 30px;
   font-weight: 800;
 }
-.mode-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #0f172a); }
+.mode-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #1c1917); }
 .mode-badge {
   margin-left: auto;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.04em;
-  background: #ecfdf5; color: #047857;
+  background: #faf6ef; color: #5c4820;
   padding: 2px 6px; border-radius: 999px;
   text-transform: uppercase;
 }
-.mode-desc { font-size: 11.5px; color: var(--text-secondary, #64748b); line-height: 1.45; }
+.mode-desc { font-size: 11.5px; color: var(--text-secondary, #78716c); line-height: 1.45; }
 
 .mode-card.active {
-  border-color: var(--primary-color, #2563eb);
-  background: var(--gradient-primary, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  border-color: var(--primary-color, #cd6a43);
+  background: var(--gradient-primary, linear-gradient(135deg, #cd6a43 0%, #d47f5d 100%));
 }
 .mode-card.active .mode-icon { background: rgba(255, 255, 255, 0.24); color: #ffffff; }
 .mode-card.active .mode-name { color: #ffffff; }
@@ -442,16 +442,16 @@ const startInterview = async () => {
 /* Position picker -- clearer empty/filled affordance */
 .picker-box {
   display: flex; align-items: center; justify-content: space-between;
-  border: 1.5px solid #e2e8f0; border-radius: 14px;
-  padding: 14px 16px; background: var(--surface-2, #f8fafc);
+  border: 1.5px solid #e7e5e4; border-radius: 14px;
+  padding: 14px 16px; background: var(--surface-2, #fafaf9);
   min-height: 52px; box-sizing: border-box;
   transition: border-color 0.15s, background 0.15s;
 }
-.picker-box:active { border-color: var(--primary-color, #2563eb); background: var(--primary-soft, #eff6ff); }
-.picker-filled { border-color: #c7d2fe; background: #ffffff; }
+.picker-box:active { border-color: var(--primary-color, #cd6a43); background: var(--primary-soft, #fcf5f2); }
+.picker-filled { border-color: #f3dbd2; background: #ffffff; }
 
 .picker-val { font-size: 15px; color: var(--text-tertiary, #8e8e93); flex: 1; }
-.has-val { color: var(--text-primary, #0f172a); font-weight: 600; }
+.has-val { color: var(--text-primary, #1c1917); font-weight: 600; }
 
 .picker-arrow { font-size: 20px; color: #c7c7cc; line-height: 1; flex-shrink: 0; }
 
@@ -464,18 +464,18 @@ const startInterview = async () => {
   display: flex; flex-direction: column; align-items: flex-start;
   gap: 4px;
   padding: 12px;
-  border: 2px solid #e2e8f0; border-radius: 14px;
+  border: 2px solid #e7e5e4; border-radius: 14px;
   background: #ffffff;
   transition: all 0.15s;
   min-height: 72px;
 }
 
-.diff-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #0f172a); }
-.diff-desc { font-size: 11px; color: var(--text-secondary, #64748b); line-height: 1.35; }
+.diff-name { font-size: 14px; font-weight: 700; color: var(--text-primary, #1c1917); }
+.diff-desc { font-size: 11px; color: var(--text-secondary, #78716c); line-height: 1.35; }
 
 .diff-card.active {
-  border-color: var(--primary-color, #2563eb);
-  background: var(--gradient-primary, linear-gradient(135deg, #2563eb 0%, #3b82f6 100%));
+  border-color: var(--primary-color, #cd6a43);
+  background: var(--gradient-primary, linear-gradient(135deg, #cd6a43 0%, #d47f5d 100%));
 }
 .diff-card.active .diff-name { color: #ffffff; }
 .diff-card.active .diff-desc { color: rgba(255, 255, 255, 0.85); }
@@ -485,7 +485,7 @@ const startInterview = async () => {
 /* What-to-expect card */
 .expect-card {
   background: #ffffff;
-  border: 1px solid var(--border-color, #b8c8d8);
+  border: 1px solid var(--border-color, #d8c1b8);
   border-radius: var(--radius-lg, 20px);
   padding: 20px;
   display: flex; flex-direction: column; gap: 16px;
@@ -493,7 +493,7 @@ const startInterview = async () => {
 
 .expect-title {
   font-size: 12px; font-weight: 700;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -501,19 +501,19 @@ const startInterview = async () => {
 .expect-row { display: flex; gap: 14px; align-items: flex-start; }
 .expect-icon {
   width: 32px; height: 32px; flex-shrink: 0;
-  background: var(--primary-soft, #eff6ff); border-radius: 10px;
+  background: var(--primary-soft, #fcf5f2); border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 11px;
   line-height: 32px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
-.expect-icon-time { background: var(--primary-soft, #eff6ff); color: var(--primary-color, #2563eb); }
-.expect-icon-chat { background: var(--violet-soft, #f5f3ff); color: var(--violet, #8b5cf6); }
-.expect-icon-score { background: var(--success-soft, #d1fae5); color: var(--success-color, #10b981); }
+.expect-icon-time { background: var(--primary-soft, #fcf5f2); color: var(--primary-color, #cd6a43); }
+.expect-icon-chat { background: var(--violet-soft, #fcf7f6); color: var(--violet, #db9377); }
+.expect-icon-score { background: var(--success-soft, #f2ead9); color: var(--success-color, #957534); }
 .expect-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.expect-h { font-size: 14px; font-weight: 700; color: var(--text-primary, #0f172a); }
-.expect-p { font-size: 12px; color: var(--text-secondary, #64748b); line-height: 1.45; }
+.expect-h { font-size: 14px; font-weight: 700; color: var(--text-primary, #1c1917); }
+.expect-p { font-size: 12px; color: var(--text-secondary, #78716c); line-height: 1.45; }
 
 /* Sticky CTA -- pinned to the bottom thumb zone (HCI: Fitts's law) */
 .sticky-cta {
@@ -534,7 +534,7 @@ const startInterview = async () => {
 .btn-primary {
   height: 52px;
   border-radius: 16px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -549,52 +549,52 @@ const startInterview = async () => {
   letter-spacing: 0.01em;
 }
 
-.btn-primary:active { background: #1d4ed8; }
+.btn-primary:active { background: #c25c33; }
 
 /* Disabled = no position selected. Use a mid-grey background with dark text
    so "Choose a position to begin" is legible — white-on-lightgrey fails WCAG. */
 .btn-disabled {
-  background: var(--surface-3, #f1f5f9);
+  background: var(--surface-3, #f5f5f4);
   box-shadow: none;
 }
 .btn-disabled .btn-primary-label {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   font-weight: 600;
 }
 
 /* Dark mode */
-.is-dark { background-color: var(--bg-color, #0f172a); }
+.is-dark { background-color: var(--bg-color, #1c1917); }
 
 .is-dark .title,
 .is-dark .label,
 .is-dark .has-val,
 .is-dark .expect-h,
-.is-dark .diff-name { color: #f8fafc; }
+.is-dark .diff-name { color: #fafaf9; }
 
 .is-dark .form-card,
-.is-dark .expect-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+.is-dark .expect-card { background: #292524; border-color: #44403c; box-shadow: none; }
 
-.is-dark .picker-box { border-color: #334155; background: #0f172a; }
-.is-dark .diff-card:not(.active) { border-color: #334155; background: #0f172a; }
-.is-dark .mode-card:not(.active) { border-color: #334155; background: #0f172a; }
-.is-dark .mode-name { color: #f8fafc; }
+.is-dark .picker-box { border-color: #44403c; background: #1c1917; }
+.is-dark .diff-card:not(.active) { border-color: #44403c; background: #1c1917; }
+.is-dark .mode-card:not(.active) { border-color: #44403c; background: #1c1917; }
+.is-dark .mode-name { color: #fafaf9; }
 
-.is-dark .picker-val { color: var(--text-secondary, #64748b); }
+.is-dark .picker-val { color: var(--text-secondary, #78716c); }
 .is-dark .label-hint {
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(129, 140, 248, 0.36);
-  color: #c7d2fe;
+  background: rgba(219, 149, 121, 0.2);
+  border: 1px solid rgba(227, 172, 150, 0.36);
+  color: #f3dbd2;
 }
 
-.is-dark .expect-icon { background: rgba(37, 99, 235, 0.2); }
+.is-dark .expect-icon { background: rgba(205, 106, 67, 0.2); }
 
 .is-dark .sticky-cta {
-  background: rgba(15, 23, 42, 0.92);
-  border-color: #334155;
+  background: rgba(28, 25, 23, 0.92);
+  border-color: #44403c;
 }
 
 .is-dark .btn-disabled {
-  background: #1e293b;
+  background: #292524;
 }
 .is-dark .btn-disabled .btn-primary-label {
   color: var(--text-tertiary, #8e8e93);
@@ -622,8 +622,8 @@ const startInterview = async () => {
 .start-page.is-dark .sticky-cta {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: rgba(15, 23, 42, 0.96);
-  border-color: #334155;
+  background: rgba(28, 25, 23, 0.96);
+  border-color: #44403c;
 }
 
 /* #endif */
@@ -682,9 +682,9 @@ const startInterview = async () => {
 }
 
 .label-hint {
-  color: #3f51b5;
+  color: #ac6448;
   background: transparent;
-  border: 1px solid rgba(63, 81, 181, 0.32);
+  border: 1px solid rgba(172, 100, 72, 0.32);
   border-radius: 4px;
 }
 
@@ -698,15 +698,15 @@ const startInterview = async () => {
 
 .mode-icon,
 .expect-icon {
-  color: #3f51b5;
+  color: #ac6448;
   background: #efeee9;
   border-radius: 4px;
 }
 
 .mode-badge {
-  color: #6b8e5a;
+  color: #947f54;
   background: transparent;
-  border: 1px solid rgba(107, 142, 90, 0.4);
+  border: 1px solid rgba(148, 127, 84, 0.4);
   border-radius: 3px;
 }
 
@@ -726,8 +726,8 @@ const startInterview = async () => {
 .mode-card.active,
 .diff-card.active {
   color: #faf9f6;
-  background: #3f51b5;
-  border-color: #3f51b5;
+  background: #ac6448;
+  border-color: #ac6448;
 }
 
 .mode-card.active .mode-icon {
@@ -743,7 +743,7 @@ const startInterview = async () => {
 .picker-box:active,
 .picker-filled {
   background: #ffffff;
-  border-color: #3f51b5;
+  border-color: #ac6448;
 }
 
 .expect-icon-chat {
@@ -751,7 +751,7 @@ const startInterview = async () => {
 }
 
 .expect-icon-score {
-  color: #6b8e5a;
+  color: #947f54;
 }
 
 .sticky-cta {
@@ -828,6 +828,6 @@ const startInterview = async () => {
 .start-page.is-dark .mode-card:not(.active) .mode-icon,
 .start-page.is-dark .expect-icon {
   background: #33332f;
-  color: #aab3ea;
+  color: #e5beaf;
 }
 </style>

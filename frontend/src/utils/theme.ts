@@ -92,16 +92,16 @@ function _applyTabBarStyle(t: ThemeKey) {
     try {
       if (t === 'dark') {
         uni.setTabBarStyle({
-          color: '#94a3b8',
+          color: '#a8a29e',
           selectedColor: '#c23b22',
-          backgroundColor: '#0f172a',
+          backgroundColor: '#1c1917',
           borderStyle: 'black',
         });
       } else if (t === 'green') {
         uni.setTabBarStyle({
           color: '#5a5956',
           selectedColor: '#c23b22',
-          backgroundColor: '#f4f5f0',
+          backgroundColor: '#f5f5f0',
           borderStyle: 'white',
         });
       } else {
@@ -121,7 +121,7 @@ function _applyTabBarStyle(t: ThemeKey) {
     const setBg = (uni as unknown as { setBackgroundColor?: (o: Record<string, string>) => void })
       .setBackgroundColor;
     if (typeof setBg === 'function') {
-      const bg = t === 'dark' ? '#0f172a' : t === 'green' ? '#f0fdf4' : '#faf9f6';
+      const bg = t === 'dark' ? '#1c1917' : t === 'green' ? '#faf8f3' : '#faf9f6';
       setBg({
         backgroundColor: bg,
         backgroundColorTop: bg,

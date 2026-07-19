@@ -338,15 +338,15 @@ const goBack = () => {
 }
 
 .message.user .msg-content {
-  background: var(--primary-color, #2563eb); color: #fff;
+  background: var(--primary-color, #cd6a43); color: #fff;
   border-radius: 20px 4px 20px 20px;
   box-shadow: var(--shadow-sm);
 }
 
 .message.ai .msg-content {
   background: #fff;
-  border: 1px solid var(--border-color, #b8c8d8);
-  color: var(--text-primary, #0f172a);
+  border: 1px solid var(--border-color, #d8c1b8);
+  color: var(--text-primary, #1c1917);
   border-radius: 4px 20px 20px 20px;
   box-shadow: var(--shadow-xs, 0 1px 3px rgba(0,0,0,0.08), 0 1px 8px rgba(0,0,0,0.05));
 }
@@ -362,7 +362,7 @@ const goBack = () => {
 
 .dot {
   width: 6px; height: 6px; border-radius: 3px;
-  background: #94a3b8; animation: bounce 1.4s infinite ease-in-out both;
+  background: #a8a29e; animation: bounce 1.4s infinite ease-in-out both;
 }
 
 .dot:nth-child(1) { animation-delay: -0.32s; }
@@ -382,9 +382,9 @@ const goBack = () => {
 }
 
 .chat-input {
-  flex: 1; border: 1.5px solid #e2e8f0; border-radius: 22px;
-  padding: 10px 18px; font-size: 15px; background: var(--surface-2, #f8fafc);
-  color: var(--text-primary, #0f172a); height: 44px;
+  flex: 1; border: 1.5px solid #e7e5e4; border-radius: 22px;
+  padding: 10px 18px; font-size: 15px; background: var(--surface-2, #fafaf9);
+  color: var(--text-primary, #1c1917); height: 44px;
 }
 
 .ph { color: var(--text-tertiary, #8e8e93); }
@@ -392,12 +392,12 @@ const goBack = () => {
 .send-btn {
   min-width: 64px; height: 38px; padding: 0 14px;
   border-radius: 19px;
-  background: var(--surface-3, #f1f5f9); display: flex;
+  background: var(--surface-3, #f5f5f4); display: flex;
   align-items: center; justify-content: center;
   flex-shrink: 0; transition: background 0.2s;
 }
 
-.send-active { background: var(--primary-color, #2563eb); }
+.send-active { background: var(--primary-color, #cd6a43); }
 
 .send-label {
   color: var(--text-tertiary, #8e8e93); font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
@@ -405,13 +405,13 @@ const goBack = () => {
 .send-active .send-label { color: #ffffff; }
 
 /* Dark mode */
-.is-dark { background-color: var(--bg-color, #0f172a); }
+.is-dark { background-color: var(--bg-color, #1c1917); }
 
-.is-dark .message.ai .msg-content { background: #1e293b; color: #f8fafc; box-shadow: none; }
+.is-dark .message.ai .msg-content { background: #292524; color: #fafaf9; box-shadow: none; }
 
-.is-dark .input-area { background: rgba(15, 23, 42, 0.92); border-color: #334155; }
+.is-dark .input-area { background: rgba(28, 25, 23, 0.92); border-color: #44403c; }
 
-.is-dark .chat-input { background: #1e293b; border-color: #334155; color: #f8fafc; }
+.is-dark .chat-input { background: #292524; border-color: #44403c; color: #fafaf9; }
 
 /* #ifdef MP-WEIXIN */
 .input-area {
@@ -421,18 +421,18 @@ const goBack = () => {
 }
 
 .message.ai .msg-content {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e7e5e4;
   box-shadow: var(--shadow-xs);
 }
 
 .chat-container.is-dark .input-area {
-  background: #0f172a;
-  border-color: #334155;
+  background: #1c1917;
+  border-color: #44403c;
 }
 
 .chat-container.is-dark .message.ai .msg-content {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
   box-shadow: none;
 }
 /* #endif */
@@ -457,9 +457,9 @@ const goBack = () => {
 }
 
 .difficulty {
-  color: #3f51b5;
+  color: #ac6448;
   background: transparent;
-  border: 1px solid rgba(63, 81, 181, 0.36);
+  border: 1px solid rgba(172, 100, 72, 0.36);
   border-radius: 4px;
 }
 
@@ -478,7 +478,7 @@ const goBack = () => {
 
 .message.user .msg-content {
   color: #faf9f6;
-  background: #3f51b5;
+  background: #ac6448;
   border-radius: 8px 2px 8px 8px;
   box-shadow: none;
 }

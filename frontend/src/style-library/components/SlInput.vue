@@ -47,7 +47,7 @@ const onInput = (e: any) => {
   display: block;
   margin-bottom: 8px;
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .sl-input {
@@ -55,10 +55,10 @@ const onInput = (e: any) => {
   height: 40px;
   border-radius: var(--radius-sm, 12px);
   background: var(--surface-1, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
+  border: 1px solid var(--border-color, #d8c1b8);
   padding: 0 12px;
   font-size: 14px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   box-sizing: border-box;
 }
 </style>

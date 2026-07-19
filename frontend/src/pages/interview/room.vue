@@ -886,7 +886,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 <style scoped>
 .room-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  background: linear-gradient(180deg, #1c1917 0%, #292524 50%, #1c1917 100%);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -917,7 +917,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   margin: 10px 20px 12px;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(28, 25, 23, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
   z-index: 2;
@@ -934,7 +934,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 }
 .camera-pip-fallback {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(28, 25, 23, 0.75);
   gap: 6px;
   padding: 18px;
   text-align: center;
@@ -946,7 +946,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   line-height: 1.3;
 }
 .camera-enable-btn {
-  background: #2457d6; padding: 4px 10px; border-radius: 999px; margin-top: 2px;
+  background: #c65e34; padding: 4px 10px; border-radius: 999px; margin-top: 2px;
 }
 .camera-enable-text { color: #fff; font-size: 11px; font-weight: 700; }
 .camera-caption {
@@ -956,7 +956,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   gap: 3px;
 }
 .camera-caption-main {
-  color: #f8fafc;
+  color: #fafaf9;
   font-size: 13px;
   line-height: 1.25;
   font-weight: 800;
@@ -988,7 +988,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 .avatar-halo {
   position: absolute; inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(221, 152, 125, 0.35) 0%, transparent 70%);
   animation: halo-pulse 1.8s ease-in-out infinite;
 }
 @keyframes halo-pulse {
@@ -998,7 +998,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 .avatar-face {
   width: 54px; height: 54px;
   border-radius: 50%;
-  background: linear-gradient(160deg, #60a5fa 0%, #2563eb 60%, #1e40af 100%);
+  background: linear-gradient(160deg, #dd987d 0%, #cd6a43 60%, #a24d2b 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1025,7 +1025,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 .eyes { display: flex; gap: 11px; }
 .eye {
   width: 5px; height: 5px; border-radius: 50%;
-  background: #f8fafc;
+  background: #fafaf9;
   box-shadow: var(--shadow-xs);
   animation: blink 4s ease-in-out infinite;
 }
@@ -1035,7 +1035,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 }
 
 .mouth {
-  width: 18px; height: 5px; background: #f8fafc; border-radius: 4px;
+  width: 18px; height: 5px; background: #fafaf9; border-radius: 4px;
   transition: all 0.15s ease;
 }
 .mouth-rest { width: 16px; height: 4px; }
@@ -1055,13 +1055,13 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   max-width: 270px;
 }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-.dot-idle { background: #64748b; }
-.dot-talking { background: #34d399; box-shadow: var(--shadow-xs); }
+.dot-idle { background: #78716c; }
+.dot-talking { background: #bf9748; box-shadow: var(--shadow-xs); }
 .dot-listening { background: #f87171; animation: pulse-dot 0.9s infinite; }
 .dot-thinking { background: #fbbf24; animation: pulse-dot 1.4s infinite; }
 @keyframes pulse-dot { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .status-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.status-role { color: #f8fafc; font-size: 12px; line-height: 1.2; font-weight: 800; }
+.status-role { color: #fafaf9; font-size: 12px; line-height: 1.2; font-weight: 800; }
 .status-text { color: rgba(255, 255, 255, 0.72); font-size: 11px; line-height: 1.25; font-weight: 600; }
 
 /* ========== Caption card ========== */
@@ -1083,10 +1083,10 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   padding: 3px 8px; border-radius: 999px;
   letter-spacing: 0.04em;
 }
-.tag-ai { background: rgba(96, 165, 250, 0.25); color: #bfdbfe; }
+.tag-ai { background: rgba(221, 152, 125, 0.25); color: #f1d6cc; }
 .tag-user { background: rgba(248, 113, 113, 0.22); color: #fecaca; }
 .caption-body {
-  flex: 1; color: #f8fafc; font-size: 13px; line-height: 1.55; word-break: break-word;
+  flex: 1; color: #fafaf9; font-size: 13px; line-height: 1.55; word-break: break-word;
 }
 .caption-user .caption-body { color: rgba(255, 255, 255, 0.78); font-size: 12.5px; }
 .caption-replay {
@@ -1095,7 +1095,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.replay-icon { color: #f8fafc; font-size: 16px; }
+.replay-icon { color: #fafaf9; font-size: 16px; }
 
 /* ========== Action zone ========== */
 .action-zone {
@@ -1133,7 +1133,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   box-shadow: var(--shadow-lg);
 }
 .record-btn.is-disabled {
-  background: rgba(100, 116, 139, 0.7);
+  background: rgba(120, 113, 108, 0.7);
   box-shadow: none;
   pointer-events: none;
   opacity: 0.6;
@@ -1170,7 +1170,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   border: 1px solid rgba(255, 255, 255, 0.14);
   flex: 1;
 }
-.text-mode-icon { color: #f8fafc; font-size: 14px; }
+.text-mode-icon { color: #fafaf9; font-size: 14px; }
 .text-mode-label { color: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 600; }
 .text-mode-btn:active { background: rgba(255, 255, 255, 0.16); }
 
@@ -1232,11 +1232,11 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 }
 
 .avatar-halo {
-  background: radial-gradient(circle, rgba(63, 81, 181, 0.34) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(172, 100, 72, 0.34) 0%, transparent 70%);
 }
 
 .avatar-face {
-  background: #3f51b5;
+  background: #ac6448;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
 }
 
@@ -1261,8 +1261,8 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 }
 
 .tag-ai {
-  color: #bfc5ee;
-  background: rgba(63, 81, 181, 0.26);
+  color: #eacec3;
+  background: rgba(172, 100, 72, 0.26);
 }
 
 .tag-user {
@@ -1343,7 +1343,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
   justify-content: center;
   margin-top: 12px;
   padding: 5px;
-  color: #3f51b5;
+  color: #ac6448;
   font-size: 13px;
 }
 

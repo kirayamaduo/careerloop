@@ -27,18 +27,18 @@ const emit = defineEmits<{
 .sl-tabs {
   display: flex;
   gap: 16px;
-  border-bottom: 1px solid var(--border-color, #b8c8d8);
+  border-bottom: 1px solid var(--border-color, #d8c1b8);
 }
 
 .sl-tabs__item {
   padding: 10px 0;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   font-size: 14px;
   position: relative;
 }
 
 .sl-tabs__item.is-active {
-  color: var(--primary-hover, #1d4ed8);
+  color: var(--primary-hover, #c25c33);
   font-weight: 600;
 }
 
@@ -49,7 +49,7 @@ const emit = defineEmits<{
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   border-radius: 2px;
 }
 </style>

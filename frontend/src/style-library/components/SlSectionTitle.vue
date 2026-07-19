@@ -26,13 +26,13 @@ const emit = defineEmits<{
 .sl-section-title__text {
   font-size: var(--font-title, 18px);
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   letter-spacing: -0.3px;
 }
 
 .sl-section-title__action {
   font-size: 13px;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-weight: 500;
 }
 </style>

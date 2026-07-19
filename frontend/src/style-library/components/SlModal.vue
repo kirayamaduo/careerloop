@@ -53,7 +53,7 @@ const onMaskClick = () => {
 .sl-modal__mask {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(28, 25, 23, 0.45);
 }
 
 .sl-modal__panel {
@@ -72,12 +72,12 @@ const onMaskClick = () => {
 .sl-modal__title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .sl-modal__body {
   font-size: 14px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .sl-modal__footer {

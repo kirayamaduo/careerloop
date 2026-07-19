@@ -491,22 +491,22 @@ onShow(() => {
 .clear-btn-icon {
   width: 32px;
   height: 32px;
-  background: var(--primary-soft, #eff6ff);
-  border: 1px solid #dbeafe;
+  background: var(--primary-soft, #fcf5f2);
+  border: 1px solid #f7e8e2;
   border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-size: 18px;
 }
-.clear-btn-icon:active { background: #dbeafe; }
+.clear-btn-icon:active { background: #f7e8e2; }
 
 .topbar-action {
   width: 32px;
   height: 32px;
-  background: var(--primary-soft, #eff6ff);
-  border: 1px solid #dbeafe;
+  background: var(--primary-soft, #fcf5f2);
+  border: 1px solid #f7e8e2;
   border-radius: 999px;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -517,7 +517,7 @@ onShow(() => {
   display: block;
   font-size: var(--font-hero, 28px);
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .page-subtitle {
@@ -547,8 +547,8 @@ onShow(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-color, #2563eb);
-  background: var(--primary-soft, #eff6ff);
+  color: var(--primary-color, #cd6a43);
+  background: var(--primary-soft, #fcf5f2);
   font-size: 19px;
 }
 .wechat-reminder-copy {
@@ -559,7 +559,7 @@ onShow(() => {
   gap: 3px;
 }
 .wechat-reminder-title {
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   font-size: var(--font-body, 14px);
   font-weight: 700;
 }
@@ -570,7 +570,7 @@ onShow(() => {
 }
 .wechat-reminder-action {
   flex-shrink: 0;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-size: var(--font-caption, 12px);
   font-weight: 700;
 }
@@ -591,15 +591,15 @@ onShow(() => {
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   gap: 6px;
 }
 
 .seg-active {
-  background: var(--surface-2, #f8fafc);
-  color: var(--text-primary, #0f172a);
+  background: var(--surface-2, #fafaf9);
+  color: var(--text-primary, #1c1917);
   font-weight: 600;
   box-shadow: none;
 }
@@ -687,8 +687,8 @@ onShow(() => {
 }
 
 .msg-unread {
-  border-color: var(--primary-color, #2563eb);
-  background: linear-gradient(90deg, var(--primary-soft, #eff6ff), var(--surface-1, #ffffff));
+  border-color: var(--primary-color, #cd6a43);
+  background: linear-gradient(90deg, var(--primary-soft, #fcf5f2), var(--surface-1, #ffffff));
 }
 .msg-unread::before {
   content: '';
@@ -698,10 +698,10 @@ onShow(() => {
   bottom: 14px;
   width: 4px;
   border-radius: 999px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
 }
 .msg-unread .msg-name {
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-weight: 800;
 }
 .msg-card:not(.msg-unread) {
@@ -734,7 +734,7 @@ onShow(() => {
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   border: 2px solid #ffffff;
 }
 
@@ -754,7 +754,7 @@ onShow(() => {
 .msg-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -770,7 +770,7 @@ onShow(() => {
 
 .msg-preview {
   font-size: var(--font-caption, 13px);
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   display: -webkit-box;
   line-clamp: 2;
   -webkit-line-clamp: 2;
@@ -793,14 +793,14 @@ onShow(() => {
 }
 
 .tag-progress {
-  background: var(--primary-soft, #eff6ff);
+  background: var(--primary-soft, #fcf5f2);
 }
-.tag-progress .tag-text { color: var(--primary-color, #2563eb); }
+.tag-progress .tag-text { color: var(--primary-color, #cd6a43); }
 
 .tag-sent {
-  background: #f0fdf4;
+  background: #fbf8f2;
 }
-.tag-sent .tag-text { color: #16a34a; }
+.tag-sent .tag-text { color: #896b30; }
 
 .tag-pass {
   background: #fef3c7;
@@ -829,20 +829,20 @@ onShow(() => {
 
 .empty-sub {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .is-dark {
-  background: #0f172a;
+  background: #1c1917;
 }
 
 .is-dark .page-title,
 .is-dark .msg-name {
-  color: #f8fafc;
+  color: #fafaf9;
 }
 
 .is-dark .msg-card {
-  background: #1e293b;
+  background: #292524;
   box-shadow: none;
 }
 
@@ -851,20 +851,20 @@ onShow(() => {
   color: var(--text-tertiary, #8e8e93);
 }
 
-.is-dark .segment-bar { background: #1e293b; border-color: #334155; }
+.is-dark .segment-bar { background: #292524; border-color: #44403c; }
 .is-dark .seg-item { color: var(--text-tertiary, #8e8e93); }
-.is-dark .seg-active { background: #334155; color: #f8fafc; }
-.is-dark .clear-btn-icon { background: rgba(37, 99, 235, 0.15); border-color: rgba(37, 99, 235, 0.3); color: #60a5fa; }
-.is-dark .msg-unread { background: linear-gradient(0deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.15)), #1e293b; border-color: rgba(37, 99, 235, 0.35); }
-.is-dark .tag-progress { background: rgba(37, 99, 235, 0.15); }
-.is-dark .tag-progress .tag-text { color: #60a5fa; }
-.is-dark .tag-sent { background: rgba(16, 185, 129, 0.15); }
-.is-dark .tag-sent .tag-text { color: #34d399; }
+.is-dark .seg-active { background: #44403c; color: #fafaf9; }
+.is-dark .clear-btn-icon { background: rgba(205, 106, 67, 0.15); border-color: rgba(205, 106, 67, 0.3); color: #dd987d; }
+.is-dark .msg-unread { background: linear-gradient(0deg, rgba(205, 106, 67, 0.15), rgba(205, 106, 67, 0.15)), #292524; border-color: rgba(205, 106, 67, 0.35); }
+.is-dark .tag-progress { background: rgba(205, 106, 67, 0.15); }
+.is-dark .tag-progress .tag-text { color: #dd987d; }
+.is-dark .tag-sent { background: rgba(149, 117, 52, 0.15); }
+.is-dark .tag-sent .tag-text { color: #bf9748; }
 .is-dark .tag-pass { background: rgba(245, 158, 11, 0.15); }
 .is-dark .tag-pass .tag-text { color: #fbbf24; }
 .is-dark .empty-text { color: var(--text-tertiary, #8e8e93); }
-.is-dark .empty-sub { color: var(--text-secondary, #64748b); }
-.is-dark .unread-dot { border-color: var(--text-primary, #0f172a); }
+.is-dark .empty-sub { color: var(--text-secondary, #78716c); }
+.is-dark .unread-dot { border-color: var(--text-primary, #1c1917); }
 
 /* ================================================================
  *  MP-WEIXIN parity overrides — HARDCODED values, no CSS vars.
@@ -873,19 +873,19 @@ onShow(() => {
 
 .msg-card {
   overflow: visible;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #e7e5e4;
   box-shadow: var(--shadow-xs);
 }
 
 .segment-bar {
   overflow: visible;
-  border: 1.5px solid #b0bfd0;
+  border: 1.5px solid #d3b8ad;
   box-shadow: var(--shadow-sm);
 }
 
 .seg-active {
-  background: #dbeafe;
-  color: var(--primary-color, #2563eb);
+  background: #f7e8e2;
+  color: var(--primary-color, #cd6a43);
   box-shadow: var(--shadow-xs);
 }
 
@@ -893,8 +893,8 @@ onShow(() => {
    higher specificity so the segment bar never stays a white slab. */
 
 .msg-page.is-dark .segment-bar {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
   box-shadow: none;
 }
 
@@ -903,14 +903,14 @@ onShow(() => {
 }
 
 .msg-page.is-dark .seg-active {
-  background: #334155;
-  color: #f8fafc;
+  background: #44403c;
+  color: #fafaf9;
   box-shadow: none;
 }
 
 .msg-page.is-dark .msg-card {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
   box-shadow: none;
 }
 
@@ -920,7 +920,7 @@ onShow(() => {
 }
 
 .msg-page.is-dark .msg-name {
-  color: #f8fafc;
+  color: #fafaf9;
 }
 
 .msg-page.is-dark .msg-preview,
@@ -929,15 +929,15 @@ onShow(() => {
 }
 
 .msg-page.is-dark .clear-btn-icon {
-  background: rgba(37, 99, 235, 0.15);
-  border-color: rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  background: rgba(205, 106, 67, 0.15);
+  border-color: rgba(205, 106, 67, 0.3);
+  color: #dd987d;
 }
 
 .msg-page.is-dark .topbar-action {
-  background: rgba(37, 99, 235, 0.15);
-  border-color: rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  background: rgba(205, 106, 67, 0.15);
+  border-color: rgba(205, 106, 67, 0.3);
+  color: #dd987d;
 }
 
 /* #endif */
@@ -976,14 +976,14 @@ onShow(() => {
 .topbar-action {
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(63, 81, 181, 0.32);
+  border: 1px solid rgba(172, 100, 72, 0.32);
   border-radius: 6px;
-  background: #efeff7;
-  color: #3f51b5;
+  background: #f7f1ef;
+  color: #ac6448;
 }
 
 .clear-btn-icon:active {
-  background: #e3e4f2;
+  background: #f1e8e4;
 }
 
 .segment-wrap {
@@ -1074,13 +1074,13 @@ onShow(() => {
 }
 
 .sys-0 {
-  background: #efeff7;
-  color: #3f51b5;
+  background: #f7f1ef;
+  color: #ac6448;
 }
 
 .sys-1 {
-  background: #eef1eb;
-  color: #7b8d6e;
+  background: #f1efeb;
+  color: #8d846e;
 }
 
 .sys-2 {
@@ -1118,21 +1118,21 @@ onShow(() => {
 }
 
 .tag-progress {
-  border: 1px solid rgba(63, 81, 181, 0.28);
-  background: #efeff7;
+  border: 1px solid rgba(172, 100, 72, 0.28);
+  background: #f7f1ef;
 }
 
 .tag-progress .tag-text {
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .tag-sent {
-  border: 1px solid rgba(123, 141, 110, 0.36);
-  background: #eef1eb;
+  border: 1px solid rgba(141, 132, 110, 0.36);
+  background: #f1efeb;
 }
 
 .tag-sent .tag-text {
-  color: #66775c;
+  color: #766f5d;
 }
 
 .tag-pass {
@@ -1183,8 +1183,8 @@ onShow(() => {
 
 .msg-page.is-dark .clear-btn-icon,
 .msg-page.is-dark .topbar-action {
-  border-color: rgba(159, 168, 218, 0.38);
-  background: rgba(63, 81, 181, 0.18);
-  color: #b8c0ef;
+  border-color: rgba(214, 178, 163, 0.38);
+  background: rgba(172, 100, 72, 0.18);
+  color: #ebc9bc;
 }
 </style>

@@ -28,7 +28,7 @@ const emit = defineEmits<{
 .sl-icon-button__label {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   letter-spacing: 0.02em;
   text-align: center;
   line-height: 1.25;

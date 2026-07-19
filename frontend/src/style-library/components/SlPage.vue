@@ -31,22 +31,22 @@ const pageStyle = computed(() => ({
 }
 
 .sl-page.is-dark {
-  --paper: #0f172a;
-  --paper-soft: #1e293b;
-  --paper-deep: #334155;
-  --card-bg: #1e293b;
-  --ink: #f8fafc;
-  --ink-secondary: #cbd5e1;
-  --ink-tertiary: #94a3b8;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --surface-1: #1e293b;
-  --surface-2: #0f172a;
-  --surface-3: #334155;
-  --border-color: #475569;
-  background-color: var(--bg-color, #0f172a);
-  color: #e2e8f0;
+  --paper: #1c1917;
+  --paper-soft: #292524;
+  --paper-deep: #44403c;
+  --card-bg: #292524;
+  --ink: #fafaf9;
+  --ink-secondary: #d6d3d1;
+  --ink-tertiary: #a8a29e;
+  --text-primary: #fafaf9;
+  --text-secondary: #d6d3d1;
+  --text-tertiary: #a8a29e;
+  --surface-1: #292524;
+  --surface-2: #1c1917;
+  --surface-3: #44403c;
+  --border-color: #57534e;
+  background-color: var(--bg-color, #1c1917);
+  color: #e7e5e4;
 }
 
 .sl-page.resume-template-page {

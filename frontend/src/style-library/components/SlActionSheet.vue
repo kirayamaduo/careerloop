@@ -75,7 +75,7 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
 .sl-sheet__mask {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(28, 25, 23, 0.35);
 }
 
 .sl-sheet__panel {
@@ -83,7 +83,7 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface-2, #fafaf9);
   border-top-left-radius: var(--radius-lg, 20px);
   border-top-right-radius: var(--radius-lg, 20px);
   padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
@@ -96,7 +96,7 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
 
 .sl-sheet__title {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .sl-sheet__item,
@@ -108,7 +108,7 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   box-sizing: border-box;
 }
 
@@ -120,19 +120,19 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
 }
 
 .sl-sheet__item--active {
-  border-color: var(--primary-color, #2563eb);
-  background: var(--primary-soft, #eff6ff);
+  border-color: var(--primary-color, #cd6a43);
+  background: var(--primary-soft, #fcf5f2);
 }
 
 .sl-sheet__icon {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface-2, #fafaf9);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   flex-shrink: 0;
 }
 
@@ -148,17 +148,17 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
   font-size: 15px;
   line-height: 1.25;
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .sl-sheet__subtitle {
   font-size: 12px;
   line-height: 1.35;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .sl-sheet__check {
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-size: 18px;
   flex-shrink: 0;
 }
@@ -173,29 +173,29 @@ const onSelect = (index: number, option: SlActionSheetOption) => {
 }
 
 .is-dark .sl-sheet__panel {
-  background: #0f172a;
+  background: #1c1917;
 }
 
 .is-dark .sl-sheet__item,
 .is-dark .sl-sheet__cancel {
-  background: #1e293b;
-  color: #f8fafc;
+  background: #292524;
+  color: #fafaf9;
 }
 
 .is-dark .sl-sheet__item--active {
-  background: rgba(37, 99, 235, 0.18);
-  border-color: rgba(147, 197, 253, 0.4);
+  background: rgba(205, 106, 67, 0.18);
+  border-color: rgba(232, 186, 168, 0.4);
 }
 
 .is-dark .sl-sheet__icon {
-  background: #0f172a;
+  background: #1c1917;
 }
 
 .is-dark .sl-sheet__label {
-  color: #f8fafc;
+  color: #fafaf9;
 }
 
 .is-dark .sl-sheet__subtitle {
-  color: #94a3b8;
+  color: #a8a29e;
 }
 </style>

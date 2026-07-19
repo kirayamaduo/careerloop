@@ -37,21 +37,21 @@ const emit = defineEmits<{
 }
 
 .sl-button--primary {
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   color: #fff;
   box-shadow: var(--shadow-card, 0 4px 16px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08));
 }
 
 .sl-button--secondary {
-  background: var(--surface-2, #f8fafc);
-  color: var(--text-primary, #0f172a);
-  border-color: var(--border-color, #b8c8d8);
+  background: var(--surface-2, #fafaf9);
+  color: var(--text-primary, #1c1917);
+  border-color: var(--border-color, #d8c1b8);
 }
 
 .sl-button--ghost {
   background: transparent;
-  color: var(--primary-color, #2563eb);
-  border-color: var(--primary-mid, #3b82f6);
+  color: var(--primary-color, #cd6a43);
+  border-color: var(--primary-mid, #d47f5d);
 }
 
 .sl-button--danger {

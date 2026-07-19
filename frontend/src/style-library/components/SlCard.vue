@@ -13,7 +13,7 @@ const emit = defineEmits<{
 <style scoped>
 .sl-card {
   background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
+  border: 1px solid var(--border-color, #d8c1b8);
   border-radius: var(--radius-md, 16px);
   box-shadow: var(--shadow-sm, 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08));
   box-sizing: border-box;

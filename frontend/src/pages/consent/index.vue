@@ -302,7 +302,7 @@ const onDisagree = () => {
   display: block;
   font-size: 20px;
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   margin-bottom: 10px;
 }
 
@@ -310,7 +310,7 @@ const onDisagree = () => {
   display: block;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   margin-bottom: 20px;
 }
 
@@ -328,7 +328,7 @@ const onDisagree = () => {
 .menu-item:not(:last-child)::after {
   content: ''; position: absolute;
   bottom: 0; left: 52px; right: 0;
-  height: 1px; background: var(--border-color, #e2e8f0);
+  height: 1px; background: var(--border-color, #e7e5e4);
 }
 
 .menu-icon-wrap {
@@ -347,12 +347,12 @@ const onDisagree = () => {
 .menu-text {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .menu-meta {
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   margin-top: 2px;
 }
 
@@ -371,7 +371,7 @@ const onDisagree = () => {
   height: 22px;
   min-width: 22px;
   border-radius: 7px;
-  border: 2px solid #cbd5e1;
+  border: 2px solid #d6d3d1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,8 +381,8 @@ const onDisagree = () => {
 }
 
 .checkbox.checked {
-  background: var(--primary-color, #2563eb);
-  border-color: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
+  border-color: var(--primary-color, #cd6a43);
 }
 
 .check-mark {
@@ -393,7 +393,7 @@ const onDisagree = () => {
 
 .check-label {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   line-height: 1.55;
   flex: 1;
 }
@@ -408,12 +408,12 @@ const onDisagree = () => {
 }
 
 .check-highlight {
-  color: var(--primary-hover, #1d4ed8);
+  color: var(--primary-hover, #c25c33);
   font-weight: 700;
 }
 
 .check-link {
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-weight: 600;
   font-size: 13px;
 }
@@ -434,7 +434,7 @@ const onDisagree = () => {
 }
 
 .btn-agree.btn-disabled {
-  background: #94a3b8;
+  background: #a8a29e;
   box-shadow: none;
   pointer-events: none;
 }
@@ -471,7 +471,7 @@ const onDisagree = () => {
 .doc-modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(28, 25, 23, 0.6);
   display: flex;
   align-items: flex-end;
   z-index: 9999;
@@ -492,19 +492,19 @@ const onDisagree = () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid var(--surface-3, #f1f5f9);
+  border-bottom: 1px solid var(--surface-3, #f5f5f4);
 }
 
 .doc-modal-title {
   font-size: 17px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .doc-close-btn {
   width: 32px;
   height: 32px;
-  background: var(--surface-3, #f1f5f9);
+  background: var(--surface-3, #f5f5f4);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -513,7 +513,7 @@ const onDisagree = () => {
 
 .doc-close-icon {
   font-size: 14px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   font-weight: 700;
 }
 
@@ -527,7 +527,7 @@ const onDisagree = () => {
   display: block;
   font-size: 15px;
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   margin-top: 24px;
   margin-bottom: 8px;
 }
@@ -540,23 +540,23 @@ const onDisagree = () => {
   display: block;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
-.is-dark .menu-card { background: #1e293b; box-shadow: none; border-color: #334155; }
-.is-dark .menu-text { color: #f8fafc; }
+.is-dark .menu-card { background: #292524; box-shadow: none; border-color: #44403c; }
+.is-dark .menu-text { color: #fafaf9; }
 .is-dark .menu-meta { color: var(--text-tertiary, #8e8e93); }
-.is-dark .menu-item:not(:last-child)::after { background: #334155; }
+.is-dark .menu-item:not(:last-child)::after { background: #44403c; }
 
 .doc-modal-footer {
   padding: 16px 20px 24px;
-  border-top: 1px solid var(--surface-3, #f1f5f9);
+  border-top: 1px solid var(--surface-3, #f5f5f4);
 }
 
 .doc-btn-close {
   width: 100%;
   height: 50px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -592,22 +592,22 @@ const onDisagree = () => {
 
 .hero-title {
   font-size: var(--font-hero, 28px); font-weight: 800;
-  color: var(--text-primary, #0f172a); letter-spacing: -0.5px;
+  color: var(--text-primary, #1c1917); letter-spacing: -0.5px;
   display: block; margin-bottom: 6px;
 }
 
 .hero-subtitle {
   display: block; font-size: 14px; line-height: var(--line-height-body, 1.5);
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .doc-card {
   padding: 24px 20px;
 }
 
-.is-dark .hero-title { color: #f8fafc; }
-.is-dark .doc-card { background: #1e293b; box-shadow: none; border: 1px solid #334155; }
-.is-dark .doc-section { color: #f8fafc; }
+.is-dark .hero-title { color: #fafaf9; }
+.is-dark .doc-card { background: #292524; box-shadow: none; border: 1px solid #44403c; }
+.is-dark .doc-section { color: #fafaf9; }
 
 /* Competition visual system ------------------------------------------------ */
 .consent-page {
@@ -665,7 +665,7 @@ const onDisagree = () => {
 }
 
 .menu-icon-wrap {
-  color: #3f51b5;
+  color: #ac6448;
   background: #f5f5f0;
   border: 1px solid #e0dfdb;
   border-radius: 4px;
@@ -687,12 +687,12 @@ const onDisagree = () => {
 }
 
 .checkbox.checked {
-  background: #3f51b5;
-  border-color: #3f51b5;
+  background: #ac6448;
+  border-color: #ac6448;
 }
 
 .check-link {
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .btn-agree,
@@ -783,6 +783,6 @@ const onDisagree = () => {
 }
 
 .consent-page.is-dark .btn-agree.btn-disabled .btn-agree-text {
-  color: #94a3b8;
+  color: #a8a29e;
 }
 </style>

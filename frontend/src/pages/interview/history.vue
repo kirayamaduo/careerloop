@@ -278,14 +278,14 @@ const groupedInterviews = computed(() => {
 .nav-title {
   font-size: var(--font-section, 17px);
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   letter-spacing: -0.3px;
 }
 
 .nav-icon-btn {
   font-size: 16px;
-  color: var(--primary-color, #2563eb);
-  background: var(--primary-soft, #eff6ff);
+  color: var(--primary-color, #cd6a43);
+  background: var(--primary-soft, #fcf5f2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -295,10 +295,10 @@ const groupedInterviews = computed(() => {
 }
 
 .is-dark .nav-icon-btn {
-  background: #1e293b;
-  color: #93c5fd;
+  background: #292524;
+  color: #e8baa8;
 }
-.is-dark .nav-title { color: #f8fafc; }
+.is-dark .nav-title { color: #fafaf9; }
 
 /* Section labels between date buckets */
 .group-label {
@@ -319,7 +319,7 @@ const groupedInterviews = computed(() => {
 .skel-line {
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #eef2f7 0%, #f7fafc 50%, #eef2f7 100%);
+  background: linear-gradient(90deg, #f6f1ef 0%, #fcf9f7 50%, #f6f1ef 100%);
   background-size: 200% 100%;
   animation: skel-shimmer 1.4s infinite;
 }
@@ -335,13 +335,13 @@ const groupedInterviews = computed(() => {
 
 .hero-title {
   font-size: var(--font-hero, 28px); font-weight: 800;
-  color: var(--text-primary, #0f172a); letter-spacing: -0.5px;
+  color: var(--text-primary, #1c1917); letter-spacing: -0.5px;
   display: block; margin-bottom: 6px;
 }
 
 .hero-subtitle {
   display: block; font-size: 14px; line-height: var(--line-height-body, 1.5);
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .list { display: flex; flex-direction: column; gap: 12px; }
@@ -390,20 +390,20 @@ const groupedInterviews = computed(() => {
   margin-bottom: 14px;
 }
 
-.position { font-size: var(--font-section, 17px); font-weight: 600; color: var(--text-primary, #0f172a); }
+.position { font-size: var(--font-section, 17px); font-weight: 600; color: var(--text-primary, #1c1917); }
 
 .status-pill { padding: 4px 12px; border-radius: 10px; }
 
 .pill-text { font-size: 12px; font-weight: 600; }
 
-.completed { background: var(--success-soft, #dcfce7); }
-.completed .pill-text { color: var(--success-color, #059669); }
+.completed { background: var(--success-soft, #f5efe3); }
+.completed .pill-text { color: var(--success-color, #735a28); }
 
 .ongoing { background: #fef3c7; }
 .ongoing .pill-text { color: #d97706; }
 
-.cancelled { background: var(--surface-3, #f1f5f9); }
-.cancelled .pill-text { color: var(--text-tertiary, #64748b); }
+.cancelled { background: var(--surface-3, #f5f5f4); }
+.cancelled .pill-text { color: var(--text-tertiary, #78716c); }
 
 .card-bottom { display: flex; gap: 20px; }
 
@@ -411,9 +411,9 @@ const groupedInterviews = computed(() => {
 
 .info-label { font-size: 11px; color: var(--text-tertiary, #8e8e93); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
 
-.info-val { font-size: 14px; color: var(--text-secondary, #64748b); font-weight: 500; }
+.info-val { font-size: 14px; color: var(--text-secondary, #78716c); font-weight: 500; }
 
-.score-val { color: var(--primary-color, #2563eb); font-weight: 700; }
+.score-val { color: var(--primary-color, #cd6a43); font-weight: 700; }
 
 .empty { text-align: center; padding: 80px 20px; }
 
@@ -429,38 +429,38 @@ const groupedInterviews = computed(() => {
   margin: -14px 0 24px;
   font-size: 13px;
   line-height: 1.45;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .btn-primary {
-  background: var(--primary-color, #2563eb); color: #fff; font-size: 16px; font-weight: 600;
+  background: var(--primary-color, #cd6a43); color: #fff; font-size: 16px; font-weight: 600;
   border-radius: var(--btn-radius, 14px); height: var(--btn-height-md, 48px); line-height: var(--btn-height-md, 48px); border: none;
 }
 
-.btn-primary:active { background: var(--primary-hover, #1d4ed8); }
+.btn-primary:active { background: var(--primary-hover, #c25c33); }
 
 /* Dark mode */
-.is-dark .hero-title { color: #f8fafc; }
+.is-dark .hero-title { color: #fafaf9; }
 
-.is-dark .hero-subtitle { color: #94a3b8; }
+.is-dark .hero-subtitle { color: #a8a29e; }
 
 .is-dark .title,
-.is-dark .position { color: #f8fafc; }
+.is-dark .position { color: #fafaf9; }
 
 .is-dark .subtitle,
-.is-dark .empty-desc { color: #94a3b8; }
+.is-dark .empty-desc { color: #a8a29e; }
 
 .is-dark .interview-card { background: transparent; box-shadow: none; }
 
-.is-dark .info-val { color: #e2e8f0; }
+.is-dark .info-val { color: #e7e5e4; }
 
 /* Status pills: light-mode pastels + saturated text; dark mode needs its own pair */
 .is-dark .status-pill.completed {
-  background: rgba(16, 185, 129, 0.22);
+  background: rgba(149, 117, 52, 0.22);
 }
 
 .is-dark .status-pill.completed .pill-text {
-  color: #34d399;
+  color: #bf9748;
 }
 
 .is-dark .status-pill.ongoing {
@@ -480,21 +480,21 @@ const groupedInterviews = computed(() => {
 }
 
 .is-dark .skel-card {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
 }
 
 .is-dark .skel-line {
-  background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+  background: linear-gradient(90deg, #292524 0%, #44403c 50%, #292524 100%);
   background-size: 200% 100%;
 }
 
 .is-dark .group-label {
-  color: #64748b;
+  color: #78716c;
 }
 
 .is-dark .nav-new-text {
-  color: #93c5fd;
+  color: #e8baa8;
 }
 
 /* Competition visual system ------------------------------------------------ */
@@ -555,11 +555,11 @@ const groupedInterviews = computed(() => {
 }
 
 .completed {
-  border: 1px solid rgba(107, 142, 90, 0.42);
+  border: 1px solid rgba(148, 127, 84, 0.42);
 }
 
 .completed .pill-text {
-  color: #6b8e5a;
+  color: #947f54;
 }
 
 .ongoing {
@@ -579,7 +579,7 @@ const groupedInterviews = computed(() => {
 }
 
 .score-val {
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .swipe-delete-btn {

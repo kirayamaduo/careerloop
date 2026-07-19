@@ -75,7 +75,7 @@ page {
   margin-top: 8px;
   font-size: 14px;
   line-height: 1.75;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .app-section-title {
@@ -116,7 +116,7 @@ page {
   margin-top: 10px;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .app-empty__desc {
@@ -124,7 +124,7 @@ page {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.45;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 /* #ifdef H5 */

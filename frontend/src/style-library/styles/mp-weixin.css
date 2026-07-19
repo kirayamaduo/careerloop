@@ -36,7 +36,7 @@ button::after {
 }
 
 .app-card-gradient {
-  background: #3f51b5;
+  background: #ac6448;
   color: #ffffff;
   border: none;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
@@ -60,11 +60,11 @@ button::after {
   height: calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 
-.app-icon-tile { background: #eceefa; color: #3f51b5; }
-.app-icon-tile--violet { background: #eceefa; color: #3f51b5; }
-.app-icon-tile--cyan { background: #edf1ea; color: #7b8d6e; }
+.app-icon-tile { background: #f9f0ed; color: #ac6448; }
+.app-icon-tile--violet { background: #f9f0ed; color: #ac6448; }
+.app-icon-tile--cyan { background: #f2efe9; color: #8d846e; }
 .app-icon-tile--candy { background: #f8ebe7; color: #c23b22; }
-.app-icon-tile--success { background: #edf1ea; color: #7b8d6e; }
+.app-icon-tile--success { background: #f2efe9; color: #8d846e; }
 .app-icon-tile--warning { background: #f5efe4; color: #b8975a; }
 
 .ui-list-item,
@@ -92,14 +92,14 @@ textarea {
 .is-dark .sl-input,
 .is-dark input,
 .is-dark textarea {
-  background: #1e293b;
-  border-color: #334155;
-  color: #f8fafc;
+  background: #292524;
+  border-color: #44403c;
+  color: #fafaf9;
 }
 .is-dark .ph,
 .is-dark .search-ph,
 .is-dark .input-ph {
-  color: #94a3b8;
+  color: #a8a29e;
 }
 
 .chat-nav,
@@ -131,8 +131,8 @@ textarea {
 .is-dark .input-area,
 .is-dark .input-bar,
 .is-dark .toolbar {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
 }
 
 /* #endif */

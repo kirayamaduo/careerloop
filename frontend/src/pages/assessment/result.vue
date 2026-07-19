@@ -397,14 +397,14 @@ onShow(() => {
   font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
   padding: 3px 8px; border-radius: 999px;
   color: #ffffff;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #db9579 0%, #db9377 100%);
 }
 
 /* Suggested-roles chips */
 .roles-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .role-chip {
-  font-size: 12px; font-weight: 600; color: #2563eb;
-  background: #eff6ff; border: 1px solid #dbeafe;
+  font-size: 12px; font-weight: 600; color: #cd6a43;
+  background: #fcf5f2; border: 1px solid #f7e8e2;
   padding: 6px 12px; border-radius: 999px;
 }
 
@@ -416,21 +416,21 @@ onShow(() => {
   margin-bottom: 16px;
   padding: 11px 12px;
   border-radius: 12px;
-  background: rgba(37, 99, 235, 0.06);
-  border: 1px solid #dbeafe;
+  background: rgba(205, 106, 67, 0.06);
+  border: 1px solid #f7e8e2;
 }
 .score-basis-title {
   display: block;
   font-size: 12px;
   font-weight: 900;
-  color: #2563eb;
+  color: #cd6a43;
   margin-bottom: 5px;
 }
 .score-basis-text {
   display: block;
   font-size: 12px;
   line-height: 1.5;
-  color: #475569;
+  color: #57534e;
 }
 
 .skill-bars { display: flex; flex-direction: column; gap: 20px; }
@@ -439,13 +439,13 @@ onShow(() => {
 
 .skill-name { width: 75px; font-size: 14px; font-weight: 600; color: #1c1c1e; }
 
-.bar-bg { flex: 1; height: 8px; background-color: #f2f2f7; border-radius: 4px; overflow: hidden; }
+.bar-bg { flex: 1; height: 8px; background-color: #f8f3f1; border-radius: 4px; overflow: hidden; }
 
 .bar-fill { height: 100%; border-radius: 4px; }
 
-.fill-logic { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.fill-creative { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-.fill-exec { background: linear-gradient(90deg, #10b981, #34d399); }
+.fill-logic { background: linear-gradient(90deg, #d47f5d, #dd987d); }
+.fill-creative { background: linear-gradient(90deg, #db9377, #e6b39f); }
+.fill-exec { background: linear-gradient(90deg, #957534, #bf9748); }
 .fill-team { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .fill-pressure { background: linear-gradient(90deg, #ef4444, #f87171); }
 
@@ -459,7 +459,7 @@ onShow(() => {
 
 .p-content { font-size: 15px; color: #636366; line-height: 1.6; }
 
-.divider { height: 1px; background-color: #f2f2f7; margin: 20px 0; }
+.divider { height: 1px; background-color: #f8f3f1; margin: 20px 0; }
 
 .bottom-action {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -474,29 +474,29 @@ onShow(() => {
 /* Custom-rendered buttons (using <view>) so mp-weixin's native <button>
    defaults can't override our colours. */
 .btn-primary {
-  width: 100%; background-color: #2563eb;
+  width: 100%; background-color: #cd6a43;
   border-radius: 16px;
   height: 52px;
   display: flex; align-items: center; justify-content: center;
   box-shadow: var(--shadow-card);
 }
 .btn-primary-text { color: #ffffff; font-size: 17px; font-weight: 700; }
-.btn-primary:active { background-color: #1d4ed8; }
+.btn-primary:active { background-color: #c25c33; }
 
 /* Hero CTA when an AI-suggested role exists -- gradient fill so it visually
    leads against the standard solid blue secondary action below it. */
 .btn-primary.practice-cta {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #db9579 0%, #db9377 100%);
   box-shadow: var(--shadow-card);
 }
-.btn-primary.practice-cta:active { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+.btn-primary.practice-cta:active { background: linear-gradient(135deg, #d37b58 0%, #d27855 100%); }
 
 .result-container.is-dark .radar-card,
 .result-container.is-dark .analysis-card,
 .result-container.is-dark .loading-state,
 .result-container.is-dark .error-state {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
   box-shadow: none;
 }
 
@@ -504,90 +504,90 @@ onShow(() => {
 .result-container.is-dark .skill-name,
 .result-container.is-dark .skill-score,
 .result-container.is-dark .p-title {
-  color: #f8fafc;
+  color: #fafaf9;
 }
 
 .result-container.is-dark .p-content {
-  color: #cbd5e1;
+  color: #d6d3d1;
 }
 
 .result-container.is-dark .bar-bg {
-  background-color: #334155;
+  background-color: #44403c;
 }
 
 .result-container.is-dark .divider {
-  background-color: #334155;
+  background-color: #44403c;
 }
 
 .result-container.is-dark .role-chip {
-  background: rgba(37, 99, 235, 0.18);
-  border-color: rgba(147, 197, 253, 0.32);
-  color: #bfdbfe;
+  background: rgba(205, 106, 67, 0.18);
+  border-color: rgba(232, 186, 168, 0.32);
+  color: #f1d6cc;
 }
 
 .result-container.is-dark .score-basis {
-  background: rgba(37, 99, 235, 0.14);
-  border-color: #1e3a8a;
+  background: rgba(205, 106, 67, 0.14);
+  border-color: #824026;
 }
 
 .result-container.is-dark .score-basis-text {
-  color: #94a3b8;
+  color: #a8a29e;
 }
 
 .result-container.is-dark .bottom-action {
-  background: rgba(15, 23, 42, 0.96);
-  border-top-color: #334155;
+  background: rgba(28, 25, 23, 0.96);
+  border-top-color: #44403c;
 }
 
 /* When the practice CTA is present we tone down the map button so the eye
    prioritises the practice action without making the secondary disappear. */
 .btn-primary.btn-secondary-tone {
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #d6d3d1;
   box-shadow: none;
 }
-.btn-primary.btn-secondary-tone .btn-primary-text { color: #2563eb; }
-.btn-primary.btn-secondary-tone:active { background-color: #f1f5f9; }
+.btn-primary.btn-secondary-tone .btn-primary-text { color: #cd6a43; }
+.btn-primary.btn-secondary-tone:active { background-color: #f5f5f4; }
 
 .btn-secondary {
   width: 100%; height: 44px;
   display: flex; align-items: center; justify-content: center;
 }
-.btn-secondary-text { color: #2563eb; font-size: 15px; font-weight: 600; }
+.btn-secondary-text { color: #cd6a43; font-size: 15px; font-weight: 600; }
 .btn-secondary:active { opacity: 0.7; }
 
 /* Loading + error */
 .loading-state, .error-state {
-  background: #ffffff; border: 1px solid var(--border-color, #b8c8d8);
+  background: #ffffff; border: 1px solid var(--border-color, #d8c1b8);
   border-radius: 20px; padding: 60px 24px;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
   margin-top: 12px;
 }
 .spinner {
   width: 32px; height: 32px;
-  border: 3px solid #e2e8f0; border-top-color: #2563eb;
+  border: 3px solid #e7e5e4; border-top-color: #cd6a43;
   border-radius: 50%;
   animation: result-spin 0.9s linear infinite;
 }
 @keyframes result-spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 14px; color: #475569; }
+.loading-text { font-size: 14px; color: #57534e; }
 .err-title { font-size: 15px; color: #b91c1c; font-weight: 600; }
 .btn-retry {
-  background: #2563eb; height: 40px; padding: 0 24px;
+  background: #cd6a43; height: 40px; padding: 0 24px;
   border-radius: 12px;
   display: flex; align-items: center;
 }
 .btn-retry-text { color: #fff; font-size: 14px; font-weight: 600; }
 
-.is-dark { background-color: #0f172a; }
+.is-dark { background-color: #1c1917; }
 
 .is-dark .section-title,
 .is-dark .p-title,
 .is-dark .skill-name,
-.is-dark .skill-score { color: #f8fafc; }
+.is-dark .skill-score { color: #fafaf9; }
 
 .is-dark .p-content,
-.is-dark .result-subtitle { color: #94a3b8; }
+.is-dark .result-subtitle { color: #a8a29e; }
 
 /* ── CareerLoop editorial skin ─────────────────────────────────────────── */
 .result-container {
@@ -660,7 +660,7 @@ onShow(() => {
 .ai-badge {
   padding: 3px 7px;
   border-radius: 3px;
-  background: #3f51b5;
+  background: #ac6448;
   color: #fffdfa;
 }
 
@@ -701,10 +701,10 @@ onShow(() => {
   background: #efeee9;
 }
 
-.fill-logic { background: #3f51b5; }
+.fill-logic { background: #ac6448; }
 .fill-creative { background: #b8975a; }
-.fill-exec { background: #7b8d6e; }
-.fill-team { background: #5a7b9a; }
+.fill-exec { background: #8d846e; }
+.fill-team { background: #9f6a55; }
 .fill-pressure { background: #c23b22; }
 
 .divider {
@@ -713,10 +713,10 @@ onShow(() => {
 
 .role-chip {
   padding: 5px 10px;
-  border: 1px solid rgba(123, 141, 110, 0.45);
+  border: 1px solid rgba(141, 132, 110, 0.45);
   border-radius: 4px;
-  background: #eef1eb;
-  color: #66775c;
+  background: #f1efeb;
+  color: #766f5d;
 }
 
 .bottom-action {
@@ -753,16 +753,16 @@ onShow(() => {
 }
 
 .btn-primary.btn-secondary-tone {
-  border-color: #3f51b5;
+  border-color: #ac6448;
   background: #faf9f6;
 }
 
 .btn-primary.btn-secondary-tone .btn-primary-text {
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .btn-primary.btn-secondary-tone:active {
-  background: #efeff7;
+  background: #f7f1ef;
 }
 
 .btn-secondary-text {
@@ -784,25 +784,25 @@ onShow(() => {
 }
 
 .result-container.is-dark .result-header {
-  border-color: #475569;
+  border-color: #57534e;
   border-top-color: #e27b66;
-  background: #1e293b;
-  color: #f8fafc;
+  background: #292524;
+  color: #fafaf9;
   box-shadow: none;
 }
 
 .result-container.is-dark .result-title {
-  color: #f8fafc;
+  color: #fafaf9;
 }
 
 .result-container.is-dark .result-subtitle {
-  color: #cbd5e1;
+  color: #d6d3d1;
 }
 
 .result-container.is-dark .role-chip {
-  border-color: rgba(184, 198, 175, 0.44);
-  background: rgba(123, 141, 110, 0.22);
-  color: #b8c6af;
+  border-color: rgba(197, 191, 176, 0.44);
+  background: rgba(141, 132, 110, 0.22);
+  color: #c5bfb0;
 }
 
 .result-container.is-dark .score-basis {

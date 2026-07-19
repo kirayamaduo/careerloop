@@ -135,7 +135,7 @@ onMounted(() => {
 .sl-navbar__title {
   font-size: var(--font-section, 17px);
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   pointer-events: auto;
   max-width: 100%;
   overflow: hidden;
@@ -146,7 +146,7 @@ onMounted(() => {
 .sl-navbar__back {
   font-size: 26px;
   line-height: 1;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   font-weight: 500;
 }
 </style>

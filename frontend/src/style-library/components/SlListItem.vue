@@ -30,7 +30,7 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   background: var(--surface-1, #ffffff);
-  border: 1px solid var(--border-strong, #9aafc5);
+  border: 1px solid var(--border-strong, #c7a598);
   border-radius: var(--radius-md, 16px);
   padding: 14px 16px;
   box-sizing: border-box;
@@ -49,7 +49,7 @@ const emit = defineEmits<{
 
 .sl-list-item__title {
   font-size: var(--font-body, 15px);
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   font-weight: 600;
 }
 

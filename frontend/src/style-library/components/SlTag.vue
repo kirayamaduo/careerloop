@@ -29,18 +29,18 @@ withDefaults(
 }
 
 .sl-tag--default {
-  background: var(--surface-3, #f1f5f9);
-  color: var(--text-secondary, #64748b);
+  background: var(--surface-3, #f5f5f4);
+  color: var(--text-secondary, #78716c);
 }
 
 .sl-tag--primary {
-  background: var(--primary-soft, #eff6ff);
-  color: var(--primary-hover, #1d4ed8);
+  background: var(--primary-soft, #fcf5f2);
+  color: var(--primary-hover, #c25c33);
 }
 
 .sl-tag--success {
-  background: var(--success-soft, #dcfce7);
-  color: var(--success-color, #059669);
+  background: var(--success-soft, #f5efe3);
+  color: var(--success-color, #735a28);
 }
 
 .sl-tag--warning {

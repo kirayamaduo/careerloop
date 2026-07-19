@@ -44,7 +44,7 @@ const clear = () => emit('update:modelValue', '');
   background: var(--surface-1, #ffffff);
   border-radius: 19px;
   padding: 0 12px;
-  border: 1px solid var(--border-color, #b8c8d8);
+  border: 1px solid var(--border-color, #d8c1b8);
   box-sizing: border-box;
 }
 
@@ -57,7 +57,7 @@ const clear = () => emit('update:modelValue', '');
   flex: 1;
   height: 38px;
   font-size: 14px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .sl-search-bar__clear {

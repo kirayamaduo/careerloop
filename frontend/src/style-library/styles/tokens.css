@@ -19,11 +19,11 @@ page {
   --vermilion: #c23b22;
   --vermilion-hover: #a8321d;
   --vermilion-soft: #f8ebe7;
-  --indigo: #3f51b5;
-  --indigo-hover: #33449b;
-  --indigo-soft: #eceefa;
-  --sage: #66775c;
-  --sage-soft: #edf1ea;
+  --indigo: #ac6448;
+  --indigo-hover: #93543b;
+  --indigo-soft: #f9f0ed;
+  --sage: #766f5d;
+  --sage-soft: #f2efe9;
   --heritage-gold: #8a6d38;
   --gold-soft: #f5efe4;
 
@@ -35,22 +35,22 @@ page {
   --primary-hover: #a8321d;
   --primary-mid: #d85a42;
   --primary-soft: #f8ebe7;
-  --brand-color: #3f51b5;
-  --brand-hover: #33449b;
-  --brand-soft: #eceefa;
+  --brand-color: #ac6448;
+  --brand-hover: #93543b;
+  --brand-soft: #f9f0ed;
   --action-color: #c23b22;
   --action-hover: #a8321d;
   --action-soft: #f8ebe7;
 
   /* Legacy semantic hues are deliberately folded into the competition
      palette so old icon variants no longer reintroduce candy colours. */
-  --violet: #3f51b5;
-  --violet-mid: #5968bd;
-  --violet-soft: #eceefa;
+  --violet: #ac6448;
+  --violet-mid: #b67961;
+  --violet-soft: #f9f0ed;
   
-  --cyan: #7b8d6e;
-  --cyan-mid: #899a7f;
-  --cyan-soft: #edf1ea;
+  --cyan: #8d846e;
+  --cyan-mid: #9a927f;
+  --cyan-soft: #f2efe9;
   
   --candy: #c23b22;
   --candy-mid: #d85a42;
@@ -60,8 +60,8 @@ page {
   --accent-hover: #9e7d45;
   --accent-soft: #f5efe4;
 
-  --success-color: #7b8d6e;
-  --success-soft: #edf1ea;
+  --success-color: #8d846e;
+  --success-soft: #f2efe9;
   --warning-color: #b8975a;
   --warning-soft: #f5efe4;
   --danger-color: #b52f2f;
@@ -69,10 +69,10 @@ page {
   
   /* The web design system uses flat print colours only; legacy gradient
      aliases now resolve to solid fills so old pages flatten automatically. */
-  --gradient-primary: #3f51b5;
-  --gradient-success: #7b8d6e;
+  --gradient-primary: #ac6448;
+  --gradient-success: #8d846e;
   --gradient-warning: #b8975a;
-  --gradient-violet: #3f51b5;
+  --gradient-violet: #ac6448;
   --gradient-candy: #c23b22;
 
   --page-ios-gray: #faf9f6;
@@ -85,7 +85,7 @@ page {
   --text-disabled: #b0afab;
   --border-color: #e0dfdb;
   --border-strong: #ceccc5;
-  --interactive-label: #3f51b5;
+  --interactive-label: #ac6448;
 
   --surface-1: #faf9f6;
   --surface-2: #f5f5f0;

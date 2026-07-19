@@ -149,13 +149,16 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> response = fetchWechatSession(url);
 
         if (response == null || (response.containsKey("errcode") && (Integer) response.get("errcode") != 0)) {
+            // 40125/40013 mean the server-side appid/secret pair is wrong; the
+            // user cannot fix that, so surface a friendly, actionable message
+            // instead of letting the generic handler answer "System Error".
             log.error("WeChat login failed: {}", response);
-            throw new RuntimeException("WeChat login failed");
+            throw new BizException(503, "微信登录暂时不可用，请先使用邮箱注册登录，或稍后再试");
         }
 
         String openid = (String) response.get("openid");
         if (openid == null) {
-            throw new RuntimeException("Failed to get openid from WeChat");
+            throw new BizException(503, "微信登录暂时不可用，请先使用邮箱注册登录，或稍后再试");
         }
 
         Optional<UserAuth> userAuthOpt = userAuthRepository.findByIdentifierAndIdentityType(openid, WECHAT);

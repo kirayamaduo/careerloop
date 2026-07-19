@@ -18,7 +18,7 @@ defineProps<{
   display: flex;
   background: var(--surface-1, #ffffff);
   border-radius: var(--btn-radius, 14px);
-  border: 1px solid var(--border-color, #b8c8d8);
+  border: 1px solid var(--border-color, #d8c1b8);
   overflow: hidden;
 }
 
@@ -32,18 +32,18 @@ defineProps<{
 }
 
 .sl-stat-bar__item + .sl-stat-bar__item {
-  border-left: 1px solid var(--border-color, #b8c8d8);
+  border-left: 1px solid var(--border-color, #d8c1b8);
 }
 
 .sl-stat-bar__value {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .sl-stat-bar__label {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 </style>

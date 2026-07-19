@@ -959,8 +959,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand-color, #3f51b5);
-  background: var(--brand-soft, #eceefa);
+  color: var(--brand-color, #ac6448);
+  background: var(--brand-soft, #f9f0ed);
   font-size: 18px;
 }
 .website-link-copy { flex: 1; min-width: 0; }
@@ -983,8 +983,8 @@ onUnmounted(() => {
   flex-shrink: 0;
   padding: 4px 7px;
   border-radius: var(--radius-sm, 4px);
-  background: var(--sage-soft, #edf1ea);
-  color: var(--sage, #7b8d6e);
+  background: var(--sage-soft, #f2efe9);
+  color: var(--sage, #8d846e);
   font-size: 10px;
   font-weight: 800;
 }
@@ -1083,7 +1083,7 @@ onUnmounted(() => {
   justify-content: center;
   border-radius: 50%;
   color: #fff;
-  background: var(--indigo, #3f51b5);
+  background: var(--indigo, #ac6448);
   font-size: 11px;
   font-weight: 700;
 }
@@ -1094,9 +1094,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--indigo, #3f51b5);
+  color: var(--indigo, #ac6448);
   background: var(--card-bg, #fffefa);
-  border: 1px dashed var(--indigo, #3f51b5);
+  border: 1px dashed var(--indigo, #ac6448);
   border-radius: var(--radius-sm, 4px);
 }
 .website-url {
@@ -1133,11 +1133,11 @@ onUnmounted(() => {
 .is-dark .website-destination,
 .is-dark .website-url-row,
 .is-dark .website-link-unavailable {
-  background: #26364d;
-  border-color: #8290dd;
+  background: #4b3228;
+  border-color: #d69f89;
 }
 .is-dark .website-link-state {
-  background: #32443a;
+  background: #433e33;
 }
 
 .tag-cloud-card {
@@ -1183,8 +1183,8 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: 12rpx;
   background:
-    radial-gradient(circle at 24% 28%, rgba(63,81,181,.07), transparent 34%),
-    radial-gradient(circle at 72% 68%, rgba(123,141,110,.09), transparent 36%),
+    radial-gradient(circle at 24% 28%, rgba(172, 100, 72,.07), transparent 34%),
+    radial-gradient(circle at 72% 68%, rgba(141, 132, 110,.09), transparent 36%),
     var(--paper-soft, #f5f5f0);
   border: 1px solid var(--border-color, #e0dfdb);
 }
@@ -1231,8 +1231,8 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tag-cat-skill .tag-cloud-word-text { color: var(--sage, #7b8d6e); }
-.tag-cat-background .tag-cloud-word-text { color: var(--indigo, #3f51b5); }
+.tag-cat-skill .tag-cloud-word-text { color: var(--sage, #8d846e); }
+.tag-cat-background .tag-cloud-word-text { color: var(--indigo, #ac6448); }
 .tag-cat-growth .tag-cloud-word-text { color: var(--heritage-gold, #b8975a); }
 .tag-cat-goal .tag-cloud-word-text { color: var(--vermilion, #c23b22); }
 
@@ -1299,7 +1299,7 @@ onUnmounted(() => {
 .menu-action-text {
   flex-shrink: 0;
   margin-left: 10px;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-size: var(--font-caption, 13px);
   font-weight: 600;
 }
@@ -1377,31 +1377,31 @@ onUnmounted(() => {
 .menu-item-danger:active { background: var(--vermilion-soft, #f8ebe7); }
 
 /* Dark mode */
-.is-dark { background: #0f172a; }
+.is-dark { background: #1c1917; }
 
 .is-dark .stats-bar,
-.is-dark .menu-card { background: #1e293b; box-shadow: none; }
+.is-dark .menu-card { background: #292524; box-shadow: none; }
 
 .is-dark .btn-logout { background: #b91c1c; border: none; box-shadow: none; }
 
 .is-dark .stat-val,
-.is-dark .menu-text { color: #f8fafc; }
+.is-dark .menu-text { color: #fafaf9; }
 
 .is-dark .group-label,
-.is-dark .stat-label { color: var(--text-secondary, #64748b); }
+.is-dark .stat-label { color: var(--text-secondary, #78716c); }
 
 .is-dark .btn-logout { color: #ffffff; }
 
-.is-dark .pill { background: #334155; color: var(--text-tertiary, #8e8e93); }
+.is-dark .pill { background: #44403c; color: var(--text-tertiary, #8e8e93); }
 
 .is-dark .pill-active { background: var(--vermilion, #c23b22); color: #ffffff; }
 
-.is-dark .modal-content { background: #1e293b; }
-.is-dark .sheet-handle { background: #334155; }
-.is-dark .modal-title { color: #f8fafc; }
-.is-dark .field-label { color: #e2e8f0; }
-.is-dark .field-input { background: #0f172a; border-color: var(--text-secondary, #64748b); color: #f8fafc; }
-.is-dark .btn-secondary { background: #334155; color: #e2e8f0; }
+.is-dark .modal-content { background: #292524; }
+.is-dark .sheet-handle { background: #44403c; }
+.is-dark .modal-title { color: #fafaf9; }
+.is-dark .field-label { color: #e7e5e4; }
+.is-dark .field-input { background: #1c1917; border-color: var(--text-secondary, #78716c); color: #fafaf9; }
+.is-dark .btn-secondary { background: #44403c; color: #e7e5e4; }
 
 /* ================================================================
  *  MP-WEIXIN parity overrides — HARDCODED values, no CSS vars.
@@ -1435,13 +1435,13 @@ onUnmounted(() => {
 .is-dark .stats-bar,
 .is-dark .menu-card,
 .is-dark .modal-content.bottom-sheet {
-  background: #1e293b;
-  border-color: var(--text-secondary, #64748b);
+  background: #292524;
+  border-color: var(--text-secondary, #78716c);
   filter: none;
 }
 
 .is-dark .menu-item:not(:last-child)::after {
-  background: #334155;
+  background: #44403c;
 }
 
 /* #endif */

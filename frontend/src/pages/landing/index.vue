@@ -314,8 +314,8 @@ const preview = () => {
   font-size: 22px;
 }
 
-.tone-blue { background: var(--indigo-soft, #eceefa); color: var(--indigo, #3f51b5); }
-.tone-green { background: var(--sage-soft, #edf1ea); color: var(--sage, #7b8d6e); }
+.tone-blue { background: var(--indigo-soft, #f9f0ed); color: var(--indigo, #ac6448); }
+.tone-green { background: var(--sage-soft, #f2efe9); color: var(--sage, #8d846e); }
 .tone-amber { background: var(--gold-soft, #f5efe4); color: var(--heritage-gold, #b8975a); }
 
 .value-copy {

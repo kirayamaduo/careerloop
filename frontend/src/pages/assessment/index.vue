@@ -207,7 +207,7 @@ onShow(() => {
   font-size: 28px;
   line-height: 1.12;
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .summary-text {
@@ -215,14 +215,14 @@ onShow(() => {
   margin-top: 8px;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .back-btn {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   width: var(--nav-back-width, 64px);
 }
 
@@ -239,7 +239,7 @@ onShow(() => {
 .page-title {
   font-size: var(--font-section, 17px);
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   letter-spacing: -0.3px;
   flex: 1;
   text-align: center;
@@ -264,12 +264,12 @@ onShow(() => {
   display: block;
   font-size: 11px;
   font-weight: 700;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   letter-spacing: 0.06em;
   margin-bottom: 4px;
 }
 
-.flow-desc { font-size: 13px; color: var(--text-secondary, #64748b); line-height: 1.45; }
+.flow-desc { font-size: 13px; color: var(--text-secondary, #78716c); line-height: 1.45; }
 
 .assessment-container {
   min-height: 100vh;
@@ -329,7 +329,7 @@ onShow(() => {
   height: 34px;
   border-radius: 17px;
   background: rgba(255, 255, 255, 0.9);
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   font-size: 18px;
   font-weight: 800;
   line-height: 34px;
@@ -339,7 +339,7 @@ onShow(() => {
 .section-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   letter-spacing: -0.5px;
   margin-top: 12px;
   margin-bottom: 16px;
@@ -379,15 +379,15 @@ onShow(() => {
   letter-spacing: -0.2px;
 }
 
-.mbti-icon { background-color: #f3e8ff; }
-.holland-icon { background-color: #e0e7ff; }
+.mbti-icon { background-color: #faf1ed; }
+.holland-icon { background-color: #f8ece7; }
 
 .card-info { display: flex; flex-direction: column; }
 
 .a-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
@@ -399,35 +399,35 @@ onShow(() => {
 .tag {
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-secondary, #64748b);
-  background-color: var(--surface-3, #f1f5f9);
+  color: var(--text-secondary, #78716c);
+  background-color: var(--surface-3, #f5f5f4);
   padding: 4px 8px;
   border-radius: 8px;
 }
 
-.tag-time { color: var(--text-secondary, #64748b); }
+.tag-time { color: var(--text-secondary, #78716c); }
 
-.tag-blue { color: var(--primary-color, #2563eb); background-color: var(--primary-soft, #eff6ff); }
+.tag-blue { color: var(--primary-color, #cd6a43); background-color: var(--primary-soft, #fcf5f2); }
 
 .card-right { margin-left: 12px; }
 
 .btn-start {
-  background-color: var(--primary-soft, #eff6ff);
-  color: var(--primary-color, #2563eb);
+  background-color: var(--primary-soft, #fcf5f2);
+  color: var(--primary-color, #cd6a43);
   font-size: 13px;
   font-weight: 700;
   border-radius: 999px;
   padding: 0 16px;
   height: 32px;
   line-height: 32px;
-  border: 1px solid #dbeafe;
+  border: 1px solid #f7e8e2;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: 0.02em;
 }
 
-.assessment-card:active .btn-start { background-color: #dbeafe; }
+.assessment-card:active .btn-start { background-color: #f7e8e2; }
 
-.tag-done { color: var(--success-color, #059669); background: var(--success-soft, #dcfce7); }
+.tag-done { color: var(--success-color, #735a28); background: var(--success-soft, #f5efe3); }
 
 /* Skeleton placeholders shown during initial load. */
 .skeleton-list { display: flex; flex-direction: column; gap: 16px; }
@@ -438,7 +438,7 @@ onShow(() => {
 }
 .skel-square {
   width: 48px; height: 48px; border-radius: var(--radius-xl, 24px);
-  background: linear-gradient(90deg, #eef2f7 0%, #f7fafc 50%, #eef2f7 100%);
+  background: linear-gradient(90deg, #f6f1ef 0%, #fcf9f7 50%, #f6f1ef 100%);
   background-size: 200% 100%;
   animation: skel-shimmer 1.4s infinite;
   flex-shrink: 0;
@@ -446,7 +446,7 @@ onShow(() => {
 .skel-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .skel-line {
   height: 12px; border-radius: 6px;
-  background: linear-gradient(90deg, #eef2f7 0%, #f7fafc 50%, #eef2f7 100%);
+  background: linear-gradient(90deg, #f6f1ef 0%, #fcf9f7 50%, #f6f1ef 100%);
   background-size: 200% 100%;
   animation: skel-shimmer 1.4s infinite;
 }
@@ -477,19 +477,19 @@ onShow(() => {
   font-size: 20px;
   font-weight: 800;
 }
-.empty-text { font-size: 16px; font-weight: 700; color: var(--text-secondary, #64748b); display: block; margin-bottom: 8px; }
+.empty-text { font-size: 16px; font-weight: 700; color: var(--text-secondary, #78716c); display: block; margin-bottom: 8px; }
 .empty-desc { font-size: 13px; color: var(--text-tertiary, #8e8e93); line-height: 1.5; }
-.btn-retry { margin-top: 18px; background: var(--primary-color, #2563eb); color: #fff; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm, 12px); height: 40px; line-height: 40px; border: none; width: 120px; }
+.btn-retry { margin-top: 18px; background: var(--primary-color, #cd6a43); color: #fff; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm, 12px); height: 40px; line-height: 40px; border: none; width: 120px; }
 
-.is-dark { background-color: var(--text-primary, #0f172a); }
+.is-dark { background-color: var(--text-primary, #1c1917); }
 
 .is-dark .page-title,
 .is-dark .summary-title,
 .is-dark .section-title,
-.is-dark .a-title { color: #f8fafc; }
+.is-dark .a-title { color: #fafaf9; }
 
 .is-dark .flow-pill,
-.is-dark .assessment-card { background-color: #1e293b; }
+.is-dark .assessment-card { background-color: #292524; }
 
 .is-dark .a-desc,
 .is-dark .summary-text,
@@ -509,7 +509,7 @@ onShow(() => {
 
 .assessment-card {
   overflow: visible;
-  border: 1.5px solid #b0bfd0;
+  border: 1.5px solid #d3b8ad;
   box-shadow: var(--shadow-card);
 }
 
@@ -521,60 +521,60 @@ onShow(() => {
 
 /* MP + dark: overrides above are light-first */
 .assessment-container.is-dark .assessment-card {
-  background-color: #1e293b;
-  border-color: #334155;
+  background-color: #292524;
+  border-color: #44403c;
 }
 
 .assessment-container.is-dark .skel-card {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
 }
 
 .assessment-container.is-dark .skel-square,
 .assessment-container.is-dark .skel-line {
-  background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+  background: linear-gradient(90deg, #292524 0%, #44403c 50%, #292524 100%);
   background-size: 200% 100%;
 }
 
 .assessment-container.is-dark .empty-state {
-  background: #1e293b;
-  border-color: #334155;
+  background: #292524;
+  border-color: #44403c;
 }
 
 .assessment-container.is-dark .btn-start {
-  background-color: rgba(37, 99, 235, 0.2);
-  border-color: rgba(37, 99, 235, 0.35);
-  color: #93c5fd;
+  background-color: rgba(205, 106, 67, 0.2);
+  border-color: rgba(205, 106, 67, 0.35);
+  color: #e8baa8;
 }
 
 .assessment-container.is-dark .tag {
-  background-color: rgba(51, 65, 85, 0.8);
-  color: #cbd5e1;
+  background-color: rgba(68, 64, 60, 0.8);
+  color: #d6d3d1;
 }
 
 .assessment-container.is-dark .tag-blue {
-  background-color: rgba(37, 99, 235, 0.2);
-  color: #93c5fd;
+  background-color: rgba(205, 106, 67, 0.2);
+  color: #e8baa8;
 }
 
 .assessment-container.is-dark .radar-placeholder {
-  background: rgba(37, 99, 235, 0.16);
-  border-color: rgba(147, 197, 253, 0.36);
+  background: rgba(205, 106, 67, 0.16);
+  border-color: rgba(232, 186, 168, 0.36);
 }
 
 .assessment-container.is-dark .radar-icon {
-  background: rgba(37, 99, 235, 0.28);
-  color: #bfdbfe;
+  background: rgba(205, 106, 67, 0.28);
+  color: #f1d6cc;
 }
 
 .assessment-container.is-dark .mbti-icon {
-  background-color: rgba(168, 85, 247, 0.2);
-  color: #d8b4fe;
+  background-color: rgba(218, 144, 114, 0.2);
+  color: #efcfc3;
 }
 
 .assessment-container.is-dark .holland-icon {
-  background-color: rgba(99, 102, 241, 0.2);
-  color: #c7d2fe;
+  background-color: rgba(219, 149, 121, 0.2);
+  color: #f3dbd2;
 }
 
 .assessment-container.is-dark .icon-box.app-icon-tile--candy {
@@ -663,7 +663,7 @@ onShow(() => {
 }
 
 .progress-text {
-  color: #3f51b5;
+  color: #ac6448;
   font-family: "Noto Serif SC", "Songti SC", STSong, serif;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -682,7 +682,7 @@ onShow(() => {
   height: 36px;
   border-radius: 4px;
   background: #efeee9;
-  color: #3f51b5;
+  color: #ac6448;
   line-height: 36px;
 }
 
@@ -719,17 +719,17 @@ onShow(() => {
   border: 1px solid #e0dfdb;
   border-radius: 6px;
   background: #f5f5f0;
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .icon-box.app-icon-tile--cyan {
-  background: #eef1eb;
-  color: #7b8d6e;
+  background: #f1efeb;
+  color: #8d846e;
 }
 
 .icon-box.app-icon-tile--violet {
-  background: #efeff7;
-  color: #3f51b5;
+  background: #f7f1ef;
+  color: #ac6448;
 }
 
 .icon-box.app-icon-tile--candy {
@@ -756,15 +756,15 @@ onShow(() => {
 }
 
 .tag-blue {
-  border-color: rgba(63, 81, 181, 0.28);
-  background: #efeff7;
-  color: #3f51b5;
+  border-color: rgba(172, 100, 72, 0.28);
+  background: #f7f1ef;
+  color: #ac6448;
 }
 
 .tag-done {
-  border-color: rgba(123, 141, 110, 0.38);
-  background: #eef1eb;
-  color: #6b7f5f;
+  border-color: rgba(141, 132, 110, 0.38);
+  background: #f1efeb;
+  color: #7d7561;
 }
 
 .btn-start {
@@ -815,14 +815,14 @@ onShow(() => {
 }
 
 .assessment-container.is-dark .status-card {
-  border-color: #475569;
-  background: #1e293b;
+  border-color: #57534e;
+  background: #292524;
   box-shadow: none;
 }
 
 .assessment-container.is-dark .empty-icon-shell {
-  border-color: #475569;
-  background: #0f172a;
+  border-color: #57534e;
+  background: #1c1917;
   color: #dfc58f;
 }
 
@@ -837,9 +837,9 @@ onShow(() => {
 .assessment-container.is-dark .radar-icon,
 .assessment-container.is-dark .mbti-icon,
 .assessment-container.is-dark .holland-icon {
-  border-color: rgba(170, 179, 234, 0.42);
-  background: rgba(63, 81, 181, 0.24);
-  color: #aab3ea;
+  border-color: rgba(229, 190, 175, 0.42);
+  background: rgba(172, 100, 72, 0.24);
+  color: #e5beaf;
 }
 
 .assessment-container.is-dark .icon-box.app-icon-tile--candy {

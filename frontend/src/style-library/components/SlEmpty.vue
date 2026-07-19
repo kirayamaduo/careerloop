@@ -36,7 +36,7 @@ withDefaults(
 
 .sl-empty__title {
   font-size: 15px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   font-weight: 600;
 }
 

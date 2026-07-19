@@ -122,7 +122,7 @@ const copyUrl = () => {
 
 .fb-text {
   font-size: 16px;
-  color: #1e293b;
+  color: #292524;
   margin-bottom: 8px;
   text-align: center;
   font-weight: 900;
@@ -131,31 +131,31 @@ const copyUrl = () => {
 .fb-desc {
   font-size: 13px;
   line-height: 1.55;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
   margin-bottom: 12px;
   text-align: center;
 }
 
 .fb-source {
   font-size: 13px;
-  color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #cd6a43);
   margin-bottom: 18px;
 }
 
 .fb-url {
   font-size: 13px;
-  color: #64748b;
+  color: #78716c;
   margin-bottom: 32px;
   text-align: center;
   word-break: break-all;
-  background: #f1f5f9;
+  background: #f5f5f4;
   padding: 12px;
   border-radius: 8px;
   width: 100%;
 }
 
 .btn-copy {
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   color: #ffffff;
   border-radius: var(--btn-radius, 14px);
   font-size: 15px;
@@ -177,7 +177,7 @@ const copyUrl = () => {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 10px 28px rgba(28, 25, 23, 0.16);
 }
 
 .helper-copy {
@@ -192,7 +192,7 @@ const copyUrl = () => {
   font-size: 12px;
   line-height: 1.25;
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -201,7 +201,7 @@ const copyUrl = () => {
 .helper-tip {
   font-size: 11px;
   line-height: 1.35;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 .helper-copy-btn {
@@ -212,18 +212,18 @@ const copyUrl = () => {
   padding: 0;
   border: none;
   border-radius: 10px;
-  background: var(--primary-color, #2563eb);
+  background: var(--primary-color, #cd6a43);
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
 }
 
-.is-dark .fb-text { color: #f8fafc; }
-.is-dark .fb-desc { color: #94a3b8; }
-.is-dark .fb-url { background: #1e293b; color: #cbd5e1; }
-.is-dark .webview-helper { background: #1e293b; border-color: #334155; }
-.is-dark .helper-source { color: #f8fafc; }
-.is-dark .helper-tip { color: #94a3b8; }
+.is-dark .fb-text { color: #fafaf9; }
+.is-dark .fb-desc { color: #a8a29e; }
+.is-dark .fb-url { background: #292524; color: #d6d3d1; }
+.is-dark .webview-helper { background: #292524; border-color: #44403c; }
+.is-dark .helper-source { color: #fafaf9; }
+.is-dark .helper-tip { color: #a8a29e; }
 
 /* Competition visual system ------------------------------------------------ */
 .fallback-card,
@@ -235,7 +235,7 @@ const copyUrl = () => {
 }
 
 .fb-icon {
-  color: #3f51b5;
+  color: #ac6448;
 }
 
 .fb-text,

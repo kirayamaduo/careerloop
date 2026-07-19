@@ -30,7 +30,7 @@ onMounted(() => {
   display: block;
   font-size: 22px;
   font-weight: 800;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #1c1917);
 }
 
 .bridge-copy {
@@ -38,7 +38,7 @@ onMounted(() => {
   margin-top: 8px;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #78716c);
 }
 
 /* Competition visual system: quiet paper surface while the bridge redirects. */

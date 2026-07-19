@@ -95,7 +95,7 @@
 .home-page .readiness-dim-fill,
 .hub-page .hub-pct-fill,
 .hub-page .hub-progress-fill {
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .landing-page .score-fill,
@@ -166,12 +166,12 @@
 }
 
 .login-page .checkbox.checked {
-  background: var(--indigo, #3f51b5) !important;
-  border-color: var(--indigo, #3f51b5) !important;
+  background: var(--indigo, #ac6448) !important;
+  border-color: var(--indigo, #ac6448) !important;
 }
 
 .onboarding-page .progress-dot.done {
-  background: var(--sage, #7b8d6e) !important;
+  background: var(--sage, #8d846e) !important;
 }
 
 .onboarding-page .progress-dot.active {
@@ -212,7 +212,7 @@
 .home-page .section-lite-action,
 .home-page .section-more-text,
 .home-page .section-more-arrow {
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .chat-page .chat-nav,
@@ -223,7 +223,7 @@
 }
 
 .chat-page .nav-bot-avatar {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--indigo, #ac6448) !important;
 }
 
 .chat-page .bot-avatar {
@@ -233,7 +233,7 @@
 
 .chat-page .welcome-icon {
   background: transparent !important;
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .chat-page .bubble-user {
@@ -253,8 +253,8 @@
 
 .resume-page .rc-icon,
 .resume-page .rc-icon-ai {
-  background: var(--indigo-soft, #eceefa) !important;
-  color: var(--indigo, #3f51b5) !important;
+  background: var(--indigo-soft, #f9f0ed) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .resume-page .section-action {
@@ -268,7 +268,7 @@
 }
 
 .resume-page .ai-badge {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--indigo, #ac6448) !important;
 }
 
 .home-page .feature-item {
@@ -283,7 +283,7 @@
 
 .resume-page .keyword-pill,
 .user-page .tag-cloud-word {
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .user-page .header-card {
@@ -293,7 +293,7 @@
 
 .user-page .header-edit-text,
 .user-page .tag-cloud-edit-text {
-  color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 
 .hub-page .hub-section:first-child {
@@ -335,8 +335,8 @@
 
 .start-page .mode-card.active,
 .start-page .diff-card.active {
-  background: var(--indigo, #3f51b5) !important;
-  border-color: var(--indigo, #3f51b5) !important;
+  background: var(--indigo, #ac6448) !important;
+  border-color: var(--indigo, #ac6448) !important;
 }
 
 .start-page .sticky-cta .btn-primary.btn-disabled {
@@ -364,11 +364,11 @@
 .competition-report-page .dim-bar-fill,
 .competition-report-page .mini-bar,
 .competition-report-page .behavior-fill {
-  background: var(--indigo, #3f51b5) !important;
+  background: var(--indigo, #ac6448) !important;
 }
 
 .competition-report-page .good {
-  border-left-color: var(--sage, #7b8d6e) !important;
+  border-left-color: var(--sage, #8d846e) !important;
 }
 
 .competition-report-page .warn {
@@ -480,7 +480,7 @@
   box-shadow: none !important;
 }
 .login-page .btn-wechat {
-  border: 1px solid #079b4e;
+  border: 1px solid #785e2a;
 }
 .login-page .btn-guest {
   background: transparent !important;
@@ -633,13 +633,13 @@
   color: var(--vermilion, #c23b22) !important;
 }
 .app-icon-tile--violet {
-  background: var(--indigo-soft, #eceefa) !important;
-  color: var(--indigo, #3f51b5) !important;
+  background: var(--indigo-soft, #f9f0ed) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 .app-icon-tile--cyan,
 .app-icon-tile--success {
-  background: var(--sage-soft, #edf1ea) !important;
-  color: var(--sage, #7b8d6e) !important;
+  background: var(--sage-soft, #f2efe9) !important;
+  color: var(--sage, #8d846e) !important;
 }
 .app-icon-tile--candy {
   background: var(--vermilion-soft, #f8ebe7) !important;
@@ -661,43 +661,43 @@
 .is-dark.hub-page,
 .is-dark.start-page,
 .competition-report-page.is-dark {
-  --paper: #0f172a;
-  --paper-soft: #1e293b;
-  --paper-deep: #334155;
-  --card-bg: #1e293b;
-  --ink: #f8fafc;
-  --ink-secondary: #cbd5e1;
-  --ink-tertiary: #94a3b8;
+  --paper: #1c1917;
+  --paper-soft: #292524;
+  --paper-deep: #44403c;
+  --card-bg: #292524;
+  --ink: #fafaf9;
+  --ink-secondary: #d6d3d1;
+  --ink-tertiary: #a8a29e;
   --vermilion: #c23b22;
   --vermilion-hover: #a8321d;
   --vermilion-text: #e27b66;
   --vermilion-soft: rgba(216, 90, 66, 0.15);
-  --indigo: #3f51b5;
-  --indigo-hover: #33449b;
-  --indigo-text: #aab3ea;
-  --indigo-soft: rgba(100, 116, 210, 0.16);
-  --sage: #a8b79e;
-  --sage-text: #b8c6af;
-  --sage-soft: rgba(123, 141, 110, 0.18);
+  --indigo: #ac6448;
+  --indigo-hover: #93543b;
+  --indigo-text: #e5beaf;
+  --indigo-soft: rgba(202, 135, 108, 0.16);
+  --sage: #b6af9f;
+  --sage-text: #c5bfb0;
+  --sage-soft: rgba(141, 132, 110, 0.18);
   --heritage-gold: #d3b578;
   --gold-text: #dfc58f;
   --gold-soft: rgba(184, 151, 90, 0.17);
-  --border-color: #475569;
-  --border-strong: #64748b;
+  --border-color: #57534e;
+  --border-strong: #78716c;
   --shadow-xs: none;
   --shadow-sm: none;
   --shadow-card: none;
   --shadow-lg: none;
-  background: #0f172a !important;
+  background: #1c1917 !important;
 }
 
 .is-dark.home-page .today-card {
-  background: #1e293b !important;
+  background: #292524 !important;
   border-color: #7f3a31 !important;
 }
 .is-dark.login-page .hero {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: #1c1917 !important;
+  border-color: #44403c !important;
 }
 .is-dark.login-page .hero-title,
 .is-dark.login-page .sheet-title,
@@ -705,28 +705,28 @@
 .is-dark.home-page .today-title,
 .is-dark.user-page .header-name,
 .is-dark.user-page .guest-title {
-  color: #f8fafc !important;
+  color: #fafaf9 !important;
 }
 .is-dark.login-page .hero-subtitle,
 .is-dark.home-page .today-desc,
 .is-dark.home-page .today-result-text,
 .is-dark.user-page .header-school,
 .is-dark.user-page .guest-desc {
-  color: #cbd5e1 !important;
+  color: #d6d3d1 !important;
 }
 .is-dark.home-page .today-result,
 .is-dark.user-page .header-edit {
-  background: #0f172a !important;
-  border-color: #475569 !important;
+  background: #1c1917 !important;
+  border-color: #57534e !important;
 }
 .is-dark.home-page .today-plan-link-text,
 .is-dark.home-page .today-done-text,
 .is-dark.user-page .header-edit-arrow {
-  color: #e2e8f0 !important;
+  color: #e7e5e4 !important;
 }
 .is-dark.user-page .header-card {
-  background: #1e293b !important;
-  border-color: #475569 !important;
+  background: #292524 !important;
+  border-color: #57534e !important;
 }
 
 .is-dark.login-page .field-input,
@@ -735,18 +735,18 @@
 .is-dark.chat-page .chat-input,
 .is-dark.start-page .picker-box,
 .competition-report-page.is-dark .contribute-input {
-  background: #1e293b !important;
-  border-color: #475569 !important;
-  color: #f8fafc !important;
+  background: #292524 !important;
+  border-color: #57534e !important;
+  color: #fafaf9 !important;
 }
 
 .is-dark.chat-page .bubble-ai,
 .is-dark.chat-page .bot-avatar,
 .is-dark.chat-page .welcome-card,
 .is-dark.chat-page .quick-chip {
-  background: #1e293b !important;
-  border-color: #475569 !important;
-  color: #f8fafc !important;
+  background: #292524 !important;
+  border-color: #57534e !important;
+  color: #fafaf9 !important;
   box-shadow: none !important;
 }
 
@@ -759,19 +759,19 @@
 }
 
 .is-dark.start-page .sticky-cta .btn-primary.btn-disabled {
-  background: #334155 !important;
-  border-color: #475569 !important;
+  background: #44403c !important;
+  border-color: #57534e !important;
 }
 
 .is-dark.start-page .sticky-cta .btn-primary.btn-disabled .btn-primary-label {
-  color: #94a3b8 !important;
+  color: #a8a29e !important;
 }
 
 .is-dark.start-page .header .title,
 .is-dark.start-page .header .subtitle,
 .is-dark.resume-page .section-action-text,
 .is-dark.hub-page .hub-action-primary .hub-action-text {
-  color: #f8fafc !important;
+  color: #fafaf9 !important;
 }
 
 .is-dark.user-page .website-code-panel {
@@ -801,7 +801,7 @@
 .is-dark.chat-page .welcome-icon,
 .is-dark.chat-page .bot-emoji,
 .is-dark.user-page .tag-cloud-edit-text {
-  color: var(--indigo-text, #aab3ea) !important;
+  color: var(--indigo-text, #e5beaf) !important;
 }
 
 .is-dark.start-page .mode-card.active .mode-name,
@@ -821,14 +821,14 @@
 }
 
 .is-dark .app-icon-tile--violet {
-  background: rgba(63, 81, 181, 0.24) !important;
-  color: var(--indigo-text, #aab3ea) !important;
+  background: rgba(172, 100, 72, 0.24) !important;
+  color: var(--indigo-text, #e5beaf) !important;
 }
 
 .is-dark .app-icon-tile--cyan,
 .is-dark .app-icon-tile--success {
-  background: rgba(123, 141, 110, 0.24) !important;
-  color: var(--sage-text, #b8c6af) !important;
+  background: rgba(141, 132, 110, 0.24) !important;
+  color: var(--sage-text, #c5bfb0) !important;
 }
 
 .is-dark .app-icon-tile--candy {
@@ -916,14 +916,14 @@ rich-text, cover-view, cover-image {
 .home-page .cover-tone-0,
 .home-page .cover-topic-resume,
 .home-page .cover-topic-code {
-  background: var(--indigo-soft, #eceefa) !important;
-  color: var(--indigo, #3f51b5) !important;
+  background: var(--indigo-soft, #f9f0ed) !important;
+  color: var(--indigo, #ac6448) !important;
 }
 .home-page .cover-tone-1,
 .home-page .cover-topic-career,
 .home-page .cover-topic-data {
-  background: var(--sage-soft, #edf1ea) !important;
-  color: var(--sage, #66775c) !important;
+  background: var(--sage-soft, #f2efe9) !important;
+  color: var(--sage, #766f5d) !important;
 }
 .home-page .cover-tone-2,
 .home-page .cover-topic-interview,
