@@ -937,3 +937,15 @@ rich-text, cover-view, cover-image {
   background: var(--gold-soft, #f5efe4) !important;
   color: var(--heritage-gold, #8a6d38) !important;
 }
+
+/* ============================================================
+   Press feedback (hover-class)
+   Tappable <view>s carry hover-class="press-fb"; native <button>s
+   use WeChat's default hover-class="button-hover". Both dim via
+   opacity because our flatten layer forces backgrounds with
+   !important, which would swallow the stock grey overlay.
+   ============================================================ */
+.press-fb,
+.button-hover {
+  opacity: 0.55 !important;
+}

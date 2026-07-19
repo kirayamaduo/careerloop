@@ -15,7 +15,7 @@
     <view v-else-if="pageError" class="profile-state app-card-soft">
       <text class="profile-state-title">{{ t('agent.profile.loadFailed') }}</text>
       <text class="profile-state-desc">{{ pageError }}</text>
-      <view class="profile-state-retry" @click="loadProfilePage">
+      <view class="profile-state-retry" @click="loadProfilePage" hover-class="press-fb" hover-stay-time="120">
         <text>{{ t('agent.profile.retry') }}</text>
       </view>
     </view>
@@ -80,14 +80,14 @@
       <view class="profile-section app-card-soft">
         <view class="profile-section-head">
           <text class="profile-section-title">{{ t('agent.profile.sectionTagEditor') }}</text>
-          <view class="profile-small-action" @click="refreshProfileTags">
+          <view class="profile-small-action" @click="refreshProfileTags" hover-class="press-fb" hover-stay-time="120">
             <text class="profile-small-action-text">{{ t('agent.profile.refreshTags') }}</text>
           </view>
         </view>
         <view v-for="section in tagSections" :key="section.category" class="profile-tag-editor-block">
           <view class="profile-tag-editor-head">
             <text class="profile-signal-title">{{ section.label }}</text>
-            <view class="profile-tag-add" @click="addTag(section.category)">
+            <view class="profile-tag-add" @click="addTag(section.category)" hover-class="press-fb" hover-stay-time="120">
               <text class="profile-tag-add-text">+</text>
             </view>
           </view>
@@ -97,13 +97,13 @@
               :key="section.category + '-' + tag"
               class="profile-signal-chip profile-edit-chip"
               @click="removeTag(section.category, idx)"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <text class="profile-signal-chip-text">{{ tag }}</text>
               <text class="profile-edit-chip-x">×</text>
             </view>
           </view>
         </view>
-        <view class="profile-tags-save" :class="{ 'profile-tags-saving': savingTags }" @click="saveProfileTags">
+        <view class="profile-tags-save" :class="{ 'profile-tags-saving': savingTags }" @click="saveProfileTags" hover-class="press-fb" hover-stay-time="120">
           <text class="profile-tags-save-text">{{ savingTags ? t('agent.profile.saving') : t('agent.profile.saveTags') }}</text>
         </view>
       </view>
@@ -172,7 +172,7 @@
               class="profile-chip ui-list-item"
               :class="{ 'profile-chip-active': form.timeline === opt.val }"
               @click="form.timeline = opt.val"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <text class="profile-chip-text">{{ opt.label }}</text>
             </view>
           </view>
@@ -201,7 +201,7 @@
               class="profile-chip ui-list-item"
               :class="{ 'profile-chip-active': form.weeklyHours === opt.val }"
               @click="form.weeklyHours = opt.val"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <text class="profile-chip-text">{{ opt.label }}</text>
             </view>
           </view>
@@ -216,7 +216,7 @@
               class="profile-chip ui-list-item"
               :class="{ 'profile-chip-active': form.preferredDifficulty === opt.val }"
               @click="form.preferredDifficulty = opt.val"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <text class="profile-chip-text">{{ opt.label }}</text>
             </view>
           </view>
@@ -232,12 +232,12 @@
               class="profile-toggle-btn ui-list-item"
               :class="{ 'profile-toggle-active': form.considerGradSchool === true }"
               @click="form.considerGradSchool = true"
-            ><text class="profile-toggle-text">{{ t('agent.profile.yes') }}</text></view>
+             hover-class="press-fb" hover-stay-time="120"><text class="profile-toggle-text">{{ t('agent.profile.yes') }}</text></view>
             <view
               class="profile-toggle-btn ui-list-item"
               :class="{ 'profile-toggle-active': form.considerGradSchool === false }"
               @click="form.considerGradSchool = false"
-            ><text class="profile-toggle-text">{{ t('agent.profile.no') }}</text></view>
+             hover-class="press-fb" hover-stay-time="120"><text class="profile-toggle-text">{{ t('agent.profile.no') }}</text></view>
           </view>
         </view>
         <view class="profile-toggle-row">
@@ -247,12 +247,12 @@
               class="profile-toggle-btn ui-list-item"
               :class="{ 'profile-toggle-active': form.considerStudyAbroad === true }"
               @click="form.considerStudyAbroad = true"
-            ><text class="profile-toggle-text">{{ t('agent.profile.yes') }}</text></view>
+             hover-class="press-fb" hover-stay-time="120"><text class="profile-toggle-text">{{ t('agent.profile.yes') }}</text></view>
             <view
               class="profile-toggle-btn ui-list-item"
               :class="{ 'profile-toggle-active': form.considerStudyAbroad === false }"
               @click="form.considerStudyAbroad = false"
-            ><text class="profile-toggle-text">{{ t('agent.profile.no') }}</text></view>
+             hover-class="press-fb" hover-stay-time="120"><text class="profile-toggle-text">{{ t('agent.profile.no') }}</text></view>
           </view>
         </view>
       </view>
@@ -264,7 +264,7 @@
         class="profile-submit-btn"
         :class="{ 'profile-submit-loading': saving }"
         @click="saveInputs"
-      >
+       hover-class="press-fb" hover-stay-time="120">
         <text class="profile-submit-text">{{ saving ? t('agent.profile.saving') : t('agent.profile.save') }}</text>
       </view>
     </view>

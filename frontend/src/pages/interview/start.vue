@@ -18,7 +18,7 @@
               :key="item.value"
               :class="['mode-card', selectedMode === item.value ? 'active' : '']"
               @click="selectedMode = item.value as 'voice' | 'text'"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <view class="mode-head">
                 <text class="mode-icon">{{ item.icon }}</text>
                 <text class="mode-name">{{ item.label }}</text>
@@ -34,7 +34,7 @@
             <text class="label">{{ t('interview.positionLabel') }}</text>
             <text v-if="prefillSource" class="label-hint">{{ prefillSource }}</text>
           </view>
-          <view class="picker-box ui-list-item" :class="{ 'picker-filled': selectedPosition }" @click="showPositionSheet = true">
+          <view class="picker-box ui-list-item" :class="{ 'picker-filled': selectedPosition }" @click="showPositionSheet = true" hover-class="press-fb" hover-stay-time="120">
             <text class="picker-val" :class="{ 'has-val': selectedPosition }">{{ selectedPosition || t('interview.chooseRole') }}</text>
             <text class="picker-arrow ri-arrow-down-s-line"></text>
           </view>
@@ -50,7 +50,7 @@
               :key="item.value"
               :class="['diff-card', selectedDifficulty === item.value ? 'active' : '']"
               @click="selectedDifficulty = item.value"
-            >
+             hover-class="press-fb" hover-stay-time="120">
               <text class="diff-name">{{ item.label }}</text>
               <text class="diff-desc">{{ item.desc }}</text>
             </view>
@@ -94,7 +94,7 @@
         class="btn-primary"
         :class="{ 'btn-disabled': !selectedPosition || loading }"
         @click="startInterview"
-      >
+       hover-class="press-fb" hover-stay-time="120">
         <text class="btn-primary-label" v-if="loading">{{ t('interview.starting') }}</text>
         <text class="btn-primary-label" v-else>{{ selectedPosition ? (selectedMode === 'voice' ? t('interview.startVoice') : t('interview.startText')) : t('interview.chooseFirst') }}</text>
       </view>

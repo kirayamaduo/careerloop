@@ -10,7 +10,7 @@
 
     <!-- Header card: logged in -->
     <view class="header-card" v-if="isLoggedIn">
-      <view class="header-avatar" @click="handleAvatarClick">
+      <view class="header-avatar" @click="handleAvatarClick" hover-class="press-fb" hover-stay-time="120">
         <image
           class="avatar-img"
           :src="avatarSrc"
@@ -21,7 +21,7 @@
         <text class="header-name">{{ userInfo.nickname || t('profile.defaultUser') }}</text>
         <text class="header-school" v-if="userInfo.school">{{ userInfo.school }}</text>
       </view>
-      <view class="header-edit" @click.stop="openProfileEdit">
+      <view class="header-edit" @click.stop="openProfileEdit" hover-class="press-fb" hover-stay-time="120">
         <text class="header-edit-text">{{ userInfo.school ? t('profile.edit') : t('profile.complete') }}</text>
         <text class="header-edit-arrow">›</text>
       </view>
@@ -66,14 +66,14 @@
             <text class="website-code">{{ websiteLinkCode }}</text>
             <text class="website-code-expiry">{{ websiteLinkExpiryText }}</text>
           </view>
-          <view class="website-code-copy" @click="copyWebsiteLinkCode">
+          <view class="website-code-copy" @click="copyWebsiteLinkCode" hover-class="press-fb" hover-stay-time="120">
             <text class="ri-file-copy-line"></text>
             <text>{{ t('profile.websiteLinkCopy') }}</text>
           </view>
         </view>
         <view class="website-destination">
           <view class="website-step"><text class="website-step-index">1</text><text>{{ t('profile.websiteLinkStepOpen') }}</text></view>
-          <view class="website-url-row" @click="copyWebsiteDestination">
+          <view class="website-url-row" @click="copyWebsiteDestination" hover-class="press-fb" hover-stay-time="120">
             <text class="website-url">{{ websitePassportUrl }}</text>
             <text class="ri-file-copy-line"></text>
           </view>
@@ -83,7 +83,7 @@
           class="website-link-action"
           :class="{ disabled: websiteLinkLoading }"
           @click="generateWebsiteLinkCode"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text>{{ websiteLinkLoading ? t('profile.websiteLinkGenerating') : (websiteLinkCode ? t('profile.websiteLinkRegenerate') : t('profile.websiteLinkGenerate')) }}</text>
           <text class="ri-arrow-right-line"></text>
         </view>

@@ -12,8 +12,8 @@
     <view class="form-sheet app-surface">
       <view class="segment-wrap">
         <view class="segment-bar">
-          <view class="seg-item" :class="{ 'seg-active': mode === 'login' }" @click="switchMode('login')"><text>{{ t('login.tabSignIn') }}</text></view>
-          <view class="seg-item" :class="{ 'seg-active': mode === 'register' }" @click="switchMode('register')"><text>{{ t('login.tabSignUp') }}</text></view>
+          <view class="seg-item" :class="{ 'seg-active': mode === 'login' }" @click="switchMode('login')" hover-class="press-fb" hover-stay-time="120"><text>{{ t('login.tabSignIn') }}</text></view>
+          <view class="seg-item" :class="{ 'seg-active': mode === 'register' }" @click="switchMode('register')" hover-class="press-fb" hover-stay-time="120"><text>{{ t('login.tabSignUp') }}</text></view>
         </view>
       </view>
 
@@ -88,7 +88,7 @@
 
           <!-- Agreement -->
           <view class="agreement-row">
-            <view class="checkbox" :class="{ 'checked': ageConfirmed }" @click="ageConfirmed = !ageConfirmed">
+            <view class="checkbox" :class="{ 'checked': ageConfirmed }" @click="ageConfirmed = !ageConfirmed" hover-class="press-fb" hover-stay-time="120">
               <text v-if="ageConfirmed" class="check-mark ri-check-line"></text>
             </view>
             <view class="agreement-copy">
@@ -96,7 +96,7 @@
             </view>
           </view>
           <view class="agreement-row">
-            <view class="checkbox" :class="{ 'checked': agreed }" @click="agreed = !agreed">
+            <view class="checkbox" :class="{ 'checked': agreed }" @click="agreed = !agreed" hover-class="press-fb" hover-stay-time="120">
               <text v-if="agreed" class="check-mark ri-check-line"></text>
             </view>
             <view class="agreement-copy">
@@ -107,7 +107,7 @@
             </view>
           </view>
 
-          <view class="btn-primary" @click="handleSubmit" :class="{ 'is-loading': loading, 'is-disabled': !canSubmit }">
+          <view class="btn-primary" @click="handleSubmit" :class="{ 'is-loading': loading, 'is-disabled': !canSubmit }" hover-class="press-fb" hover-stay-time="120">
             <text class="btn-text">{{ loading ? t('login.waiting') : (mode === 'login' ? t('login.signInCta') : t('login.registerCta')) }}</text>
           </view>
 
@@ -120,12 +120,12 @@
 
             <view class="social-row">
               <!-- #ifdef MP-WEIXIN -->
-              <view class="btn-wechat" @click="wxLogin">
+              <view class="btn-wechat" @click="wxLogin" hover-class="press-fb" hover-stay-time="120">
                 <text class="wx-icon ri-wechat-fill"></text>
                 <text class="wx-text">{{ t('login.wechatSignIn') }}</text>
               </view>
               <!-- #endif -->
-              <view class="btn-guest" @click="guestLogin">
+              <view class="btn-guest" @click="guestLogin" hover-class="press-fb" hover-stay-time="120">
                 <text class="guest-text">{{ t('login.guestModeBtn') }}</text>
               </view>
             </view>
@@ -138,7 +138,7 @@
 
     <!-- ── Terms / Privacy Modal ── -->
     <view class="modal-mask" v-if="showAgreementModal" @tap="showAgreementModal = false">
-      <view class="modal-card agreement-modal app-surface" @tap.stop>
+      <view class="modal-card agreement-modal app-surface" @tap.stop hover-class="press-fb" hover-stay-time="120">
         <text class="modal-title">{{ agreementType === 'terms' ? t('login.termsTitle') : t('login.privacyTitle') }}</text>
         <scroll-view scroll-y class="agreement-scroll">
           <view>
@@ -149,14 +149,14 @@
           </view>
         </scroll-view>
         <view class="modal-actions">
-          <view class="modal-btn modal-btn-confirm" @click="showAgreementModal = false"><text>{{ t('login.iUnderstand') }}</text></view>
+          <view class="modal-btn modal-btn-confirm" @click="showAgreementModal = false" hover-class="press-fb" hover-stay-time="120"><text>{{ t('login.iUnderstand') }}</text></view>
         </view>
       </view>
     </view>
 
     <!-- ── Forgot Password Modal ── -->
     <view class="modal-mask" v-if="showForgotModal" @tap="closeForgotModal">
-      <view class="modal-card app-surface" @tap.stop>
+      <view class="modal-card app-surface" @tap.stop hover-class="press-fb" hover-stay-time="120">
         <text class="modal-title">{{ t('login.forgotPasswordTitle') }}</text>
 
         <view v-if="resetStep === 1">
@@ -176,8 +176,8 @@
             </view>
           </view>
           <view class="modal-actions">
-            <view class="modal-btn modal-btn-cancel" @click="closeForgotModal"><text>{{ t('common.cancel') }}</text></view>
-            <view class="modal-btn modal-btn-confirm" @click="goResetStep2"><text>{{ t('login.nextBtn') }}</text></view>
+            <view class="modal-btn modal-btn-cancel" @click="closeForgotModal" hover-class="press-fb" hover-stay-time="120"><text>{{ t('common.cancel') }}</text></view>
+            <view class="modal-btn modal-btn-confirm" @click="goResetStep2" hover-class="press-fb" hover-stay-time="120"><text>{{ t('login.nextBtn') }}</text></view>
           </view>
         </view>
 
@@ -196,8 +196,8 @@
             <text class="field-hint-error" v-if="resetConfirmPwd.length > 0 && resetConfirmPwd !== resetNewPwd">{{ t('login.passwordsNoMatch') }}</text>
           </view>
           <view class="modal-actions">
-            <view class="modal-btn modal-btn-cancel" @click="resetStep = 1"><text>{{ t('common.back') }}</text></view>
-            <view class="modal-btn modal-btn-confirm" :class="{ 'is-loading': resetting }" @click="doResetPassword">
+            <view class="modal-btn modal-btn-cancel" @click="resetStep = 1" hover-class="press-fb" hover-stay-time="120"><text>{{ t('common.back') }}</text></view>
+            <view class="modal-btn modal-btn-confirm" :class="{ 'is-loading': resetting }" @click="doResetPassword" hover-class="press-fb" hover-stay-time="120">
               <text>{{ resetting ? t('login.resetting') : t('login.resetPasswordBtn') }}</text>
             </view>
           </view>

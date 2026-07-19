@@ -19,7 +19,7 @@
           class="cat-chip ui-list-item"
           :class="{ 'cat-active': form.category === cat.value }"
           @click="form.category = cat.value"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text class="cat-emoji" :class="cat.emoji"></text>
           <text class="cat-label">{{ cat.label }}</text>
         </view>

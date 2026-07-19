@@ -10,7 +10,7 @@
       <view v-else-if="loadError" class="checkin-state app-card-soft">
         <text class="checkin-state-icon ri-wifi-off-line"></text>
         <text class="checkin-state-title">{{ loadError }}</text>
-        <view class="checkin-retry" @click="retryLoad"><text>{{ t('checkin.retry') }}</text></view>
+        <view class="checkin-retry" @click="retryLoad" hover-class="press-fb" hover-stay-time="120"><text>{{ t('checkin.retry') }}</text></view>
       </view>
       <template v-else>
       <view class="hero-card">
@@ -38,7 +38,7 @@
             :key="a.code"
             :class="['action-row', 'ui-list-item', a.done ? 'action-done' : '']"
             @click="navTo(a.target)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <text class="action-icon" :class="[a.tone, a.icon]"></text>
             <view class="action-body">
               <text class="action-name">{{ a.label }}</text>

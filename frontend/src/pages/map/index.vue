@@ -4,7 +4,7 @@
       <template #title>
         <view class="nav-title-wrap">
           <text class="nav-title">{{ t('map.navTitle') }}</text>
-          <view class="nav-icon-btn" v-if="activeTab === 'map'" @click.stop="switchRole">
+          <view class="nav-icon-btn" v-if="activeTab === 'map'" @click.stop="switchRole" hover-class="press-fb" hover-stay-time="120">
             <text class="ri-swap-line"></text>
           </view>
         </view>

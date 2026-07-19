@@ -26,7 +26,7 @@
           class="seg-item"
           :class="{ 'seg-active': activeTab === tab.key }"
           @click="activeTab = tab.key as TabKey"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text class="seg-text">{{ tab.label }}</text>
           <view class="seg-badge" v-if="unreadByTab[tab.key] > 0">
             <text class="seg-badge-text">{{ unreadByTab[tab.key] }}</text>
@@ -36,7 +36,7 @@
     </view>
 
     <!-- #ifdef MP-WEIXIN -->
-    <view class="wechat-reminder-card app-card-soft" @click="enableWechatReminders">
+    <view class="wechat-reminder-card app-card-soft" @click="enableWechatReminders" hover-class="press-fb" hover-stay-time="120">
       <view class="wechat-reminder-icon"><text class="ri-notification-badge-line"></text></view>
       <view class="wechat-reminder-copy">
         <text class="wechat-reminder-title">{{ t('messages.wechatReminderTitle') }}</text>
@@ -63,7 +63,7 @@
             @touchstart="onMsgTouchStart($event, item.notificationId)"
             @touchmove="onMsgTouchMove($event, item.notificationId)"
             @touchend="onMsgTouchEnd($event, item.notificationId)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <view class="avatar-wrap">
               <view class="app-icon-tile" :class="'sys-' + (idx % 3)">
                 <text :class="['av-icon', item.icon]"></text>
@@ -83,7 +83,7 @@
             class="swipe-delete-btn"
             :class="{ 'swipe-delete-visible': (swipeOffsets[item.notificationId] ?? 0) < 0 }"
             @click="deleteMessage(item)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <text class="swipe-delete-text">{{ t('messages.deleteBtn') }}</text>
           </view>
         </view>
@@ -98,7 +98,7 @@
         <text class="empty-icon ri-wifi-off-line"></text>
         <text class="empty-text">{{ t('messages.loadFailed') }}</text>
         <text class="empty-sub">{{ systemError }}</text>
-        <view class="state-retry" @click="loadSystemNotifications"><text>{{ t('messages.retry') }}</text></view>
+        <view class="state-retry" @click="loadSystemNotifications" hover-class="press-fb" hover-stay-time="120"><text>{{ t('messages.retry') }}</text></view>
       </view>
 
       <!-- Empty state -->

@@ -14,7 +14,7 @@
             <text class="nav-status">{{ currentPersona.tagline }}</text>
           </view>
         </view>
-        <view class="nav-action" @click="openHistory">
+        <view class="nav-action" @click="openHistory" hover-class="press-fb" hover-stay-time="120">
           <text class="ri-history-line nav-action-icon"></text>
         </view>
       </view>
@@ -50,7 +50,7 @@
             :key="chip"
             class="quick-chip ui-list-item"
             @click="sendQuick(chip)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <text class="chip-text">{{ chip }}</text>
           </view>
         </view>
@@ -93,7 +93,7 @@
     <view class="input-bar">
       <text class="mode-caption">三种对话模式</text>
       <view class="input-row">
-        <view class="mode-picker-wrap" @click="showPersonaSheet = true">
+        <view class="mode-picker-wrap" @click="showPersonaSheet = true" hover-class="press-fb" hover-stay-time="120">
           <view class="mode-picker">
             <text class="mode-picker-icon" :class="currentPersona.emoji"></text>
             <text class="mode-picker-text">{{ currentPersona.label }}</text>
@@ -112,7 +112,7 @@
           class="send-btn"
           :class="{ 'send-active': canSend, 'send-disabled': !canSend }"
           @click="sendMessage"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text class="send-label">{{ t('assistant.send') }}</text>
         </view>
       </view>

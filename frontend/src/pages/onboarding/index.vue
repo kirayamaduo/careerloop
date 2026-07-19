@@ -32,7 +32,7 @@
                   class="choice-card app-surface"
                   :class="{ selected: stage === option.value }"
                   @click="stage = option.value"
-                >
+                 hover-class="press-fb" hover-stay-time="120">
                   <view class="choice-icon" :class="option.tone"><text :class="option.icon"></text></view>
                   <view class="choice-copy">
                     <text class="choice-title">{{ option.label }}</text>
@@ -54,13 +54,13 @@
                 <input class="target-input" v-model="targetRole" maxlength="32" placeholder="例如：Java 后端开发" placeholder-class="ph" />
               </view>
               <view class="chips">
-                <view v-for="role in targetSuggestions" :key="role" class="role-chip" :class="{ selected: targetRole === role }" @click="targetRole = role">
+                <view v-for="role in targetSuggestions" :key="role" class="role-chip" :class="{ selected: targetRole === role }" @click="targetRole = role" hover-class="press-fb" hover-stay-time="120">
                   <text>{{ role }}</text>
                 </view>
               </view>
               <text class="mini-section-title">当前最急的问题</text>
               <view class="pill-grid">
-                <view v-for="option in painOptions" :key="option.value" class="pill" :class="{ selected: painPoint === option.value }" @click="painPoint = option.value">
+                <view v-for="option in painOptions" :key="option.value" class="pill" :class="{ selected: painPoint === option.value }" @click="painPoint = option.value" hover-class="press-fb" hover-stay-time="120">
                   <text>{{ option.label }}</text>
                 </view>
               </view>
@@ -75,7 +75,7 @@
               <text class="step-title">你离投递还有多远？</text>
               <text class="mini-section-title">简历状态</text>
               <view class="resume-options">
-                <view v-for="option in resumeOptions" :key="option.value" class="resume-card app-surface" :class="{ selected: resumeStatus === option.value }" @click="resumeStatus = option.value">
+                <view v-for="option in resumeOptions" :key="option.value" class="resume-card app-surface" :class="{ selected: resumeStatus === option.value }" @click="resumeStatus = option.value" hover-class="press-fb" hover-stay-time="120">
                   <text class="resume-icon" :class="option.icon"></text>
                   <view class="resume-copy">
                     <text class="resume-title">{{ option.label }}</text>
@@ -85,7 +85,7 @@
               </view>
               <text class="mini-section-title">求职时间线</text>
               <view class="pill-grid">
-                <view v-for="option in timelineOptions" :key="option.value" class="pill" :class="{ selected: timeline === option.value }" @click="timeline = option.value">
+                <view v-for="option in timelineOptions" :key="option.value" class="pill" :class="{ selected: timeline === option.value }" @click="timeline = option.value" hover-class="press-fb" hover-stay-time="120">
                   <text>{{ option.label }}</text>
                 </view>
               </view>
@@ -127,13 +127,13 @@
               <text class="step-title">你希望智绘职路先帮你做什么？</text>
               <text class="mini-section-title">每周可投入时间</text>
               <view class="pill-grid">
-                <view v-for="option in weeklyOptions" :key="option.value" class="pill" :class="{ selected: weeklyAvailability === option.value }" @click="weeklyAvailability = option.value">
+                <view v-for="option in weeklyOptions" :key="option.value" class="pill" :class="{ selected: weeklyAvailability === option.value }" @click="weeklyAvailability = option.value" hover-class="press-fb" hover-stay-time="120">
                   <text>{{ option.label }}</text>
                 </view>
               </view>
               <text class="mini-section-title">优先帮助</text>
               <view class="priority-grid">
-                <view v-for="option in priorityOptions" :key="option.value" class="priority-card app-surface" :class="{ selected: priorityHelp === option.value }" @click="priorityHelp = option.value">
+                <view v-for="option in priorityOptions" :key="option.value" class="priority-card app-surface" :class="{ selected: priorityHelp === option.value }" @click="priorityHelp = option.value" hover-class="press-fb" hover-stay-time="120">
                   <text class="priority-icon" :class="option.icon"></text>
                   <text class="priority-title">{{ option.label }}</text>
                   <text class="priority-desc">{{ option.desc }}</text>
@@ -150,11 +150,11 @@
     </view>
 
     <view class="bottom-bar">
-      <view class="btn-secondary" :class="{ invisible: current === 0 }" @click="prev">
+      <view class="btn-secondary" :class="{ invisible: current === 0 }" @click="prev" hover-class="press-fb" hover-stay-time="120">
         <text class="ri-arrow-left-line"></text>
         <text>上一步</text>
       </view>
-      <view class="btn-primary" :class="{ disabled: !canContinue || saving }" @click="handlePrimary">
+      <view class="btn-primary" :class="{ disabled: !canContinue || saving }" @click="handlePrimary" hover-class="press-fb" hover-stay-time="120">
         <text>{{ primaryText }}</text>
         <text class="ri-arrow-right-line" v-if="current < steps.length - 1"></text>
       </view>

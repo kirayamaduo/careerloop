@@ -33,7 +33,7 @@
             @touchstart="onItemTouchStart($event, session.sessionId)"
             @touchmove="onItemTouchMove($event, session.sessionId)"
             @touchend="onItemTouchEnd($event, session.sessionId)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <view class="session-top">
               <view class="persona-pill">
                 <text class="persona-emoji" :class="personaMeta(session.persona).emoji"></text>
@@ -51,7 +51,7 @@
             class="swipe-delete-btn"
             :class="{ 'swipe-delete-visible': (swipeOffsets[session.sessionId] ?? 0) < 0 }"
             @click.stop="confirmDelete(session)"
-          >
+           hover-class="press-fb" hover-stay-time="120">
             <text class="swipe-delete-text">{{ t('assistantHistory.deleteBtn') }}</text>
           </view>
         </view>

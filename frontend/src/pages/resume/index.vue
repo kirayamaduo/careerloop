@@ -26,7 +26,7 @@
           <text class="section-title">{{ t('resume.myResumes') }}</text>
           <text class="section-sub">{{ t('resume.filesCount', { n: mainHubResumes.length }) }}</text>
         </view>
-        <view class="section-action" @click="handleUploadClick">
+        <view class="section-action" @click="handleUploadClick" hover-class="press-fb" hover-stay-time="120">
           <text class="section-action-text">{{ t('resume.addBtn') }}</text>
         </view>
       </view>
@@ -55,16 +55,16 @@
             <text v-else class="keyword-empty" @click="retryResumeKeywords(item)">{{ keywordStatusText(item) }}</text>
           </view>
           <view class="rc-actions">
-            <view class="rc-action-btn" @click="handlePreview(item)">
+            <view class="rc-action-btn" @click="handlePreview(item)" hover-class="press-fb" hover-stay-time="120">
               <text class="rc-action-text">{{ t('resume.previewBtn') }}</text>
             </view>
-            <view class="rc-more" @click="handleMore(resumeList.indexOf(item))">
+            <view class="rc-more" @click="handleMore(resumeList.indexOf(item))" hover-class="press-fb" hover-stay-time="120">
               <text class="rc-more-dots">···</text>
             </view>
           </view>
         </view>
         <!-- Add new resume -->
-        <view class="add-card app-card-feature" @click="handleUploadClick">
+        <view class="add-card app-card-feature" @click="handleUploadClick" hover-class="press-fb" hover-stay-time="120">
           <view class="add-icon"><text class="add-plus">+</text></view>
           <view class="add-info">
             <text class="add-title">{{ t('resume.newResume') }}</text>
@@ -108,10 +108,10 @@
             <text v-else class="keyword-empty" @click="retryResumeKeywords(item)">{{ keywordStatusText(item) }}</text>
           </view>
           <view class="rc-actions">
-            <view class="rc-action-btn" @click="handlePreview(item)">
+            <view class="rc-action-btn" @click="handlePreview(item)" hover-class="press-fb" hover-stay-time="120">
               <text class="rc-action-text">{{ t('resume.previewBtn') }}</text>
             </view>
-            <view class="rc-more" @click="handleMore(resumeList.indexOf(item))">
+            <view class="rc-more" @click="handleMore(resumeList.indexOf(item))" hover-class="press-fb" hover-stay-time="120">
               <text class="rc-more-dots">···</text>
             </view>
           </view>
@@ -123,7 +123,7 @@
       <text class="empty-icon ri-file-text-line"></text>
       <text class="empty-title">{{ t('resume.noResumes') }}</text>
       <text class="empty-desc">{{ t('resume.noResumesDesc2') }}</text>
-      <view class="add-card app-card-feature" @click="handleUploadClick">
+      <view class="add-card app-card-feature" @click="handleUploadClick" hover-class="press-fb" hover-stay-time="120">
         <view class="add-icon"><text class="add-plus">+</text></view>
         <view class="add-info">
           <text class="add-title">{{ t('resume.addFirst') }}</text>
@@ -140,11 +140,11 @@
       <view class="sheet-title-bar">
         <text class="sheet-title">{{ t('resume.chooseOption') }}</text>
       </view>
-      <view class="sheet-option" @click="selectAction('template')">
+      <view class="sheet-option" @click="selectAction('template')" hover-class="press-fb" hover-stay-time="120">
         <text class="sheet-option-icon ri-edit-box-line"></text>
         <text class="sheet-option-text">{{ t('resume.useTemplateBtn') }}</text>
       </view>
-      <view class="sheet-option" @click="selectAction('upload')">
+      <view class="sheet-option" @click="selectAction('upload')" hover-class="press-fb" hover-stay-time="120">
         <view class="sheet-option-col">
           <view class="sheet-option-row">
             <text class="sheet-option-icon ri-attachment-line"></text>
@@ -153,7 +153,7 @@
           <text class="sheet-option-hint">{{ t('resume.uploadHint') }}</text>
         </view>
       </view>
-      <view class="sheet-cancel" @click="closeSheet">
+      <view class="sheet-cancel" @click="closeSheet" hover-class="press-fb" hover-stay-time="120">
         <text class="sheet-cancel-text">{{ t('common.cancel') }}</text>
       </view>
     </view>

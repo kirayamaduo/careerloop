@@ -8,7 +8,7 @@
       :right-avoid-width="rightAvoidWidth"
     >
       <template #right>
-        <view class="hub-refresh" @click="loadAll"><text class="hub-refresh-icon">↻</text></view>
+        <view class="hub-refresh" @click="loadAll" hover-class="press-fb" hover-stay-time="120"><text class="hub-refresh-icon">↻</text></view>
       </template>
     </SlNavBar>
 

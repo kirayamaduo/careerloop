@@ -49,7 +49,7 @@
           v-for="s in scales"
           :key="s.scaleId"
           @click="startQuiz(s)"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <view class="card-left">
             <view class="app-icon-tile icon-box" :class="scaleIconTone(s.title)">
               <text class="icon-glyph" :class="scaleIconClass(s.title)"></text>

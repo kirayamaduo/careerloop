@@ -8,7 +8,7 @@
         :key="s.value"
         :class="['source-tab', sourceFilter === s.value ? 'source-tab-on' : '']"
         @click="setSource(s.value)"
-      >
+       hover-class="press-fb" hover-stay-time="120">
         <text class="source-tab-text">{{ s.label }}</text>
       </view>
     </view>
@@ -26,10 +26,10 @@
           :key="d || 'any'"
           :class="['diff-chip', difficultyFilter === d ? 'diff-chip-on' : '']"
           @click="setDifficulty(d)"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text class="diff-chip-text">{{ d || t('market.diffAny') }}</text>
         </view>
-        <view class="diff-action" @click="applyFilters">
+        <view class="diff-action" @click="applyFilters" hover-class="press-fb" hover-stay-time="120">
           <text class="diff-action-text">{{ t('market.applyFilter') }}</text>
         </view>
       </view>
@@ -44,7 +44,7 @@
           v-model="contributePosition"
           :placeholder="t('market.positionPlaceholder')"
         />
-        <view class="meta-picker" @click="showDifficultySheet = true">
+        <view class="meta-picker" @click="showDifficultySheet = true" hover-class="press-fb" hover-stay-time="120">
           <text class="meta-picker-text">{{ contributeDifficultyLabel }}</text>
           <text class="meta-picker-arrow ri-arrow-down-s-line"></text>
         </view>
@@ -95,12 +95,12 @@
           <text class="q-answer-text">{{ q.answer }}</text>
         </view>
         <view class="q-foot">
-          <view class="like-btn" @click="like(q)">
+          <view class="like-btn" @click="like(q)" hover-class="press-fb" hover-stay-time="120">
             <text class="like-icon" :class="likedSet.has(q.id) ? 'ri-heart-fill' : 'ri-heart-line'"></text>
             <text class="like-count">{{ q.likes }}</text>
           </view>
           <text class="q-meta">{{ t('market.drawnCount', { n: q.drawCount }) }}</text>
-          <view v-if="q.answer" class="answer-btn" @click="toggleAnswer(q.id)">
+          <view v-if="q.answer" class="answer-btn" @click="toggleAnswer(q.id)" hover-class="press-fb" hover-stay-time="120">
             <text class="answer-btn-text">{{ expandedId === q.id ? t('market.hideAnswer') : t('market.showAnswer') }}</text>
           </view>
         </view>

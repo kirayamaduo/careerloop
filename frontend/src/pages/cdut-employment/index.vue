@@ -24,7 +24,7 @@
               <text class="summary-label">{{ insight.matchLabel }}</text>
               <text class="summary-title">{{ insight.major }} · {{ insight.targetRole }}</text>
             </view>
-            <view class="refresh-btn" @click="refresh">
+            <view class="refresh-btn" @click="refresh" hover-class="press-fb" hover-stay-time="120">
               <text class="refresh-icon ri-refresh-line"></text>
             </view>
           </view>
@@ -191,17 +191,17 @@
         <view class="section">
           <text class="section-title">查看更多</text>
           <view class="detail-grid">
-            <view class="detail-entry app-card-soft app-surface" @click="openDetail('trend')">
+            <view class="detail-entry app-card-soft app-surface" @click="openDetail('trend')" hover-class="press-fb" hover-stay-time="120">
               <text class="detail-icon ri-line-chart-line"></text>
               <text class="detail-title">{{ isDemoMode ? '演示趋势' : '已验证趋势' }}</text>
               <text class="detail-desc">{{ isDemoMode ? '查看 2021-2025 年就业与升学变化' : '仅展示已从公开来源识别到的历年变化' }}</text>
             </view>
-            <view class="detail-entry app-card-soft app-surface" @click="openDetail('sources')">
+            <view class="detail-entry app-card-soft app-surface" @click="openDetail('sources')" hover-class="press-fb" hover-stay-time="120">
               <text class="detail-icon ri-links-line"></text>
               <text class="detail-title">{{ isDemoMode ? '演示材料' : '公开来源' }}</text>
               <text class="detail-desc">{{ isDemoMode ? '查看 5 条年份报告与去向摘要' : '查看报告来源、年份和原链接' }}</text>
             </view>
-            <view class="detail-entry app-card-soft app-surface" @click="openDetail('method')">
+            <view class="detail-entry app-card-soft app-surface" @click="openDetail('method')" hover-class="press-fb" hover-stay-time="120">
               <text class="detail-icon ri-information-line"></text>
               <text class="detail-title">数据口径</text>
               <text class="detail-desc">{{ isDemoMode ? '了解演示数据的组织方式与说明' : '了解抓取、匹配和未接入说明' }}</text>

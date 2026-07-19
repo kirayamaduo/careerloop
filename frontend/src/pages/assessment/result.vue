@@ -9,7 +9,7 @@
 
     <view class="error-state app-surface" v-else-if="errorMsg">
       <text class="err-title">{{ errorMsg }}</text>
-      <view class="btn-retry" @click="loadResult"><text class="btn-retry-text">{{ t('assessmentResult.retry') }}</text></view>
+      <view class="btn-retry" @click="loadResult" hover-class="press-fb" hover-stay-time="120"><text class="btn-retry-text">{{ t('assessmentResult.retry') }}</text></view>
     </view>
 
     <template v-else-if="record">

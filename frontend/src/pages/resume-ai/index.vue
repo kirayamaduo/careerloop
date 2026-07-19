@@ -10,7 +10,7 @@
       <view class="analysis-card app-card-soft app-surface">
         <view class="section">
           <text class="section-title">{{ t('resumeAi.resumeLabel') }}</text>
-          <view class="select-box ui-list-item" :class="{ 'has-value': !!selectedResume }" @click="selectResume">
+          <view class="select-box ui-list-item" :class="{ 'has-value': !!selectedResume }" @click="selectResume" hover-class="press-fb" hover-stay-time="120">
             <view class="s-icon-wrap"><text class="s-icon-text">PDF</text></view>
             <text class="s-text">{{ selectedResume || t('resumeAi.chooseResume') }}</text>
             <text class="s-chevron">›</text>

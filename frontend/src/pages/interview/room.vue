@@ -4,7 +4,7 @@
          Custom header so we can sit flush over the camera preview without
          the WeChat default white nav bar reducing contrast. -->
     <view class="top-bar" :style="{ paddingTop: statusTopPx + 'px', paddingRight: rightAvoidWidth + 'px' }">
-      <view class="back-btn" @click="confirmExit">
+      <view class="back-btn" @click="confirmExit" hover-class="press-fb" hover-stay-time="120">
         <text class="back-icon">‹</text>
       </view>
       <view class="top-meta">
@@ -61,7 +61,7 @@
     <view v-else class="camera-pip camera-pip-fallback">
       <text class="camera-fallback-icon ri-camera-line"></text>
       <text class="camera-fallback-text">{{ cameraError || t('interviewRoom.tapToEnable') }}</text>
-      <view class="camera-enable-btn" @click="requestCamera">
+      <view class="camera-enable-btn" @click="requestCamera" hover-class="press-fb" hover-stay-time="120">
         <text class="camera-enable-text">{{ t('interviewRoom.enableCamera') }}</text>
       </view>
     </view>
@@ -85,7 +85,7 @@
       <view v-if="lastAiText" class="caption-row">
         <text class="caption-tag tag-ai">{{ t('interviewRoom.captionAi') }}</text>
         <text class="caption-body">{{ lastAiText }}</text>
-        <view class="caption-replay" v-if="lastAudioUrl" @click="replayAudio">
+        <view class="caption-replay" v-if="lastAudioUrl" @click="replayAudio" hover-class="press-fb" hover-stay-time="120">
           <text class="replay-icon">↻</text>
         </view>
       </view>
@@ -124,11 +124,11 @@
       </view>
 
       <view class="footer-row">
-        <view class="text-mode-btn" @click="switchToTextMode">
+        <view class="text-mode-btn" @click="switchToTextMode" hover-class="press-fb" hover-stay-time="120">
           <text class="text-mode-icon">⌨</text>
           <text class="text-mode-label">{{ t('interviewRoom.switchToText') }}</text>
         </view>
-        <view class="end-btn-bottom" @click="endInterview">
+        <view class="end-btn-bottom" @click="endInterview" hover-class="press-fb" hover-stay-time="120">
           <text class="end-btn-bottom-text">{{ t('interviewRoom.endInterview') }}</text>
         </view>
       </view>
@@ -141,11 +141,11 @@
         <text class="privacy-copy">
           为完成语音模拟面试和可选的行为表现评估，需要使用麦克风与相机。音频用于转写，画面仅在答题时抽帧分析，不保存原始录音或照片。
         </text>
-        <view class="privacy-contract" @click="openWechatPrivacyContract">
+        <view class="privacy-contract" @click="openWechatPrivacyContract" hover-class="press-fb" hover-stay-time="120">
           <text>查看《小程序隐私保护指引》</text>
         </view>
         <view class="privacy-actions">
-          <view class="privacy-reject" @click="rejectWechatPrivacyAuthorization">
+          <view class="privacy-reject" @click="rejectWechatPrivacyAuthorization" hover-class="press-fb" hover-stay-time="120">
             <text>暂不使用</text>
           </view>
           <button

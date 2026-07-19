@@ -2,7 +2,7 @@
   <view class="quiz-container app-soft-bg" :class="[themeClass, fontClass]">
     <view class="header-bar" :style="{ paddingTop: topSafeHeight + 6 + 'px', paddingRight: rightAvoidWidth + 'px' }">
       <view class="header-top">
-        <view class="back-btn" @click="goBack">
+        <view class="back-btn" @click="goBack" hover-class="press-fb" hover-stay-time="120">
           <text class="back-icon">‹</text>
           <text class="back-text">{{ t('common.back') }}</text>
         </view>
@@ -23,7 +23,7 @@
 
     <view class="error-state app-surface" v-else-if="errorMsg">
       <text class="err-title">{{ errorMsg }}</text>
-      <view class="btn-retry" @click="loadQuestions"><text class="btn-retry-text">{{ t('quiz.retry') }}</text></view>
+      <view class="btn-retry" @click="loadQuestions" hover-class="press-fb" hover-stay-time="120"><text class="btn-retry-text">{{ t('quiz.retry') }}</text></view>
     </view>
 
     <template v-else-if="currentQuestion">
@@ -39,7 +39,7 @@
           :key="opt.optionId"
           :class="{ 'option-selected': currentAnswerOptionId === opt.optionId }"
           @click="selectOption(opt.optionId)"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <view class="option-label">{{ opt.optionLabel }}</view>
           <text class="option-text">{{ opt.optionText }}</text>
         </view>

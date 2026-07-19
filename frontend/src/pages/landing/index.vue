@@ -46,11 +46,11 @@
     </view>
 
     <view class="bottom-actions">
-      <view class="primary-btn" @click="start">
+      <view class="primary-btn" @click="start" hover-class="press-fb" hover-stay-time="120">
         <text>开始建立我的求职路线</text>
         <text class="ri-arrow-right-line"></text>
       </view>
-      <view class="secondary-btn" @click="preview">
+      <view class="secondary-btn" @click="preview" hover-class="press-fb" hover-stay-time="120">
         <text>先看看产品首页</text>
       </view>
     </view>

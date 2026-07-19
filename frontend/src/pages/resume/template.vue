@@ -113,7 +113,7 @@
         class="btn-next"
         :class="{ 'btn-disabled': !stepValid }"
         @click="nextStep"
-      >
+       hover-class="press-fb" hover-stay-time="120">
         <text class="btn-next-text">{{ t('resumeTemplate.nextBtn') }}</text>
       </view>
       <view
@@ -121,7 +121,7 @@
         class="btn-generate"
         :class="{ 'btn-disabled': submitting }"
         @click="handleGenerate"
-      >
+       hover-class="press-fb" hover-stay-time="120">
         <text class="btn-generate-text">{{ submitting ? t('resumeTemplate.generating') : t('resumeTemplate.generateBtn') }}</text>
       </view>
     </view>

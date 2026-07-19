@@ -79,7 +79,7 @@
               <view class="fact-conf-badge" :class="confClass(fact.confidence)">
                 <text class="fact-conf-text">{{ confLabel(fact.confidence) }}</text>
               </view>
-              <view class="fact-delete-btn" @click="confirmDelete(fact)">
+              <view class="fact-delete-btn" @click="confirmDelete(fact)" hover-class="press-fb" hover-stay-time="120">
                 <text class="fact-delete-icon ri-close-line"></text>
               </view>
             </view>
@@ -88,7 +88,7 @@
 
         <!-- Clear all -->
         <view class="clear-all-row">
-          <view class="btn-clear-all" @click="confirmClearAll">
+          <view class="btn-clear-all" @click="confirmClearAll" hover-class="press-fb" hover-stay-time="120">
             <text class="btn-clear-all-text">{{ t('memory.clearAll') }}</text>
           </view>
         </view>

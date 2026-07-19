@@ -30,18 +30,18 @@
         <text class="today-result-text">{{ primaryTask.outcome }}</text>
       </view>
       <view class="today-actions">
-        <view class="today-cta" @click="navTo(primaryTask.target)">
+        <view class="today-cta" @click="navTo(primaryTask.target)" hover-class="press-fb" hover-stay-time="120">
           <text class="today-cta-text">{{ primaryTask.cta }}</text>
           <text class="today-cta-arrow">›</text>
         </view>
-        <view class="today-plan-link" @click="navTo('/pages/agent/index')">
+        <view class="today-plan-link" @click="navTo('/pages/agent/index')" hover-class="press-fb" hover-stay-time="120">
           <text class="today-plan-link-text">查看完整下一步</text>
         </view>
         <view
           v-if="primaryTask.taskId"
           class="today-done"
           @click="completeAgentTask(primaryTask.taskId)"
-        >
+         hover-class="press-fb" hover-stay-time="120">
           <text class="today-done-text">标记完成</text>
         </view>
       </view>

@@ -4,7 +4,7 @@
       <template #title>
         <view class="nav-title-wrap">
           <text class="nav-title">{{ t('interviewHistory.navTitle') }}</text>
-          <view class="nav-icon-btn" @click.stop="startNew">
+          <view class="nav-icon-btn" @click.stop="startNew" hover-class="press-fb" hover-stay-time="120">
             <text class="ri-add-line"></text>
           </view>
         </view>

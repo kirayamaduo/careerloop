@@ -38,7 +38,7 @@
 
       <!-- Agreements list -->
       <view class="menu-card app-card-soft">
-        <view class="menu-item" @click="openDoc('privacy')">
+        <view class="menu-item" @click="openDoc('privacy')" hover-class="press-fb" hover-stay-time="120">
           <view class="app-icon-tile app-icon-tile--warning menu-icon-wrap"><text class="menu-icon ri-lock-line"></text></view>
           <view class="menu-text-wrap">
             <text class="menu-text">{{ t('consent.privacyTitle') }}</text>
@@ -46,7 +46,7 @@
           </view>
           <text class="menu-arrow">›</text>
         </view>
-        <view class="menu-item" @click="openDoc('terms')">
+        <view class="menu-item" @click="openDoc('terms')" hover-class="press-fb" hover-stay-time="120">
           <view class="app-icon-tile app-icon-tile--cyan menu-icon-wrap"><text class="menu-icon ri-clipboard-line"></text></view>
           <view class="menu-text-wrap">
             <text class="menu-text">{{ t('consent.termsTitle') }}</text>
@@ -57,7 +57,7 @@
       </view>
 
       <!-- Age confirmation (14+) -->
-      <view class="check-row" @click="ageChecked = !ageChecked">
+      <view class="check-row" @click="ageChecked = !ageChecked" hover-class="press-fb" hover-stay-time="120">
         <view class="checkbox" :class="{ checked: ageChecked }">
           <text v-if="ageChecked" class="check-mark ri-check-line"></text>
         </view>
@@ -65,7 +65,7 @@
       </view>
 
       <!-- Agreement checkbox -->
-      <view class="check-row" @click="termsChecked = !termsChecked">
+      <view class="check-row" @click="termsChecked = !termsChecked" hover-class="press-fb" hover-stay-time="120">
         <view class="checkbox" :class="{ checked: termsChecked }">
           <text v-if="termsChecked" class="check-mark ri-check-line"></text>
         </view>
@@ -78,10 +78,10 @@
       </view>
 
       <!-- Action buttons -->
-      <view class="btn-agree" :class="{ 'btn-disabled': !canAgree }" @click="onAgree">
+      <view class="btn-agree" :class="{ 'btn-disabled': !canAgree }" @click="onAgree" hover-class="press-fb" hover-stay-time="120">
         <text class="btn-agree-text">{{ t('consent.agreeBtn') }}</text>
       </view>
-      <view class="btn-disagree" @click="onDisagree">
+      <view class="btn-disagree" @click="onDisagree" hover-class="press-fb" hover-stay-time="120">
         <text class="btn-disagree-text">{{ t('consent.disagreeBtn') }}</text>
       </view>
 
@@ -92,10 +92,10 @@
 
     <!-- Document viewer modal -->
     <view class="doc-modal-mask" v-if="showDoc" @tap="closeDoc">
-      <view class="doc-modal" @tap.stop>
+      <view class="doc-modal" @tap.stop hover-class="press-fb" hover-stay-time="120">
         <view class="doc-modal-header">
           <text class="doc-modal-title">{{ docType === 'terms' ? t('consent.termsTitle') : t('consent.privacyTitle') }}</text>
-          <view class="doc-close-btn" @click="closeDoc"><text class="doc-close-icon ri-close-line"></text></view>
+          <view class="doc-close-btn" @click="closeDoc" hover-class="press-fb" hover-stay-time="120"><text class="doc-close-icon ri-close-line"></text></view>
         </view>
         <scroll-view scroll-y class="doc-scroll">
           <view>
@@ -106,7 +106,7 @@
           </view>
         </scroll-view>
         <view class="doc-modal-footer">
-          <view class="doc-btn-close" @click="closeDoc"><text class="doc-btn-close-text">{{ t('consent.docCloseBtn') }}</text></view>
+          <view class="doc-btn-close" @click="closeDoc" hover-class="press-fb" hover-stay-time="120"><text class="doc-btn-close-text">{{ t('consent.docCloseBtn') }}</text></view>
         </view>
       </view>
     </view>

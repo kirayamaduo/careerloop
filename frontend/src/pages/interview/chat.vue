@@ -8,7 +8,7 @@
       :right-avoid-width="rightAvoidWidth"
     >
       <template #right>
-        <view class="end-link" @click="endInterview">
+        <view class="end-link" @click="endInterview" hover-class="press-fb" hover-stay-time="120">
           <text class="end-link-text">{{ t('interviewChat.endBtn') }}</text>
         </view>
       </template>
