@@ -88,31 +88,32 @@ function _readFont(): FontKey {
 }
 
 function _applyTabBarStyle(t: ThemeKey) {
-  if (!_isTabBarPage()) return;
-  try {
-    if (t === 'dark') {
-      uni.setTabBarStyle({
-        color: '#94a3b8',
-        selectedColor: '#60a5fa',
-        backgroundColor: '#0f172a',
-        borderStyle: 'black',
-      });
-    } else if (t === 'green') {
-      uni.setTabBarStyle({
-        color: '#64748b',
-        selectedColor: '#059669',
-        backgroundColor: '#f0fdf4',
-        borderStyle: 'white',
-      });
-    } else {
-      uni.setTabBarStyle({
-        color: '#94a3b8',
-        selectedColor: '#2563eb',
-        backgroundColor: '#ffffff',
-        borderStyle: 'white',
-      });
-    }
-  } catch { /* ignore unsupported runtimes */ }
+  if (_isTabBarPage()) {
+    try {
+      if (t === 'dark') {
+        uni.setTabBarStyle({
+          color: '#94a3b8',
+          selectedColor: '#8290dd',
+          backgroundColor: '#0f172a',
+          borderStyle: 'black',
+        });
+      } else if (t === 'green') {
+        uni.setTabBarStyle({
+          color: '#64748b',
+          selectedColor: '#059669',
+          backgroundColor: '#f0fdf4',
+          borderStyle: 'white',
+        });
+      } else {
+        uni.setTabBarStyle({
+          color: '#8b8a86',
+          selectedColor: '#3f51b5',
+          backgroundColor: '#faf9f6',
+          borderStyle: 'white',
+        });
+      }
+    } catch { /* ignore unsupported runtimes */ }
+  }
 
   // WeChat `page` background in App.vue is a static light colour; sync the
   // native window chrome when the in-app theme changes (MP supports this API).
@@ -120,7 +121,7 @@ function _applyTabBarStyle(t: ThemeKey) {
     const setBg = (uni as unknown as { setBackgroundColor?: (o: Record<string, string>) => void })
       .setBackgroundColor;
     if (typeof setBg === 'function') {
-      const bg = t === 'dark' ? '#0f172a' : t === 'green' ? '#f0fdf4' : '#eaeff5';
+      const bg = t === 'dark' ? '#0f172a' : t === 'green' ? '#f0fdf4' : '#faf9f6';
       setBg({
         backgroundColor: bg,
         backgroundColorTop: bg,

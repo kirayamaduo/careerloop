@@ -1,5 +1,5 @@
 <template>
-  <SlPage class="app-soft-bg" :custom-class="[themeClass, fontClass].join(' ')">
+  <SlPage class="app-soft-bg" :custom-class="['competition-report-page', themeClass, fontClass].join(' ')">
     <SlNavBar :title="t('interviewReport.navTitle')" show-back @back="goBack" :safe-top="topSafeHeight" />
 
 
@@ -19,6 +19,7 @@
 
     <template v-else-if="report">
       <view class="report-header">
+        <text class="report-brand">智绘职路 CareerLoop · AI 面试成长报告</text>
         <text class="r-title">{{ t('interviewReport.reportTitle') }}</text>
         <text class="r-sub">{{ report.positionName }} · {{ report.difficulty }}{{ report.durationSeconds ? ' · ' + formatDuration(report.durationSeconds) : '' }}</text>
         <text class="r-desc">{{ report.textSummary || t('interviewReport.summaryFallback') }}</text>
@@ -302,6 +303,15 @@ onShow(() => {
 }
 
 .report-header { margin-bottom: 24px; padding: 0 20px; }
+.report-brand {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--brand-color, #3f51b5);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
 
 .r-title {
   font-size: 28px; font-weight: 800; color: #0f172a;
@@ -531,14 +541,14 @@ onShow(() => {
 .loading-title { font-size: 16px; font-weight: 700; color: #0f172a; }
 .loading-sub { font-size: 13px; color: #64748b; line-height: 1.5; text-align: center; }
 .spinner {
-  width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #2563eb;
+  width: 36px; height: 36px; border: 3px solid #e0dfdb; border-top-color: #3f51b5;
   border-radius: 50%; animation: spin 0.9s linear infinite; margin-bottom: 8px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .err-title { font-size: 16px; font-weight: 700; color: #b91c1c; }
 .err-detail { font-size: 13px; color: #64748b; text-align: center; line-height: 1.5; }
 .btn-retry {
-  margin-top: 8px; background: #2563eb; color: #fff;
+  margin-top: 8px; background: #c23b22; color: #fff;
   border: none; height: 40px; line-height: 40px;
   font-size: 14px; font-weight: 600; border-radius: 12px; padding: 0 20px;
 }
@@ -556,18 +566,18 @@ onShow(() => {
 .bottom-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
   padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-  background: rgba(245, 245, 247, 0.88);
+  background: rgba(250, 249, 246, 0.94);
   backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
   border-top: 0.5px solid rgba(60, 60, 67, 0.1); z-index: 100;
 }
 
 .btn-back {
-  width: 100%; background: #2563eb; color: #ffffff;
+  width: 100%; background: #c23b22; color: #ffffff;
   font-size: 16px; font-weight: 600; border-radius: 16px;
   height: 52px; line-height: 52px; border: none;
 }
 
-.btn-back:active { background: #1d4ed8; }
+.btn-back:active { background: #a8321d; }
 
 /* Phase 4 — contribute card */
 .contribute-card {
@@ -592,12 +602,12 @@ onShow(() => {
 .btn-secondary {
   flex: 1; height: 40px; line-height: 40px; padding: 0 14px;
   border-radius: 12px; font-size: 13px; font-weight: 600;
-  background: #f1f5f9; color: #2563eb; border: 1px solid #e2e8f0;
+  background: #f5f5f0; color: #3f51b5; border: 1px solid #e0dfdb;
 }
 .btn-primary {
   flex: 1; height: 40px; line-height: 40px; padding: 0 14px;
   border-radius: 12px; font-size: 13px; font-weight: 700;
-  background: #2563eb; color: #fff; border: none;
+  background: #c23b22; color: #fff; border: none;
 }
 .btn-primary[disabled] { opacity: 0.55; }
 

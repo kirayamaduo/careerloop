@@ -37,4 +37,7 @@ public final class NotificationTypes {
 
     /** Broadcast pushed by an admin to a user or org segment. */
     public static final String ADMIN_BROADCAST   = "ADMIN_BROADCAST";
+
+    /** Action assigned by the connected school employment platform. */
+    public static final String SCHOOL_INTERVENTION = "SCHOOL_INTERVENTION";
 }

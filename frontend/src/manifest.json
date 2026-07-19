@@ -1,7 +1,7 @@
 {
-    "name" : "",
+    "name" : "智绘职路 CareerLoop",
     "appid" : "",
-    "description" : "",
+    "description" : "智绘职路 CareerLoop · 学生成长端",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
@@ -90,7 +90,7 @@
         "router": {
             "mode": "history"
         },
-        "title": "Career Platform"
+        "title": "智绘职路 CareerLoop · 学生成长端"
     },
     "uniStatistics": {  
         "enable": false

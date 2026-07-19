@@ -7,6 +7,7 @@ import com.group1.career.model.entity.User;
 import com.group1.career.service.AgentProfileService;
 import com.group1.career.service.CareerPlanService;
 import com.group1.career.service.UserProfileSnapshotService;
+import com.group1.career.service.UserProfileTagService;
 import com.group1.career.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,6 +56,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private AgentProfileService agentProfileService;
+
+    @MockitoBean
+    private UserProfileTagService userProfileTagService;
 
     @MockitoBean
     private AuthInterceptor authInterceptor;

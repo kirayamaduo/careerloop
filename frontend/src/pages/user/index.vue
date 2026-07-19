@@ -47,6 +47,37 @@
       </view>
     </view>
 
+    <view class="website-link-card app-card-soft" v-if="isLoggedIn">
+      <view class="website-link-head">
+        <view class="website-link-icon"><text class="ri-links-line"></text></view>
+        <view class="website-link-copy">
+          <text class="website-link-title">{{ t('profile.websiteLinkTitle') }}</text>
+          <text class="website-link-desc">{{ t('profile.websiteLinkDesc') }}</text>
+        </view>
+        <view class="website-link-state"><text>{{ t('profile.websiteLinkSecure') }}</text></view>
+      </view>
+      <view v-if="websiteLinkCode" class="website-code-panel">
+        <view>
+          <text class="website-code-label">{{ t('profile.websiteLinkCodeLabel') }}</text>
+          <text class="website-code">{{ websiteLinkCode }}</text>
+          <text class="website-code-expiry">{{ websiteLinkExpiryText }}</text>
+        </view>
+        <view class="website-code-copy" @click="copyWebsiteLinkCode">
+          <text class="ri-file-copy-line"></text>
+          <text>{{ t('profile.websiteLinkCopy') }}</text>
+        </view>
+      </view>
+      <view
+        class="website-link-action"
+        :class="{ disabled: websiteLinkLoading }"
+        @click="generateWebsiteLinkCode"
+      >
+        <text>{{ websiteLinkLoading ? t('profile.websiteLinkGenerating') : (websiteLinkCode ? t('profile.websiteLinkRegenerate') : t('profile.websiteLinkGenerate')) }}</text>
+        <text class="ri-arrow-right-line"></text>
+      </view>
+      <text class="website-link-note">{{ t('profile.websiteLinkNote') }}</text>
+    </view>
+
     <view class="tag-cloud-card app-card-soft" v-if="isLoggedIn">
       <view class="tag-cloud-head">
         <view>
@@ -218,6 +249,7 @@ import { listMyResumesApi } from '@/api/resume';
 import { updateUserApi, getUserInfoApi, requestDeletionApi } from '@/api/user';
 import { uploadFileApi } from '@/api/file';
 import { getProfileTagsApi, refreshProfileTagsApi, type UserProfileTag } from '@/api/profileTags';
+import { createWebsiteLinkCodeApi } from '@/api/integration';
 import { isCloudKeyword } from '@/utils/profileTagFilters';
 import { useTheme, type ThemeKey } from '@/utils/theme';
 import { setLocale, currentLocale, type LangCode } from '@/locales/index';
@@ -280,6 +312,15 @@ const rightAvoidWidth = ref(20);
 
 const showProfileEdit = ref(false);
 const editForm = ref({ nickname: '', school: '', major: '', gradYear: '' });
+const websiteLinkCode = ref('');
+const websiteLinkExpiresAt = ref(0);
+const websiteLinkLoading = ref(false);
+let websiteLinkExpiryTimer: ReturnType<typeof setTimeout> | undefined;
+const websiteLinkExpiryText = computed(() => {
+  if (!websiteLinkExpiresAt.value) return '';
+  const minutes = Math.max(1, Math.ceil((websiteLinkExpiresAt.value - Date.now()) / 60_000));
+  return t('profile.websiteLinkExpires', { n: minutes });
+});
 
 const isLoggedIn = computed(() => !!userId.value);
 const CLOUD_POINTS = [
@@ -329,6 +370,36 @@ const openProfileEdit = () => {
 
 const goResumes = () => {
   uni.switchTab({ url: '/pages/resume/index' });
+};
+
+const generateWebsiteLinkCode = async () => {
+  if (websiteLinkLoading.value) return;
+  websiteLinkLoading.value = true;
+  try {
+    const result = await createWebsiteLinkCodeApi();
+    websiteLinkCode.value = result.code;
+    websiteLinkExpiresAt.value = Date.now() + result.expiresInSeconds * 1000;
+    if (websiteLinkExpiryTimer) clearTimeout(websiteLinkExpiryTimer);
+    const generatedCode = result.code;
+    websiteLinkExpiryTimer = setTimeout(() => {
+      if (websiteLinkCode.value !== generatedCode) return;
+      websiteLinkCode.value = '';
+      websiteLinkExpiresAt.value = 0;
+    }, result.expiresInSeconds * 1000);
+    uni.showToast({ title: t('profile.websiteLinkGenerated'), icon: 'success' });
+  } catch (e: any) {
+    uni.showToast({ title: e?.message || t('profile.websiteLinkFailed'), icon: 'none' });
+  } finally {
+    websiteLinkLoading.value = false;
+  }
+};
+
+const copyWebsiteLinkCode = () => {
+  if (!websiteLinkCode.value) return;
+  uni.setClipboardData({
+    data: websiteLinkCode.value,
+    success: () => uni.showToast({ title: t('profile.websiteLinkCopied'), icon: 'success' }),
+  });
 };
 
 const SWITCH_TAB_PATHS = new Set([
@@ -679,6 +750,120 @@ const loadProfile = async () => {
   border-radius: var(--radius-md, 16px);
   box-shadow: var(--shadow-sm);
   padding: 16px 0; margin-bottom: 24px;
+}
+
+.website-link-card {
+  margin: 0 0 20px;
+  padding: 16px;
+  border-top: 3px solid var(--brand-color, #3f51b5);
+}
+.website-link-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.website-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-color, #3f51b5);
+  background: var(--brand-soft, #eceefa);
+  font-size: 18px;
+}
+.website-link-copy { flex: 1; min-width: 0; }
+.website-link-title {
+  display: block;
+  color: var(--text-primary, #2c2b29);
+  font-family: "Iowan Old Style", "Songti SC", STSong, serif;
+  font-size: 17px;
+  font-weight: 800;
+}
+.website-link-desc {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-secondary, #5a5956);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.website-link-state {
+  flex-shrink: 0;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--sage-soft, #edf1ea);
+  color: var(--sage, #7b8d6e);
+  font-size: 10px;
+  font-weight: 800;
+}
+.website-code-panel {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--brand-color, #3f51b5);
+  background: var(--brand-soft, #eceefa);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.website-code-label,
+.website-code-expiry {
+  display: block;
+  color: var(--text-secondary, #5a5956);
+  font-size: 10px;
+}
+.website-code {
+  display: block;
+  margin: 2px 0;
+  color: var(--brand-color, #3f51b5);
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+.website-code-copy {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  background: var(--brand-color, #3f51b5);
+  font-size: 12px;
+  font-weight: 700;
+}
+.website-link-action {
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  background: var(--action-color, #c23b22);
+  font-size: 14px;
+  font-weight: 800;
+}
+.website-link-action.disabled { opacity: 0.55; }
+.website-link-note {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-tertiary, #8b8a86);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.is-dark .website-link-icon,
+.is-dark .website-code-panel {
+  background: #26364d;
+  border-color: #8290dd;
+}
+.is-dark .website-link-state {
+  background: #32443a;
 }
 
 .tag-cloud-card {

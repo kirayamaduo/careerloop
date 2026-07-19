@@ -33,6 +33,7 @@
       <view class="chat-list-surface">
       <!-- Welcome card -->
       <view class="welcome-card">
+        <text class="welcome-brand">智绘职路 CareerLoop · AI 导师</text>
         <view class="welcome-icon" :class="currentPersona.emoji"></view>
         <text class="welcome-title">{{ currentPersona.name }}</text>
         <text class="welcome-desc">{{ currentPersona.intro }}</text>
@@ -548,6 +549,16 @@ onShow(() => {
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.welcome-brand {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--brand-color, #3f51b5);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
 .welcome-icon {

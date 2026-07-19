@@ -245,7 +245,7 @@
 .is-dark .send-active,
 .is-dark .pill-active,
 .is-dark .sl-button--primary {
-  background: #3b82f6 !important;
+  background: #d85a42 !important;
   color: #ffffff !important;
 }
 .is-dark .sl-button--secondary {
@@ -254,8 +254,8 @@
   border-color: #475569 !important;
 }
 .is-dark .sl-button--ghost {
-  color: #93c5fd !important;
-  border-color: #3b82f6 !important;
+  color: #9aa5e9 !important;
+  border-color: #8290dd !important;
 }
 .is-dark .sl-segment {
   background: #334155 !important;
@@ -334,8 +334,8 @@
   color: #f8fafc !important;
 }
 .is-dark .app-icon-tile {
-  background: rgba(37, 99, 235, 0.18) !important;
-  color: #93c5fd !important;
+  background: rgba(63, 81, 181, 0.24) !important;
+  color: #9aa5e9 !important;
 }
 .is-dark .app-icon-tile--violet { background: rgba(139,92,246,0.15) !important; }
 .is-dark .app-icon-tile--cyan   { background: rgba(6,182,212,0.15) !important; }

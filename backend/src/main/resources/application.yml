@@ -155,3 +155,10 @@ bodylang:
 # ==============================
 content-safety:
   enabled: ${CONTENT_SAFETY_ENABLED:true}
+
+# Server-to-server bridge used by the connected college employment platform.
+# Fail-closed: when the environment variable is absent, every internal bridge
+# request is rejected. Never put the real value in source control.
+career:
+  bridge:
+    key: ${CAREER_PLATFORM_BRIDGE_KEY:}

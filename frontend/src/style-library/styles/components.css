@@ -2,10 +2,10 @@
 .card,
 .panel,
 .section-card {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
-  border-radius: var(--radius-md, 16px);
-  box-shadow: var(--shadow-sm, 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08));
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-sm, 0 3px 12px rgba(44,43,41,0.045));
 }
 
 .ui-card-strong {
@@ -18,21 +18,21 @@
 textarea.ui-input {
   width: 100%;
   box-sizing: border-box;
-  background: var(--surface-1, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
-  border-radius: 12px;
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-sm, 6px);
   min-height: 44px;
   padding: 0 12px;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #2c2b29);
   font-size: 14px;
 }
 
 .ui-list-item,
 .list-item,
 .item {
-  background: var(--surface-1, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
-  border-radius: 14px;
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 8px);
 }
 
 button {
@@ -56,7 +56,7 @@ button {
 .ui-btn-primary,
 .btn-primary,
 .btn-send {
-  background: var(--primary-color, #2563eb);
+  background: var(--action-color, #c23b22);
   color: #fff;
   box-shadow: var(--shadow-card, 0 4px 16px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08));
 }
@@ -65,38 +65,38 @@ button {
 .btn-secondary,
 .btn-choose,
 .btn-upload-cloud {
-  background: var(--surface-2, #f8fafc);
-  color: var(--text-primary, #0f172a);
-  border-color: var(--border-color, #b8c8d8);
+  background: var(--surface-2, #f5f5f0);
+  color: var(--text-primary, #2c2b29);
+  border-color: var(--border-color, #e0dfdb);
 }
 
 .sl-page {
   min-height: 100vh;
-  background-color: var(--surface-1, #ffffff);
+  background-color: var(--surface-1, #faf9f6);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
 }
 
 .app-card-soft {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-lg, 20px);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-lg, 10px);
   box-shadow: var(--shadow-sm, 0 4px 12px rgba(0,0,0,0.04));
   padding: var(--space-lg, 16px);
 }
 
 .app-card-gradient {
-  background: var(--gradient-primary);
-  border: none;
-  border-radius: var(--radius-lg, 20px);
+  background: var(--brand-color, #3f51b5);
+  border: 1px solid rgba(44, 43, 41, 0.08);
+  border-radius: var(--radius-lg, 10px);
   box-shadow: var(--shadow-card);
   color: #ffffff;
   padding: var(--space-lg, 16px);
 }
 
 .app-card-metric {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-md, 16px);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-xs);
   padding: var(--space-md, 12px);
   display: flex;
@@ -104,21 +104,21 @@ button {
 }
 
 .app-card-feature {
-  background: var(--surface-2, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-lg, 20px);
+  background: var(--surface-2, #f5f5f0);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-lg, 10px);
   padding: var(--space-lg, 16px);
 }
 
 .app-icon-tile {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-sm, 12px);
+  border-radius: var(--radius-sm, 6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-soft, #eff6ff);
-  color: var(--primary-color, #2563eb);
+  background: var(--brand-soft, #eceefa);
+  color: var(--brand-color, #3f51b5);
 }
 
 .app-icon-tile--violet { background: var(--violet-soft); color: var(--violet); }
@@ -128,9 +128,9 @@ button {
 .app-icon-tile--warning { background: var(--warning-soft); color: var(--warning-color); }
 
 .sl-card {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #b8c8d8);
-  border-radius: var(--radius-md, 16px);
+  background: var(--card-bg, #fffefa);
+  border: 1px solid var(--border-color, #e0dfdb);
+  border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-sm, 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08));
   box-sizing: border-box;
 }
@@ -148,7 +148,7 @@ button {
 }
 
 .sl-button--primary {
-  background: var(--primary-color, #2563eb);
+  background: var(--action-color, #c23b22);
   color: #fff;
   box-shadow: var(--shadow-card, 0 4px 16px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08));
 }
@@ -161,8 +161,8 @@ button {
 
 .sl-button--ghost {
   background: transparent;
-  color: var(--primary-color, #2563eb);
-  border-color: var(--primary-mid, #3b82f6);
+  color: var(--brand-color, #3f51b5);
+  border-color: var(--brand-color, #3f51b5);
 }
 
 .sl-button--danger {
@@ -226,7 +226,8 @@ button {
 .sl-navbar__title {
   font-size: var(--font-section, 17px);
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary, #2c2b29);
+  font-family: "Iowan Old Style", "Songti SC", STSong, serif;
 }
 
 .sl-navbar__back {
@@ -241,7 +242,7 @@ button {
   align-items: center;
   background: var(--surface-1, #ffffff);
   border: 1px solid var(--border-strong, #9aafc5);
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-md, 8px);
   padding: 14px 16px;
   box-sizing: border-box;
 }
@@ -305,37 +306,3 @@ button {
   font-size: 18px;
   color: var(--text-tertiary, #8e8e93);
 }
-
-/* #ifndef H5 */
-@media (prefers-color-scheme: dark) {
-  .ui-card,
-  .card,
-  .panel,
-  .section-card,
-  .ui-list-item,
-  .list-item,
-  .item,
-  .sl-card,
-  .sl-list-item,
-  .sl-search-bar {
-    box-shadow: none;
-    border-color: var(--border-color, #b8c8d8);
-  }
-
-  .ui-input,
-  .input,
-  textarea.ui-input,
-  .sl-input {
-    background: #0f172a;
-  }
-
-  .ui-btn-secondary,
-  .btn-secondary,
-  .btn-choose,
-  .btn-upload-cloud,
-  .sl-button--secondary {
-    background: #1e293b;
-    color: #e2e8f0;
-  }
-}
-/* #endif */

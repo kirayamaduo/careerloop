@@ -4,7 +4,7 @@
 
     <view class="hero" :style="{ paddingRight: rightAvoidWidth + 'px' }">
       <view class="status-bar-spacer" :style="{ height: statusTopPx + 'px' }"></view>
-      <text class="hero-kicker">智绘职路</text>
+      <text class="hero-kicker">智绘职路 CareerLoop · 学生成长端</text>
       <text class="hero-title">{{ t('login.heroTitle') }}</text>
       <text class="hero-subtitle">{{ t('login.heroSubtitle') }}</text>
     </view>

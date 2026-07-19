@@ -17,6 +17,8 @@ public interface AgentTaskRepository extends JpaRepository<AgentTask, Long> {
     List<AgentTask> findByUserIdAndStatusOrderByDueDateAscCreatedAtDesc(Long userId, String status);
     List<AgentTask> findByUserIdAndDueDateBetweenOrderByDueDateDescCreatedAtDesc(Long userId, LocalDate from, LocalDate to);
     Optional<AgentTask> findByUserIdAndDueDateAndTaskKey(Long userId, LocalDate dueDate, String taskKey);
+    Optional<AgentTask> findByUserIdAndTaskKey(Long userId, String taskKey);
+    List<AgentTask> findTop20ByUserIdAndTaskTypeOrderByCreatedAtDesc(Long userId, String taskType);
 
     @Query("SELECT t.taskType, COUNT(t) FROM AgentTask t WHERE t.userId = :userId AND t.status = 'DISMISSED' AND t.dueDate BETWEEN :from AND :to GROUP BY t.taskType")
     List<Object[]> countDismissedByTaskTypeSince(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);

@@ -1,5 +1,6 @@
 package com.group1.career.controller;
 
+import com.group1.career.aspect.RedactWebLog;
 import com.group1.career.common.Result;
 import com.group1.career.model.entity.User;
 import com.group1.career.service.EmailService;
@@ -25,6 +26,7 @@ import jakarta.validation.constraints.Size;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Validated
+@RedactWebLog
 public class AuthController {
 
     private final UserService userService;

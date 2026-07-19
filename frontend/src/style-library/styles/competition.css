@@ -1,0 +1,337 @@
+/*
+ * CareerLoop national-competition presentation skin.
+ *
+ * Pages still own their layout and data states. These rules only align the
+ * golden demo path with the web platform's paper / ink / vermilion / indigo
+ * language and intentionally keep mobile-friendly radii and touch sizes.
+ */
+.landing-page,
+.login-page,
+.onboarding-page,
+.home-page,
+.chat-page,
+.resume-page,
+.user-page,
+.hub-page,
+.start-page,
+.competition-report-page {
+  background: var(--paper, #faf9f6) !important;
+  color: var(--ink, #2c2b29);
+}
+
+.landing-page .hero-title,
+.login-page .hero-title,
+.onboarding-page .hero-title,
+.onboarding-page .step-title,
+.home-page .brand-title,
+.home-page .readiness-title,
+.home-page .today-title,
+.home-page .section-lite-title,
+.home-page .section-title,
+.chat-page .welcome-title,
+.resume-page .page-title,
+.resume-page .section-title,
+.user-page .page-title,
+.user-page .header-name,
+.hub-page .hub-headline,
+.start-page .title,
+.competition-report-page .r-title,
+.competition-report-page .section-title {
+  font-family: "Iowan Old Style", "Songti SC", STSong, serif !important;
+  letter-spacing: -0.02em;
+  color: var(--ink, #2c2b29);
+}
+
+.landing-page .brand-name,
+.landing-page .brand-tag,
+.login-page .hero-kicker,
+.onboarding-page .hero-kicker,
+.onboarding-page .step-label,
+.home-page .brand-kicker {
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.landing-page .brand-mark {
+  border-radius: 8px !important;
+  background: var(--indigo, #3f51b5) !important;
+  box-shadow: 0 8px 20px rgba(63, 81, 181, 0.16) !important;
+}
+
+.landing-page .score-panel,
+.landing-page .task-panel,
+.landing-page .value-strip,
+.login-page .form-sheet,
+.onboarding-page .choice-card,
+.onboarding-page .resume-card,
+.onboarding-page .priority-card,
+.home-page .app-card-soft,
+.chat-page .welcome-card,
+.chat-page .quick-chip,
+.resume-page .resume-card,
+.resume-page .add-card,
+.user-page .header-card,
+.user-page .menu-card,
+.user-page .tag-cloud-card,
+.hub-page .hub-section,
+.start-page .form-card,
+.start-page .expect-card,
+.competition-report-page .app-surface {
+  background: var(--card-bg, #fffefa) !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-sm, 0 3px 12px rgba(44,43,41,0.045)) !important;
+}
+
+.landing-page .score-value,
+.landing-page .score-fill,
+.home-page .readiness-fill,
+.home-page .readiness-dim-fill,
+.hub-page .hub-pct-fill,
+.hub-page .hub-progress-fill {
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.landing-page .score-fill,
+.home-page .readiness-fill,
+.home-page .readiness-dim-fill,
+.hub-page .hub-pct-fill,
+.hub-page .hub-progress-fill {
+  background: var(--indigo, #3f51b5) !important;
+}
+
+.landing-page .primary-btn,
+.login-page .btn-primary,
+.onboarding-page .btn-primary,
+.home-page .today-cta,
+.home-page .agent-action-primary,
+.home-page .checkin-cta,
+.chat-page .send-active,
+.hub-page .hub-primary-cta,
+.hub-page .hub-action-primary,
+.start-page .sticky-cta .btn-primary,
+.competition-report-page .btn-primary {
+  min-height: 44px;
+  border-radius: 8px !important;
+  border-color: var(--vermilion, #c23b22) !important;
+  background: var(--vermilion, #c23b22) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(194, 59, 34, 0.16) !important;
+}
+
+.landing-page .secondary-btn,
+.onboarding-page .btn-secondary,
+.home-page .today-plan-link,
+.home-page .today-done,
+.hub-page .hub-primary-done,
+.hub-page .hub-task-btn,
+.competition-report-page .btn-secondary,
+.competition-report-page .btn-back {
+  min-height: 44px;
+  border-radius: 8px !important;
+  background: var(--paper-soft, #f5f5f0) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+  color: var(--ink, #2c2b29) !important;
+}
+
+.login-page .segment-bar,
+.chat-page .mode-picker,
+.resume-page .section-action,
+.user-page .pill {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+
+.login-page .seg-active,
+.user-page .pill-active {
+  background: var(--indigo, #3f51b5) !important;
+  color: #fff !important;
+}
+
+.login-page .field-input,
+.onboarding-page .target-input-wrap,
+.onboarding-page .field,
+.chat-page .chat-input,
+.start-page .picker-box,
+.competition-report-page .contribute-input {
+  background: #fffefa !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  border-radius: 8px !important;
+  color: var(--ink, #2c2b29) !important;
+}
+
+.login-page .checkbox.checked {
+  background: var(--indigo, #3f51b5) !important;
+  border-color: var(--indigo, #3f51b5) !important;
+}
+
+.onboarding-page .progress-dot.active,
+.onboarding-page .progress-dot.done {
+  background: var(--indigo, #3f51b5) !important;
+}
+
+.onboarding-page .choice-card.selected,
+.onboarding-page .resume-card.selected,
+.onboarding-page .priority-card.selected,
+.onboarding-page .pill.selected,
+.onboarding-page .role-chip.selected {
+  background: var(--indigo-soft, #eceefa) !important;
+  border-color: var(--indigo, #3f51b5) !important;
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.home-page .workbench-hero {
+  background: transparent !important;
+}
+
+.home-page .readiness-card {
+  border-top: 3px solid var(--indigo, #3f51b5) !important;
+}
+
+.home-page .today-card {
+  background: #fffafa !important;
+  border: 1px solid #e8c6be !important;
+  border-top: 3px solid var(--vermilion, #c23b22) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(194, 59, 34, 0.08) !important;
+}
+
+.home-page .today-icon-wrap {
+  background: var(--vermilion-soft, #f8ebe7) !important;
+  color: var(--vermilion, #c23b22) !important;
+}
+
+.home-page .section-lite-action,
+.home-page .section-more-text,
+.home-page .section-more-arrow {
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.chat-page .chat-nav,
+.chat-page .input-bar,
+.chat-page .chat-list-surface {
+  background: var(--paper, #faf9f6) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+
+.chat-page .nav-bot-avatar,
+.chat-page .bot-avatar,
+.chat-page .welcome-icon,
+.chat-page .bubble-user {
+  background: var(--indigo, #3f51b5) !important;
+}
+
+.chat-page .bubble-ai {
+  background: #fffefa !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  color: var(--ink, #2c2b29) !important;
+}
+
+.resume-page .rc-icon,
+.resume-page .rc-icon-ai,
+.resume-page .section-action {
+  background: var(--indigo-soft, #eceefa) !important;
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.resume-page .ai-badge {
+  background: var(--indigo, #3f51b5) !important;
+}
+
+.home-page .feature-item {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border: 1px solid var(--border-color, #e0dfdb) !important;
+  color: var(--ink, #2c2b29) !important;
+}
+
+.home-page .feature-label {
+  color: var(--ink, #2c2b29) !important;
+}
+
+.resume-page .keyword-pill,
+.user-page .tag-cloud-word {
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.user-page .header-card {
+  background: var(--indigo, #3f51b5) !important;
+  border-top: 3px solid var(--indigo, #3f51b5) !important;
+}
+
+.user-page .header-edit-text,
+.user-page .tag-cloud-edit-text {
+  color: var(--indigo, #3f51b5) !important;
+}
+
+.hub-page .hub-section:first-child {
+  border-top: 3px solid var(--vermilion, #c23b22) !important;
+}
+
+.hub-page .hub-stage-pill,
+.hub-page .hub-badge,
+.hub-page .hub-missing-chip {
+  background: var(--paper-soft, #f5f5f0) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+
+.start-page .header {
+  background: var(--indigo, #3f51b5) !important;
+  border-radius: 10px !important;
+}
+
+.start-page .mode-card,
+.start-page .diff-card {
+  border-radius: 8px !important;
+  background: var(--paper-soft, #f5f5f0) !important;
+  border-color: var(--border-color, #e0dfdb) !important;
+}
+
+.start-page .mode-card.active,
+.start-page .diff-card.active {
+  background: var(--indigo, #3f51b5) !important;
+  border-color: var(--indigo, #3f51b5) !important;
+}
+
+.competition-report-page .score-card {
+  border-top: 3px solid var(--indigo, #3f51b5) !important;
+}
+
+.competition-report-page .score-basis,
+.competition-report-page .behavior-card,
+.competition-report-page .dims-card,
+.competition-report-page .advice-card,
+.competition-report-page .contribute-card {
+  border-radius: 10px !important;
+}
+
+.competition-report-page .dim-bar-fill,
+.competition-report-page .mini-bar,
+.competition-report-page .behavior-fill {
+  background: var(--indigo, #3f51b5) !important;
+}
+
+.competition-report-page .good {
+  border-left-color: var(--sage, #7b8d6e) !important;
+}
+
+.competition-report-page .warn {
+  border-left-color: var(--heritage-gold, #b8975a) !important;
+}
+
+/* Explicit dark-mode corrections: retain contrast instead of forcing paper. */
+.is-dark.landing-page,
+.is-dark.login-page,
+.is-dark.onboarding-page,
+.is-dark.home-page,
+.is-dark.chat-page,
+.is-dark.resume-page,
+.is-dark.user-page,
+.is-dark.hub-page,
+.is-dark.start-page,
+.competition-report-page.is-dark {
+  background: #0f172a !important;
+}
+
+.is-dark .today-card {
+  background: #1e293b !important;
+  border-color: #7f3a31 !important;
+}

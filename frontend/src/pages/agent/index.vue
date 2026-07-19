@@ -13,6 +13,7 @@
     </SlNavBar>
 
     <scroll-view scroll-y class="hub-scroll" :style="{ height: scrollHeight }">
+      <text class="hub-brand-kicker">智绘职路 CareerLoop · 学生成长端</text>
 
       <!-- ① Today -->
       <view v-if="agentToday" class="hub-section app-card-soft">
@@ -578,6 +579,16 @@ onMounted(() => {
   box-sizing: border-box;
   overflow: hidden;
 }
+
+.hub-brand-kicker {
+  display: block;
+  margin: 2px 2px 10px;
+  color: var(--brand-color, #3f51b5);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
 .hub-state-section { margin-bottom: 0; }
 .hub-bottom-spacer { height: 48rpx; }
 
@@ -853,19 +864,19 @@ onMounted(() => {
   border-color: rgba(147, 197, 253, 0.36) !important;
 }
 
-/* 主要操作：鲜蓝底 + 纯白字，对比清晰 */
+/* 主要操作：朱红行动色 + 纯白字，对比清晰 */
 .hub-page.is-dark .hub-action-primary {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
+  background: #d85a42 !important;
+  border-color: #d85a42 !important;
 }
 .hub-page.is-dark .hub-action-primary .hub-action-text {
   color: #ffffff !important;
 }
 
-/* 完成按钮：蓝底 + 白字 */
+/* 完成按钮：朱红底 + 白字 */
 .hub-page.is-dark .hub-task-done {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
+  background: #d85a42 !important;
+  border-color: #d85a42 !important;
 }
 .hub-page.is-dark .hub-task-done .hub-task-btn-text {
   color: #ffffff !important;

@@ -8,8 +8,8 @@
           <text class="brand-mark-text">职</text>
         </view>
         <view class="brand-copy">
-          <text class="brand-name">智绘职路</text>
-          <text class="brand-tag">AI 求职准备教练</text>
+          <text class="brand-name">智绘职路 CareerLoop</text>
+          <text class="brand-tag">学生成长端 · AI 求职准备教练</text>
         </view>
       </view>
 

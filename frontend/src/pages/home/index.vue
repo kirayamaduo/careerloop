@@ -7,52 +7,9 @@
       <view class="brand-row">
         <image class="user-avatar workbench-avatar" :src="avatarSrc" mode="aspectFill" @click="handleAvatarClick" />
         <view class="brand-copy">
-          <text class="brand-kicker">智绘职路</text>
+          <text class="brand-kicker">智绘职路 CareerLoop · 学生成长端</text>
           <text class="brand-title">{{ welcomeTitle }}</text>
           <text class="brand-subtitle">{{ stageLabel }} · {{ targetRoleLabel }}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="readiness-card app-card-soft app-surface">
-      <view class="readiness-head">
-        <view class="readiness-copy">
-          <text class="readiness-kicker">求职准备度</text>
-          <text class="readiness-title">{{ readinessPercent }}%</text>
-          <text class="readiness-subtitle">{{ readinessSummary }}</text>
-        </view>
-        <view class="readiness-ring" :style="readinessRingStyle">
-          <text class="readiness-ring-text">{{ readinessPercent }}</text>
-        </view>
-      </view>
-      <view class="readiness-bar">
-        <view class="readiness-fill" :style="{ width: readinessPercent + '%' }"></view>
-      </view>
-      <view class="gap-row">
-        <text class="gap-label">最大短板</text>
-        <text class="gap-text">{{ biggestGap }}</text>
-      </view>
-      <view class="readiness-dims">
-        <view v-for="d in readinessDimensions" :key="d.label" class="readiness-dim">
-          <text class="readiness-dim-label">{{ d.label }}</text>
-          <view class="readiness-dim-track">
-            <view class="readiness-dim-fill" :style="{ width: d.value + '%' }"></view>
-          </view>
-          <text class="readiness-dim-val">{{ d.value }}</text>
-        </view>
-      </view>
-      <text class="score-rule">评分依据：方向清晰度、简历诊断分、面试表现分、行动连续性和求职计划加权；仅完成动作不会直接视为准备充分。</text>
-    </view>
-
-    <view class="intake-card app-card-soft app-surface compact-card">
-      <view class="section-lite-head">
-        <text class="section-lite-title">你的求职画像</text>
-        <text class="section-lite-action" @click="startProfileCalibration">更新校准 ›</text>
-      </view>
-      <view class="intake-grid">
-        <view v-for="item in intakeSummary" :key="item.label" class="intake-item">
-          <text class="intake-label">{{ item.label }}</text>
-          <text class="intake-value">{{ item.value }}</text>
         </view>
       </view>
     </view>
@@ -86,6 +43,46 @@
           @click="completeAgentTask(primaryTask.taskId)"
         >
           <text class="today-done-text">标记完成</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="readiness-card app-card-soft app-surface">
+      <view class="readiness-head">
+        <view class="readiness-copy">
+          <text class="readiness-kicker">求职准备度</text>
+          <text class="readiness-title">{{ readinessPercent }}%</text>
+          <text class="readiness-subtitle">{{ readinessSummary }}</text>
+        </view>
+      </view>
+      <view class="readiness-bar">
+        <view class="readiness-fill" :style="{ width: readinessPercent + '%' }"></view>
+      </view>
+      <view class="gap-row">
+        <text class="gap-label">最大短板</text>
+        <text class="gap-text">{{ biggestGap }}</text>
+      </view>
+      <view class="readiness-dims">
+        <view v-for="d in readinessDimensions" :key="d.label" class="readiness-dim">
+          <text class="readiness-dim-label">{{ d.label }}</text>
+          <view class="readiness-dim-track">
+            <view class="readiness-dim-fill" :style="{ width: d.value + '%' }"></view>
+          </view>
+          <text class="readiness-dim-val">{{ d.value }}</text>
+        </view>
+      </view>
+      <text class="score-rule">评分依据：方向清晰度、简历诊断分、面试表现分、行动连续性和求职计划加权；仅完成动作不会直接视为准备充分。</text>
+    </view>
+
+    <view class="intake-card app-card-soft app-surface compact-card">
+      <view class="section-lite-head">
+        <text class="section-lite-title">你的求职画像</text>
+        <text class="section-lite-action" @click="startProfileCalibration">更新校准 ›</text>
+      </view>
+      <view class="intake-grid">
+        <view v-for="item in intakeSummary" :key="item.label" class="intake-item">
+          <text class="intake-label">{{ item.label }}</text>
+          <text class="intake-value">{{ item.value }}</text>
         </view>
       </view>
     </view>
@@ -668,13 +665,6 @@ const readinessSummary = computed(() => {
   if (readinessPercent.value >= 55) return '已有基础信号，下一步要补齐最短板。';
   if (readinessPercent.value >= 25) return '已经开始准备，但还缺少关键材料和练习。';
   return '先确定方向，再建立测评、简历和面试基线。';
-});
-
-const readinessRingStyle = computed(() => {
-  const deg = Math.round((readinessPercent.value / 100) * 360);
-  return {
-    background: `conic-gradient(#2563eb 0deg, #38bdf8 ${deg}deg, #e2e8f0 ${deg}deg, #e2e8f0 360deg)`,
-  };
 });
 
 const biggestGap = computed(() => {
@@ -1521,29 +1511,6 @@ const handleAvatarClick = () => {
   font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary, #64748b);
-}
-.readiness-ring {
-  width: 70px;
-  height: 70px;
-  border-radius: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: conic-gradient(#2563eb 0deg, #38bdf8 245deg, #e2e8f0 245deg);
-  flex-shrink: 0;
-}
-.readiness-ring-text {
-  width: 54px;
-  height: 54px;
-  border-radius: 27px;
-  background: var(--surface-1, #ffffff);
-  color: var(--text-primary, #0f172a);
-  font-size: 17px;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
 }
 .readiness-bar {
   height: 8px;

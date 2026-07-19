@@ -55,7 +55,7 @@
 			"path": "pages/assessment/quiz",
 			"style": {
 				"navigationBarTitleText": "职业测评",
-				"navigationBarBackgroundColor": "#f5f5f7",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationStyle": "custom"
 			}
 		},
@@ -63,7 +63,7 @@
 			"path": "pages/assessment/result",
 			"style": {
 				"navigationBarTitleText": "测评结果",
-				"navigationBarBackgroundColor": "#f5f5f7",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationStyle": "custom"
 			}
 		},
@@ -92,7 +92,7 @@
 			"path": "pages/resume/template",
 			"style": {
 				"navigationBarTitleText": "创建简历",
-				"navigationBarBackgroundColor": "#f5f5f7",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationStyle": "custom"
 			}
 		},
@@ -121,7 +121,7 @@
 			"path": "pages/interview/chat",
 			"style": {
 				"navigationBarTitleText": "面试对话",
-				"navigationBarBackgroundColor": "#f5f5f7",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationStyle": "custom"
 			}
 		},
@@ -129,7 +129,7 @@
 			"path": "pages/interview/start",
 			"style": {
 				"navigationBarTitleText": "开始面试",
-				"navigationBarBackgroundColor": "#f5f5f7",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationStyle": "custom"
 			}
 		},
@@ -152,8 +152,8 @@
 			"style": {
 				"navigationBarTitleText": "",
 				"navigationStyle": "custom",
-				"navigationBarBackgroundColor": "#f1f5f9",
-				"backgroundColor": "#f1f5f9",
+				"navigationBarBackgroundColor": "#FAF9F6",
+				"backgroundColor": "#FAF9F6",
 				"disableScroll": true
 			}
 		},
@@ -162,7 +162,7 @@
 			"style": {
 				"navigationBarTitleText": "",
 				"navigationStyle": "custom",
-				"backgroundColor": "#f6f8fb",
+				"backgroundColor": "#FAF9F6",
 				"disableScroll": true
 			}
 		},
@@ -170,7 +170,7 @@
 			"path": "pages/webview/index",
 			"style": {
 				"navigationBarTitleText": "加载中",
-				"navigationBarBackgroundColor": "#ffffff",
+				"navigationBarBackgroundColor": "#FAF9F6",
 				"navigationBarTextStyle": "black",
 				"navigationStyle": "custom"
 			}
@@ -237,14 +237,14 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "CareerLoop",
-		"navigationBarBackgroundColor": "#ffffff",
-		"backgroundColor": "#f8fafc"
+		"navigationBarTitleText": "智绘职路 CareerLoop",
+		"navigationBarBackgroundColor": "#FAF9F6",
+		"backgroundColor": "#FAF9F6"
 	},
 	"tabBar": {
-		"color": "#94a3b8",
-		"selectedColor": "#2563eb",
-		"backgroundColor": "#ffffff",
+		"color": "#8B8A86",
+		"selectedColor": "#3F51B5",
+		"backgroundColor": "#FAF9F6",
 		"borderStyle": "white",
 		"list": [
 			{
@@ -255,7 +255,7 @@
 			},
 			{
 				"pagePath": "pages/assistant/index",
-				"text": "助手",
+				"text": "AI 导师",
 				"iconPath": "static/tabbar/assistant.png",
 				"selectedIconPath": "static/tabbar/assistant-active.png"
 			},

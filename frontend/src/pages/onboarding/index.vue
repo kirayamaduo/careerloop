@@ -4,7 +4,7 @@
 
     <view class="page-shell">
       <view class="hero">
-        <text class="hero-kicker">智绘职路画像建立</text>
+        <text class="hero-kicker">智绘职路 CareerLoop · 学生成长端</text>
         <text class="hero-title">先用 2 分钟，让首页真正懂你</text>
         <text class="hero-desc">这里只收集制定第一批求职任务必需的信息。简历、项目、面试表现会在后续使用中继续补全。</text>
       </view>

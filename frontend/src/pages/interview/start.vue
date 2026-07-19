@@ -4,6 +4,7 @@
 
     <view class="start-content">
       <view class="header app-card-gradient">
+        <text class="header-kicker">智绘职路 CareerLoop · AI 模拟面试</text>
         <text class="title">{{ t('interview.startPageTitle') }}</text>
         <text class="subtitle">{{ t('interview.startSubtitle') }}</text>
       </view>
@@ -323,6 +324,16 @@ const startInterview = async () => {
   border-radius: var(--radius-xl, 24px);
   position: relative;
   overflow: hidden;
+}
+
+.header-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
 .title {

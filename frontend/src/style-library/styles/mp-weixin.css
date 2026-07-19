@@ -1,6 +1,6 @@
 /* #ifdef MP-WEIXIN */
 page {
-  background-color: var(--surface-1, #ffffff);
+  background-color: var(--surface-1, #faf9f6);
 }
 
 button {
@@ -29,19 +29,19 @@ button::after {
 .app-card-metric,
 .app-card-feature {
   overflow: visible;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.04);
+  border: 1px solid #e0dfdb;
+  box-shadow: 0 3px 12px rgba(44,43,41,0.045);
 }
 
 .app-card-gradient {
-  background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%);
+  background: #3f51b5;
   color: #ffffff;
   border: none;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .app-gradient-bg {
-  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  background: #faf9f6;
 }
 
 .app-soft-bg {
@@ -58,7 +58,7 @@ button::after {
   height: calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 
-.app-icon-tile { background: #eff6ff; color: #2563eb; }
+.app-icon-tile { background: #eceefa; color: #3f51b5; }
 .app-icon-tile--violet { background: #f5f3ff; color: #8b5cf6; }
 .app-icon-tile--cyan { background: #ecfeff; color: #06b6d4; }
 .app-icon-tile--candy { background: #fdf2f8; color: #ec4899; }
@@ -68,7 +68,7 @@ button::after {
 .ui-list-item,
 .list-item,
 .item {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e0dfdb;
 }
 
 .ui-input,
@@ -76,13 +76,13 @@ button::after {
 textarea.ui-input,
 .sl-input {
   font-size: 14px;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
+  color: #2c2b29;
+  border: 1px solid #e0dfdb;
 }
 input,
 textarea {
   font-size: 14px;
-  color: #0f172a;
+  color: #2c2b29;
 }
 .is-dark .ui-input,
 .is-dark .input,
@@ -116,7 +116,7 @@ textarea {
   -webkit-backdrop-filter: none;
 }
 .chat-nav,
-.header-bar { background: #ffffff; }
+.header-bar { background: #faf9f6; }
 .sticky-cta,
 .bottom-bar,
 .bottom-action,

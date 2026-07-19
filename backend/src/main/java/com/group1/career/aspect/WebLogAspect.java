@@ -8,7 +8,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 
 @Aspect
 @Component
@@ -29,13 +28,16 @@ public class WebLogAspect {
             log.info("HTTP Method    : {}", request.getMethod());
             log.info("Class Method   : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
             log.info("IP             : {}", request.getRemoteAddr());
-            log.info("Request Args   : {}", Arrays.toString(joinPoint.getArgs()));
+            // Controller payloads can contain passwords, verification codes,
+            // resumes, chat messages and interview media. Keep the operational
+            // request metadata above, but never serialize user data into logs.
+            log.info("Request Args   : [REDACTED]");
         }
     }
 
     @AfterReturning(returning = "ret", pointcut = "webLog()")
-    public void doAfterReturning(Object ret) {
-        log.info("Response Args  : {}", ret);
+    public void doAfterReturning(JoinPoint joinPoint, Object ret) {
+        log.info("Response Args  : [REDACTED]");
         log.info("=========================================== End ===========================================");
     }
 }

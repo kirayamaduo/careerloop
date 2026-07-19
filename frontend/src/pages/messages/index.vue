@@ -127,7 +127,7 @@ type TabKey = 'ALL' | 'CAREER' | 'SYSTEM' | 'AI';
 
 const TAB_TYPES: Record<TabKey, string[]> = {
   ALL:    [],
-  CAREER: ['INTERVIEW_REPORT', 'INTERVIEW_COMPLETED', 'ASSESSMENT_RESULT', 'ASSESSMENT_DONE', 'RESUME_DIAGNOSIS', 'RESUME_REVIEWED', 'WEEKLY_REPORT', 'STREAK_WARNING', 'MARKET_LIKE'],
+  CAREER: ['INTERVIEW_REPORT', 'INTERVIEW_COMPLETED', 'ASSESSMENT_RESULT', 'ASSESSMENT_DONE', 'RESUME_DIAGNOSIS', 'RESUME_REVIEWED', 'WEEKLY_REPORT', 'STREAK_WARNING', 'MARKET_LIKE', 'SCHOOL_INTERVENTION'],
   SYSTEM: ['SYSTEM', 'ADMIN_BROADCAST'],
   AI:     ['AI_PROACTIVE'],
 };
@@ -148,6 +148,7 @@ const iconForType = (type: string): string => {
     case 'MARKET_LIKE':       return 'ri-heart-fill';
     case 'AI_PROACTIVE':      return 'ri-robot-2-line';
     case 'ADMIN_BROADCAST':   return 'ri-megaphone-line';
+    case 'SCHOOL_INTERVENTION': return 'ri-school-line';
     default:                  return 'ri-notification-3-line';
   }
 };
@@ -164,6 +165,7 @@ const nameForType = (type: string): string => {
     case 'MARKET_LIKE':         return t('messages.typeMarket');
     case 'AI_PROACTIVE':        return t('messages.typeAI');
     case 'ADMIN_BROADCAST':     return t('messages.typeAnnouncement');
+    case 'SCHOOL_INTERVENTION': return t('messages.typeSchoolIntervention');
     default:                    return t('messages.typeSystem');
   }
 };

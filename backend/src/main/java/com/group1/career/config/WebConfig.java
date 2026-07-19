@@ -1,5 +1,7 @@
 package com.group1.career.config;
 
+import com.group1.career.interceptor.CareerBridgeInterceptor;
+import com.group1.career.interceptor.AuthInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -7,10 +9,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final com.group1.career.interceptor.AuthInterceptor authInterceptor;
+    private final AuthInterceptor authInterceptor;
+    private final CareerBridgeInterceptor careerBridgeInterceptor;
 
-    public WebConfig(com.group1.career.interceptor.AuthInterceptor authInterceptor) {
+    public WebConfig(AuthInterceptor authInterceptor,
+                     CareerBridgeInterceptor careerBridgeInterceptor) {
         this.authInterceptor = authInterceptor;
+        this.careerBridgeInterceptor = careerBridgeInterceptor;
     }
 
     @Override
@@ -23,6 +28,12 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
+        // Mandatory dependency + unconditional registration keeps the bridge
+        // fail-closed: the application cannot start with an unguarded internal
+        // route if this dedicated interceptor is ever removed or misconfigured.
+        registry.addInterceptor(careerBridgeInterceptor)
+                .addPathPatterns("/internal/career-platform/v1/**");
+
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
@@ -36,6 +47,10 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/careers/progress/**",
                         "/api/careers/timeline",
                         "/api/careers/initialize",
+                        // Internal server-to-server bridge has its own dedicated
+                        // X-Career-Bridge-Key interceptor. It must never fall
+                        // through to the end-user JWT interceptor.
+                        "/internal/career-platform/v1/**",
                         // Liveness/readiness probes used by Docker, nginx, uptime
                         // monitors -- and us, when proving the ngrok tunnel reaches
                         // the backend before pointing the mini-program at it.
@@ -45,4 +60,3 @@ public class WebConfig implements WebMvcConfigurer {
                 );
     }
 }
-
