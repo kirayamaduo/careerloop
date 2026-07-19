@@ -515,9 +515,21 @@ const authorizeCamera = () => {
       cameraError.value = '';
       startBodyLanguageCapture();
     },
-    fail: () => {
+    fail: (err: any) => {
       cameraReady.value = false;
-      cameraError.value = t('interviewRoom.cameraNotEnabled');
+      const msg: string = err?.errMsg || '';
+      // errno 104 / "privacy" errMsg means the platform-side privacy guide
+      // (用户隐私保护指引) has not declared the camera scope yet — surface an
+      // actionable hint instead of a silent "not enabled" state.
+      if (err?.errno === 104 || msg.includes('privacy')) {
+        cameraError.value = '摄像头授权被微信拦截：请在小程序后台《用户隐私保护指引》中声明摄像头权限';
+        showToast('隐私指引未声明摄像头，授权被微信拦截', 'error');
+      } else {
+        cameraError.value = t('interviewRoom.cameraNotEnabled');
+        if (msg && !msg.includes('auth deny') && !msg.includes('authorize:fail deny')) {
+          showToast(msg, 'error');
+        }
+      }
     },
   });
 };
